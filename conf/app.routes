@@ -2,3 +2,6 @@
 # This file defines all application app.routes (Higher priority app.routes first)
 # ~~~~
 
+GET         /basic-details/:id         controllers.GetController.getBasicDetails(id : String)
+GET         /enrolments/:id            controllers.GetController.getEnrolments(id : String)
+GET         /settings/:id              controllers.GetController.getSettings(id : String)

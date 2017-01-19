@@ -4,7 +4,13 @@ name := """accounts-microservice"""
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val playSettings : Seq[Setting[_]] = Seq.empty
+
+lazy val root = (project in file("."))
+  .enablePlugins(PlayScala)
+  .settings(playSettings ++ scoverageSettings : _*)
+
+PlayKeys.devSettings := Seq("play.server.http.port" -> "8603")
 
 scalaVersion := "2.11.8"
 
