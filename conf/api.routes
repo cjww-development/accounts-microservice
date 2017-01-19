@@ -1,0 +1,2 @@
+#Primary entry point for the acounts microservice
+->          /accounts          app.Routes
