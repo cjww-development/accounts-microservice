@@ -13,13 +13,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package config
+package models
 
-trait MongoCollections {
-  val USER_ACCOUNTS = "user-accounts"
-  val ORG_ACCOUNTS = "org-accounts"
-  val USER_FEED = "user-feed"
+import play.api.libs.json.Json
 
-  //Counts
-  val MAX_USER_FEED = 10
+case class Enrolments(hubId : Option[String],
+                      diagId : Option[String],
+                      deversityId : Option[String])
+
+object Enrolments {
+  implicit val format = Json.format[Enrolments]
 }

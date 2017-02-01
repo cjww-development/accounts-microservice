@@ -36,4 +36,4 @@ lazy val scoverageSettings = {
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 
-herokuAppName in Compile := "cjww-auth-microservice"
+herokuAppName in Compile := "cjww-accounts-microservice"

@@ -15,26 +15,64 @@
 */
 package controllers
 
+import models.{BasicDetails, Enrolments, Settings}
+import play.api.Logger
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, AnyContent, Controller}
+import services.GetDetailsService
+import utils.security.DataSecurity
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-class GetController extends GetCtrl
+class GetController extends GetCtrl {
+  val detailsService = GetDetailsService
+}
 
 trait GetCtrl extends Controller {
 
+  val detailsService : GetDetailsService
+
   def getBasicDetails(id : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(s"Basic details for: $id"))
+      Logger.debug(s"ID: $id")
+      detailsService.getBasicDetails(id) map {
+        case Some(details) =>
+          DataSecurity.encryptData[BasicDetails](details) match {
+            case Some(enc) => Ok(enc)
+            case None => InternalServerError
+          }
+        case None => NotFound
+      }
   }
 
   def getEnrolments(id : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(s"Enrolments for: $id"))
+      Logger.debug(s"ID: $id")
+      detailsService.getEnrolments(id) map {
+        case Some(enrolments) =>
+          DataSecurity.encryptData[Enrolments](enrolments) match {
+            case Some(enc) => Ok(enc)
+            case None => InternalServerError
+          }
+        case None => NotFound
+      }
   }
 
   def getSettings(id : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      Future.successful(Ok(s"Settings for: $id"))
+      Logger.debug(s"ID: $id")
+      detailsService.getSettings(id) map {
+        case Some(settings) =>
+          DataSecurity.encryptData[Settings](settings) match {
+            case Some(enc) =>
+              Logger.debug("OK")
+              Ok(enc)
+            case None =>
+              Logger.debug("ISE")
+              InternalServerError
+          }
+        case None => NotFound
+      }
   }
 }

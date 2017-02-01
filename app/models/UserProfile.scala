@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 the original author or authors.
+// Copyright (C) 2011-2012 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -13,13 +13,19 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package config
 
-trait MongoCollections {
-  val USER_ACCOUNTS = "user-accounts"
-  val ORG_ACCOUNTS = "org-accounts"
-  val USER_FEED = "user-feed"
+package models
 
-  //Counts
-  val MAX_USER_FEED = 10
+import org.joda.time.DateTime
+import play.api.libs.json.Json
+
+case class UserProfile(firstName : String,
+                       lastName : String,
+                       userName : String,
+                       email : String,
+                       settings : Option[Map[String, String]],
+                       details : Option[Map[String,DateTime]])
+
+object UserProfile {
+  implicit val format = Json.format[UserProfile]
 }

@@ -5,3 +5,10 @@
 GET         /basic-details/:id         controllers.GetController.getBasicDetails(id : String)
 GET         /enrolments/:id            controllers.GetController.getEnrolments(id : String)
 GET         /settings/:id              controllers.GetController.getSettings(id : String)
+
+POST        /update-profile            controllers.AccountDetailsController.updateProfileInformation()
+POST        /update-password           controllers.AccountDetailsController.updateUserPassword()
+POST        /update-settings           controllers.AccountDetailsController.updateUserSettings()
+
+POST        /create-feed-item          controllers.UserFeedController.createEvent()
+GET         /get-feed                  controllers.UserFeedController.retrieveFeed()

@@ -13,13 +13,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package controllers
+package models
 
-import helpers.CJWWSpec
+import play.api.libs.json.Json
 
-class GetControllerSpec extends CJWWSpec {
+case class Settings(displayName : Option[String],
+                    displayNameColour : Option[String],
+                    displayImageURL : Option[String])
 
-  class Setup {
-   
-  }
+object Settings {
+  implicit val format = Json.format[Settings]
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2016-2017 the original author or authors.
+// Copyright (C) 2011-2012 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -13,13 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package config
+package models
 
-trait MongoCollections {
-  val USER_ACCOUNTS = "user-accounts"
-  val ORG_ACCOUNTS = "org-accounts"
-  val USER_FEED = "user-feed"
+import play.api.libs.json.Json
 
-  //Counts
-  val MAX_USER_FEED = 10
+case class UpdatedPassword(userId : String, previousPassword : String, newPassword : String)
+
+object UpdatedPassword {
+  implicit val format = Json.format[UpdatedPassword]
 }

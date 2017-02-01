@@ -38,7 +38,6 @@ trait DataSecurity extends DataCommon {
       cipher.init(Cipher.ENCRYPT_MODE, keyToSpec)
       Some(Base64.encodeBase64String(cipher.doFinal(json.toString.getBytes("UTF-8"))))
     }
-
     scramble(Json.toJson(data))
   }
 

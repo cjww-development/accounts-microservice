@@ -13,13 +13,23 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package controllers
+package repositories
 
-import helpers.CJWWSpec
+import config.{MongoCollections, MongoResponse}
+import connectors.MongoConnector
+import models.UserAccount
+import reactivemongo.bson.BSONDocument
 
-class GetControllerSpec extends CJWWSpec {
+import scala.concurrent.Future
 
-  class Setup {
-   
+object RetrievalRepository extends RetrievalRepository {
+  val mongoConnector = MongoConnector
+}
+
+trait RetrievalRepository extends MongoCollections {
+  val mongoConnector : MongoConnector
+
+  def getAccount(userId : String) : Future[MongoResponse] = {
+    mongoConnector.read[UserAccount](USER_ACCOUNTS, BSONDocument("_id" -> userId))
   }
 }
