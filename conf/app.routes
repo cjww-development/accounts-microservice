@@ -2,13 +2,13 @@
 # This file defines all application app.routes (Higher priority app.routes first)
 # ~~~~
 
-GET         /basic-details/:id         controllers.GetController.getBasicDetails(id : String)
-GET         /enrolments/:id            controllers.GetController.getEnrolments(id : String)
-GET         /settings/:id              controllers.GetController.getSettings(id : String)
+PATCH       /account/:userId/update-profile            controllers.UpdateUserDetailsController.updateProfileInformation(userId)
+PATCH       /account/:userId/update-password           controllers.UpdateUserDetailsController.updateUserPassword(userId)
+PATCH       /account/:userId/update-settings           controllers.UpdateUserDetailsController.updateUserSettings(userId)
 
-POST        /update-profile            controllers.AccountDetailsController.updateProfileInformation()
-POST        /update-password           controllers.AccountDetailsController.updateUserPassword()
-POST        /update-settings           controllers.AccountDetailsController.updateUserSettings()
+GET         /account/:userId/basic-details             controllers.UserDetailsController.getBasicDetails(userId)
+GET         /account/:userId/enrolments                controllers.UserDetailsController.getEnrolments(userId)
+GET         /account/:userId/settings                  controllers.UserDetailsController.getSettings(userId)
+GET         /account/:userId/get-user-feed             controllers.UserFeedController.retrieveFeed(userId)
 
-POST        /create-feed-item          controllers.UserFeedController.createEvent()
-GET         /get-feed                  controllers.UserFeedController.retrieveFeed()
+POST        /create-feed-item                          controllers.UserFeedController.createEvent()

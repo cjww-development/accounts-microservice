@@ -13,13 +13,14 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package utils.application
 
-import config.ConfigurationStrings
-import play.api.Logger
+import com.cjwwdev.logging.Logger
+import com.cjwwdev.security.encryption.DataSecurity
+import config.ApplicationConfiguration
 import play.api.libs.json.{Format, Reads}
 import play.api.mvc.{Controller, Request, Result}
-import utils.security.DataSecurity
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
@@ -28,8 +29,7 @@ sealed trait AuthorisationResponse
 case object NotAuthorised extends AuthorisationResponse
 case object Authorised extends AuthorisationResponse
 
-trait BackendController extends Controller with ConfigurationStrings {
-
+trait BackendController extends Controller with ApplicationConfiguration {
   protected def decryptRequest[T](f : T => Future[Result])(implicit request : Request[String], manifest: Manifest[T], reads : Reads[T], format : Format[T]) = {
     Try(DataSecurity.decryptInto[T](request.body)) match {
       case Success(Some(data)) =>
@@ -43,21 +43,18 @@ trait BackendController extends Controller with ConfigurationStrings {
     }
   }
 
-  protected def openActionVerification(f : AuthorisationResponse => Future[Result])(implicit request : Request[_]) = {
-    f(checkAuth(request.headers.get("appID")))
-  }
-
-  private def checkAuth(appId : Option[String]) : AuthorisationResponse = {
-    appId match {
-      case Some(id) => id match {
-        case AUTH_MICROSERVICE_ID | AUTH_ID | DIAG_ID | DEV_ID => Authorised
+  protected def openActionVerification(f: AuthorisationResponse => Future[Result])(implicit request: Request[_]) = {
+    Try(request.headers("appId")) match {
+      case Success(appId) => appId match {
+        case AUTH_MICROSERVICE_ID | AUTH_ID | DIAG_ID | DEV_ID => f(Authorised)
         case _ =>
           Logger.warn("[BackendController] - [checkAuth] : API CALL FROM UNKNOWN SOURCE - ACTION DENIED")
-          NotAuthorised
+          f(NotAuthorised)
       }
-      case _ =>
+      case Failure(_) =>
+        Logger.error("[BackendController] - [checkAuth] : AppId not found in header")
         Logger.warn("[BackendController] - [checkAuth] : API CALL FROM UNKNOWN SOURCE - ACTION DENIED")
-        NotAuthorised
+        f(NotAuthorised)
     }
   }
 }

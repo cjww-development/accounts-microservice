@@ -1,10 +1,30 @@
+import com.typesafe.config.ConfigFactory
 import scoverage.ScoverageKeys
 
-name := """accounts-microservice"""
+import scala.util.{Failure, Success, Try}
 
-version := "1.0-SNAPSHOT"
+val btVersion: String = {
+  Try(ConfigFactory.load.getString("version")) match {
+    case Success(ver) => ver
+    case Failure(_) => "0.1.0"
+  }
+}
+
+name := """accounts-microservice"""
+version := btVersion
+scalaVersion := "2.11.8"
+organization := "com.cjww-dev.libs"
 
 lazy val playSettings : Seq[Setting[_]] = Seq.empty
+
+lazy val scoverageSettings = {
+  Seq(
+    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;views.*;models.*;utils.*;config.*;.*(AuthService|BuildInfo|Routes).*",
+    ScoverageKeys.coverageMinimum := 80,
+    ScoverageKeys.coverageFailOnMinimum := false,
+    ScoverageKeys.coverageHighlighting := true
+  )
+}
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala)
@@ -12,28 +32,22 @@ lazy val root = (project in file("."))
 
 PlayKeys.devSettings := Seq("play.server.http.port" -> "8603")
 
-scalaVersion := "2.11.8"
-
-libraryDependencies ++= Seq(
-  cache,
-  ws,
-  "org.scalatestplus.play" %% "scalatestplus-play" % "1.5.1" % Test,
-  "org.mockito" % "mockito-core" % "1.8.5",
-  "org.reactivemongo" %% "reactivemongo" % "0.11.14",
-  "org.reactivemongo" %% "play2-reactivemongo" % "0.11.14"
+val cjwwDep: Seq[ModuleID] = Seq(
+  "com.cjww-dev.libs" % "data-security_2.11" % "0.3.0",
+  "com.cjww-dev.libs" % "logging_2.11" % "0.1.0",
+  "com.cjww-dev.libs" % "reactive-mongo_2.11" % "0.6.0",
+  "com.cjww-dev.libs" % "bootstrapper_2.11" % "0.2.0"
 )
 
-lazy val scoverageSettings = {
+val testDep: Seq[ModuleID] = Seq(
+  "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0" % Test,
+  "org.mockito" % "mockito-core" % "2.7.17" % Test
+)
 
-  // Semicolon-separated list of regexs matching classes to exclude
-  Seq(
-    ScoverageKeys.coverageExcludedPackages := "<empty>;Reverse.*;models/.data/..*;views.*;models.*;config.*;utils.*;.*(AuthService|BuildInfo|Routes).*",
-    ScoverageKeys.coverageMinimum := 80,
-    ScoverageKeys.coverageFailOnMinimum := false,
-    ScoverageKeys.coverageHighlighting := true
-  )
-}
+libraryDependencies ++= cjwwDep
+libraryDependencies ++= testDep
 
 resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
+resolvers += "cjww-dev" at "http://dl.bintray.com/cjww-development/releases"
 
 herokuAppName in Compile := "cjww-accounts-microservice"

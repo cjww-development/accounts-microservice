@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -15,54 +15,41 @@
 // limitations under the License.
 package controllers
 
+import javax.inject.{Inject, Singleton}
+
+import com.cjwwdev.security.encryption.DataSecurity
 import models.FeedItem
-import play.api.Logger
 import play.api.libs.json.JsObject
 import play.api.mvc.Action
 import services.UserFeedService
 import utils.application.{Authorised, BackendController, NotAuthorised}
-import utils.security.DataSecurity
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class UserFeedController extends UserFeedCtrl {
-  val userFeedService = UserFeedService
-}
-
-trait UserFeedCtrl extends BackendController {
-  val userFeedService : UserFeedService
-
+@Singleton
+class UserFeedController @Inject()(userFeedService: UserFeedService) extends BackendController {
   def createEvent() : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[FeedItem] {
-            fi =>
-              userFeedService.createFeedItem(fi) map {
-                case true => InternalServerError
-                case false => Ok
-              }
+          decryptRequest[FeedItem] { fi =>
+            userFeedService.createFeedItem(fi) map {
+              case true => InternalServerError
+              case false => Ok
+            }
           }
         case NotAuthorised => Future.successful(Forbidden)
       }
   }
 
-  def retrieveFeed() : Action[String] = Action.async(parse.text) {
+  def retrieveFeed(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[String] {
-            dec =>
-              userFeedService.getFeedList(dec) map {
-                resp => resp.isDefined match {
-                  case true =>
-                    val dec = DataSecurity.encryptData[JsObject](resp.get).get
-                    Logger.debug(dec)
-                    Ok(dec)
-                  case false => NotFound
-                }
-              }
+          userFeedService.getFeedList(userId) map {
+            case Some(json) => Ok(DataSecurity.encryptData[JsObject](json).get)
+            case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)
       }

@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -15,23 +15,18 @@
 // limitations under the License.
 package services
 
-import config.{MongoFailedCreate, MongoSuccessCreate}
+import javax.inject.{Inject, Singleton}
+
+import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
 import models.FeedItem
-import play.api.Logger
 import play.api.libs.json.{JsObject, Json}
 import repositories.UserFeedRepository
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-object UserFeedService extends UserFeedService {
-  val userFeedRepository = UserFeedRepository
-}
-
-trait UserFeedService {
-
-  val userFeedRepository : UserFeedRepository
-
+@Singleton
+class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
   private val MIN = 0
   private val MAX = 10
 
@@ -43,26 +38,19 @@ trait UserFeedService {
   }
 
   def flipList(list : Option[List[FeedItem]]) : Option[List[FeedItem]] = {
-    list.isDefined match {
-      case false => None
-      case true => Some(list.get.reverse.slice(MIN, MAX))
+    list match {
+      case Some(feedList) => Some(feedList.reverse.slice(MIN, MAX))
+      case None => None
     }
   }
 
   def getFeedList(userId : String) : Future[Option[JsObject]] = {
-    userFeedRepository.getFeedItems(userId) map {
-      list =>
-        convertToJsObject(flipList(list))
-    }
+    userFeedRepository.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
   }
 
-  def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {
+  private def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {
     for {
       fi <- list
-    } yield {
-      val obj = Json.obj("feed-array" -> fi)
-      Logger.debug(s"[UserFeedService] - [convertToJsObject] : $obj")
-      obj
-    }
+    } yield Json.obj("feed-array" -> fi)
   }
 }

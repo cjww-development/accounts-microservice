@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -20,16 +20,14 @@ import java.util.UUID
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 
-case class FeedItem(_id : Option[String],
+case class FeedItem(feedId : Option[String],
                     userId : String,
                     sourceDetail: SourceDetail,
                     eventDetail: EventDetail,
-                    generated : DateTime) extends Ordering[FeedItem]{
-
-  override def compare(x: FeedItem, y: FeedItem) = x.generated compareTo y.generated
+                    generated : DateTime) {
 
   def withId : FeedItem = {
-    copy(_id = Some(s"feed-item-${UUID.randomUUID()}"))
+    copy(feedId = Some(s"feed-item-${UUID.randomUUID()}"))
   }
 }
 

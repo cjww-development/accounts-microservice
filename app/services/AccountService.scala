@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -16,12 +16,14 @@
 
 package services
 
-import config.{MongoFailedUpdate, MongoSuccessUpdate}
+import javax.inject.{Inject, Singleton}
+
+import com.cjwwdev.mongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import models.{AccountSettings, UpdatedPassword, UserProfile}
 import repositories.AccountDetailsRepository
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 sealed trait UpdatedPasswordResponse
 case object InvalidOldPassword extends UpdatedPasswordResponse
@@ -31,33 +33,27 @@ sealed trait UpdatedSettingsResponse
 case object UpdatedSettingsSuccess extends UpdatedSettingsResponse
 case object UpdatedSettingsFailed extends UpdatedSettingsResponse
 
-object AccountService extends AccountService {
-  val accountDetailsRepo = AccountDetailsRepository
-}
-
-trait AccountService {
-
-  val accountDetailsRepo : AccountDetailsRepository
-
-  def updateProfileInformation(userProfile: UserProfile) : Future[Boolean] = {
-    accountDetailsRepo.updateAccountData(userProfile) map {
+@Singleton
+class AccountService @Inject()(accountDetailsRepo : AccountDetailsRepository) {
+  def updateProfileInformation(userId: String, userProfile: UserProfile) : Future[Boolean] = {
+    accountDetailsRepo.updateAccountData(userId, userProfile) map {
       case MongoFailedUpdate => true
       case MongoSuccessUpdate => false
     }
   }
 
-  def updatePassword(passwordSet : UpdatedPassword) : Future[UpdatedPasswordResponse] = {
-    accountDetailsRepo.findPassword(passwordSet) flatMap {
+  def updatePassword(userId: String, passwordSet : UpdatedPassword) : Future[UpdatedPasswordResponse] = {
+    accountDetailsRepo.findPassword(userId, passwordSet) flatMap {
       case false => Future.successful(InvalidOldPassword)
-      case true => accountDetailsRepo.updatePassword(passwordSet) map {
+      case true => accountDetailsRepo.updatePassword(userId, passwordSet) map {
         case MongoFailedUpdate => PasswordUpdate(true)
         case MongoSuccessUpdate => PasswordUpdate(false)
       }
     }
   }
 
-  def updateSettings(accountSettings : AccountSettings) : Future[UpdatedSettingsResponse] = {
-    accountDetailsRepo.updateSettings(accountSettings) map {
+  def updateSettings(userId: String, accountSettings : AccountSettings) : Future[UpdatedSettingsResponse] = {
+    accountDetailsRepo.updateSettings(userId, accountSettings) map {
       case MongoFailedUpdate => UpdatedSettingsFailed
       case MongoSuccessUpdate => UpdatedSettingsSuccess
     }

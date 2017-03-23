@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -16,65 +16,58 @@
 
 package controllers
 
+import javax.inject.{Inject, Singleton}
+
 import models.{AccountSettings, UpdatedPassword, UserProfile}
 import play.api.mvc.Action
 import services._
 import utils.application.{Authorised, BackendController, NotAuthorised}
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class AccountDetailsController extends AccountDetailsCtrl {
-  val accountService = AccountService
-}
-
-trait AccountDetailsCtrl extends BackendController {
-
-  val accountService : AccountService
-
-  def updateProfileInformation() : Action[String] = Action.async(parse.text) {
+@Singleton
+class UpdateUserDetailsController @Inject()(accountService: AccountService) extends BackendController {
+  def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[UserProfile] {
-            profile =>
-              accountService.updateProfileInformation(profile) map {
-                case false => Ok
+          decryptRequest[UserProfile] { profile =>
+            accountService.updateProfileInformation(userId, profile) map {
+              case false => Ok
+              case true => InternalServerError
+            }
+          }
+        case NotAuthorised => Future.successful(Forbidden)
+      }
+  }
+
+  def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) {
+    implicit request =>
+      openActionVerification {
+        case Authorised =>
+          decryptRequest[UpdatedPassword] { passwordSet =>
+            accountService.updatePassword(userId, passwordSet) map {
+              case InvalidOldPassword => Conflict
+              case PasswordUpdate(success) => success match {
                 case true => InternalServerError
+                case false => Ok
               }
+            }
           }
         case NotAuthorised => Future.successful(Forbidden)
       }
   }
 
-  def updateUserPassword() : Action[String] = Action.async(parse.text) {
+  def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[UpdatedPassword] {
-            passwordSet =>
-              accountService.updatePassword(passwordSet) map {
-                case InvalidOldPassword => Conflict
-                case PasswordUpdate(success) => success match {
-                  case true => InternalServerError
-                  case false => Ok
-                }
-              }
-          }
-        case NotAuthorised => Future.successful(Forbidden)
-      }
-  }
-
-  def updateUserSettings() : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      openActionVerification {
-        case Authorised =>
-          decryptRequest[AccountSettings] {
-            settings =>
-              accountService.updateSettings(settings) map {
-                case UpdatedSettingsSuccess => Ok
-                case UpdatedSettingsFailed => InternalServerError
-              }
+          decryptRequest[AccountSettings] { settings =>
+            accountService.updateSettings(userId, settings) map {
+              case UpdatedSettingsSuccess => Ok
+              case UpdatedSettingsFailed => InternalServerError
+            }
           }
         case NotAuthorised => Future.successful(Forbidden)
       }

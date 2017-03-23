@@ -16,11 +16,11 @@
 
 package mocks
 
-import org.scalatest.mock.MockitoSugar
 import org.mockito.Mockito._
+import org.scalatest.mockito.MockitoSugar
 import reactivemongo.api.commands.{UpdateWriteResult, WriteResult}
 
-trait MongoMocks extends MockitoSugar{
+trait MongoMocks extends MockitoSugar {
 
   def mockWriteResult(success: Boolean) : WriteResult = {
     val mockResult = mock[WriteResult]

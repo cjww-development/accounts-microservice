@@ -1,4 +1,4 @@
-// Copyright (C) 2011-2012 the original author or authors.
+// Copyright (C) 2016-2017 the original author or authors.
 // See the LICENCE.txt file distributed with this work for additional
 // information regarding copyright ownership.
 //
@@ -16,59 +16,65 @@
 
 package repositories
 
-import config.{MongoCollections, MongoFailedRead, MongoResponse, MongoSuccessRead}
-import connectors.MongoConnector
-import models.{UserAccount, UserProfile}
-import models.{AccountSettings, UpdatedPassword, UserProfile}
-import reactivemongo.api.commands.UpdateWriteResult
-import reactivemongo.bson._
-import play.api.Logger
+import javax.inject.{Inject, Singleton}
 
-import scala.concurrent.Future
+import com.cjwwdev.mongo._
+import config.ApplicationConfiguration
+import models.{AccountSettings, UpdatedPassword, UserAccount, UserProfile}
+import play.api.libs.json._
+import reactivemongo.bson.BSONDocument
+
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-object AccountDetailsRepository extends AccountDetailsRepository {
-  val mongoConnector = MongoConnector
-}
-
-trait AccountDetailsRepository extends MongoCollections {
-  val mongoConnector : MongoConnector
-
-  def updateAccountData(userProfile: UserProfile) : Future[MongoResponse] = {
-    val selector = BSONDocument("userName" -> userProfile.userName)
-    val updatedData = BSONDocument("$set" -> BSONDocument("firstName" -> userProfile.firstName,"lastName" -> userProfile.lastName,"email" -> userProfile.email))
-    mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+@Singleton
+class AccountDetailsRepository @Inject()(mongoConnector: MongoConnector) extends ApplicationConfiguration {
+  def updateAccountData(userId: String, userProfile: UserProfile)(implicit format: OFormat[UserProfile]) : Future[MongoUpdatedResponse] = {
+    val selector = BSONDocument("_id" -> userId)
+    mongoConnector.read[UserAccount](USER_ACCOUNTS, selector) flatMap {
+      case MongoSuccessRead(profile) =>
+        val updatedData = profile.asInstanceOf[UserAccount].copy(
+          firstName = userProfile.firstName,
+          lastName = userProfile.lastName,
+          email = userProfile.email
+        )
+        mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+      case _ => Future.successful(MongoFailedUpdate)
+    }
   }
 
-  def findPassword(passwordSet : UpdatedPassword) : Future[Boolean] = {
-    val old = passwordSet.previousPassword
-    mongoConnector.read[UserAccount](USER_ACCOUNTS, BSONDocument("_id" -> passwordSet.userId, "password" -> passwordSet.previousPassword)) map {
-      case MongoSuccessRead(acc) => acc.asInstanceOf[UserAccount].password match {
-        case `old` => true
-        case _ => false
-      }
+  def findPassword(userId: String, passwordSet : UpdatedPassword)(implicit format: OFormat[UpdatedPassword]) : Future[Boolean] = {
+    mongoConnector.read[UserAccount](USER_ACCOUNTS, BSONDocument("_id" -> userId, "password" -> passwordSet.previousPassword)) map {
+      case MongoSuccessRead(_) => true
       case MongoFailedRead => false
     }
   }
 
-  def updatePassword(passwordSet : UpdatedPassword) : Future[MongoResponse] = {
-    val selector = BSONDocument("_id" -> passwordSet.userId)
-    val updatedData = BSONDocument("$set" -> BSONDocument("password" -> passwordSet.newPassword))
-    mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+  def updatePassword(userId: String, passwordSet : UpdatedPassword)(implicit format: OFormat[UpdatedPassword]) : Future[MongoUpdatedResponse] = {
+    val selector = BSONDocument("_id" -> userId)
+    mongoConnector.read[UserAccount](USER_ACCOUNTS, selector) flatMap {
+      case MongoSuccessRead(profile) =>
+        val updatedData = profile.asInstanceOf[UserAccount].copy(
+          password = passwordSet.newPassword
+        )
+        mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+      case _ => Future.successful(MongoFailedUpdate)
+    }
   }
 
-  def updateSettings(accSettings : AccountSettings) : Future[MongoResponse] = {
-    val selector = BSONDocument("_id" -> accSettings.userId)
-    val updatedData =
-      BSONDocument(
-        "$set" -> BSONDocument(
-          "settings" -> BSONDocument(
+  def updateSettings(userId: String, accSettings : AccountSettings)(implicit format: OFormat[AccountSettings]) : Future[MongoUpdatedResponse] = {
+    val selector = BSONDocument("_id" -> userId)
+    mongoConnector.read[UserAccount](USER_ACCOUNTS, selector) flatMap {
+      case MongoSuccessRead(profile) =>
+        val updatedData = profile.asInstanceOf[UserAccount].copy(
+          settings = Some(Map(
             "displayName" -> accSettings.settings("displayName"),
             "displayNameColour" -> accSettings.settings("displayNameColour"),
             "displayImageURL" -> accSettings.settings("displayImageURL")
-          )
+          ))
         )
-      )
-    mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+        mongoConnector.update(USER_ACCOUNTS, selector, updatedData)
+      case _ => Future.successful(MongoFailedUpdate)
+    }
   }
 }

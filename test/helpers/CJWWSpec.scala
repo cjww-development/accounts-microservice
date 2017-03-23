@@ -18,22 +18,50 @@ package helpers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import config.{ConfigurationStrings, MongoCollections}
+import com.cjwwdev.mongo.MongoConnector
+import config.ApplicationConfiguration
 import mocks.MongoMocks
-import org.scalatest.mock.MockitoSugar
+import org.mockito.Mockito.reset
+import org.scalatest.{BeforeAndAfter, TestSuite}
+import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.ws.ahc.AhcWSClient
+import repositories.{AccountDetailsRepository, RetrievalRepository, UserFeedRepository}
+import services.{AccountService, GetDetailsService, UserFeedService}
 
-import scala.concurrent.{Await, Awaitable}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Awaitable}
 
-trait CJWWSpec extends PlaySpec with OneAppPerSuite with MongoMocks with MockitoSugar with ConfigurationStrings with MongoCollections  {
+trait CJWWSpec
+  extends PlaySpec
+    with MockitoSugar
+    with MongoMocks
+    with ApplicationConfiguration
+    with BeforeAndAfter
+    with OneAppPerSuite
+    with TestSuite {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
   val ws = AhcWSClient()
 
-  def await[T](future : Awaitable[T]) : T = {
-    Await.result(future, 5.seconds)
-  }
+  def await[T](future : Awaitable[T]) : T = Await.result(future, 5.seconds)
+
+  val mockUserFeedRepo = mock[UserFeedRepository]
+  val mockAccountDetailsRepo = mock[AccountDetailsRepository]
+  val mockMongoConnector = mock[MongoConnector]
+  val mockRetrievalRepo = mock[RetrievalRepository]
+  val mockAccountService = mock[AccountService]
+  val mockUserFeedService = mock[UserFeedService]
+  val mockGetDetailsService = mock[GetDetailsService]
+
+  before(
+    reset(mockUserFeedRepo),
+    reset(mockAccountDetailsRepo),
+    reset(mockMongoConnector),
+    reset(mockRetrievalRepo),
+    reset(mockAccountService),
+    reset(mockUserFeedService),
+    reset(mockGetDetailsService)
+  )
 }
