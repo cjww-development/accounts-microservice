@@ -16,6 +16,7 @@
 package controllers
 
 import helpers.CJWWSpec
+import mocks.AuthBuilder
 import models.{BasicDetails, Enrolments, Settings}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
@@ -49,10 +50,8 @@ class UserDetailsControllerSpec extends CJWWSpec {
       Some("/test/uri")
     )
 
-  lazy val request = FakeRequest().withHeaders("appId" -> AUTH_ID, CONTENT_TYPE -> TEXT)
-
   class Setup {
-    val testController = new UserDetailsController(mockGetDetailsService)
+    val testController = new UserDetailsController(mockGetDetailsService, mockAuthConnector)
   }
 
   "getBasicDetails" should {
@@ -61,8 +60,19 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testBasicDetails)))
 
-        val result = testController.getBasicDetails("testUserId")(request)
-        status(result) mustBe OK
+        val request = FakeRequest().withSession(
+          "cookieId"  -> "session-0987654321",
+          "contextId" -> "context-1234567890",
+          "firstName" -> "testFirstName",
+          "lastName"  -> "testLastName"
+        ).withHeaders(
+          "appId" -> AUTH_SERVICE_ID,
+          CONTENT_TYPE -> TEXT
+        )
+
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getBasicDetails("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -71,15 +81,9 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        val result = testController.getBasicDetails("testUserId")(request)
-        status(result) mustBe NOT_FOUND
-      }
-    }
-
-    "return a forbidden" when {
-      "no valid appId is present in the header" in new Setup {
-        val result = testController.getBasicDetails("testUserId")(FakeRequest())
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getBasicDetails("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe NOT_FOUND
+        }
       }
     }
   }
@@ -90,8 +94,9 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testEnrolments)))
 
-        val result = testController.getEnrolments("testUserId")(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getEnrolments("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -100,15 +105,9 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        val result = testController.getEnrolments("testUserId")(request)
-        status(result) mustBe NOT_FOUND
-      }
-    }
-
-    "return a forbidden" when {
-      "no valid appId is present in the header" in new Setup {
-        val result = testController.getEnrolments("testUserId")(FakeRequest())
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getEnrolments("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe NOT_FOUND
+        }
       }
     }
   }
@@ -119,8 +118,9 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getSettings(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testSettings)))
 
-        val result = testController.getSettings("testUserId")(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getSettings("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -129,15 +129,9 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getSettings(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        val result = testController.getSettings("testUserId")(request)
-        status(result) mustBe NOT_FOUND
-      }
-    }
-
-    "return a forbidden" when {
-      "no valid appId is present in the header" in new Setup {
-        val result = testController.getSettings("testUserId")(FakeRequest())
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndGet(testController.getSettings("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe NOT_FOUND
+        }
       }
     }
   }

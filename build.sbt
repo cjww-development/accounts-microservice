@@ -12,7 +12,7 @@ val btVersion: String = {
 
 name := """accounts-microservice"""
 version := btVersion
-scalaVersion := "2.11.8"
+scalaVersion := "2.11.10"
 organization := "com.cjww-dev.libs"
 
 lazy val playSettings : Seq[Setting[_]] = Seq.empty
@@ -33,15 +33,17 @@ lazy val root = (project in file("."))
 PlayKeys.devSettings := Seq("play.server.http.port" -> "8603")
 
 val cjwwDep: Seq[ModuleID] = Seq(
-  "com.cjww-dev.libs" % "data-security_2.11" % "0.3.0",
-  "com.cjww-dev.libs" % "logging_2.11" % "0.1.0",
-  "com.cjww-dev.libs" % "reactive-mongo_2.11" % "0.6.0",
-  "com.cjww-dev.libs" % "bootstrapper_2.11" % "0.2.0"
+  "com.cjww-dev.libs" % "data-security_2.11" % "0.6.0",
+  "com.cjww-dev.libs" % "logging_2.11" % "0.2.0",
+  "com.cjww-dev.libs" % "reactive-mongo_2.11" % "0.7.0",
+  "com.cjww-dev.libs" % "bootstrapper_2.11" % "0.6.0",
+  "com.cjww-dev.libs" % "http-verbs_2.11" % "0.10.0",
+  "com.cjww-dev.libs" % "backend-auth_2.11" % "0.4.0"
 )
 
 val testDep: Seq[ModuleID] = Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0" % Test,
-  "org.mockito" % "mockito-core" % "2.7.17" % Test
+  "org.mockito" % "mockito-core" % "2.7.22" % Test
 )
 
 libraryDependencies ++= cjwwDep

@@ -17,6 +17,7 @@ package controllers
 
 import com.cjwwdev.security.encryption.DataSecurity
 import helpers.CJWWSpec
+import mocks.AuthBuilder
 import models.{EventDetail, FeedItem, SourceDetail}
 import org.joda.time.DateTime
 import org.mockito.Mockito.when
@@ -41,7 +42,7 @@ class UserFeedControllerSpec extends CJWWSpec {
   val testFeedItemJson = Json.toJson(testFeedItem).as[JsObject]
 
   class Setup {
-    val testController = new UserFeedController(mockUserFeedService)
+    val testController = new UserFeedController(mockUserFeedService, mockAuthConnector)
   }
 
   "createEvent" should {
@@ -50,17 +51,20 @@ class UserFeedControllerSpec extends CJWWSpec {
         when(mockUserFeedService.createFeedItem(ArgumentMatchers.any()))
           .thenReturn(Future.successful(false))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[FeedItem](testFeedItem).get
-          )
+          ).withBody(DataSecurity.encryptData[FeedItem](testFeedItem).get)
 
-        val result = testController.createEvent()(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.createEvent(), mockAuthConnector, request) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -69,32 +73,38 @@ class UserFeedControllerSpec extends CJWWSpec {
         when(mockUserFeedService.createFeedItem(ArgumentMatchers.any()))
           .thenReturn(Future.successful(true))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[FeedItem](testFeedItem).get
-          )
+          ).withBody(DataSecurity.encryptData[FeedItem](testFeedItem).get)
 
-        val result = testController.createEvent()(request)
-        status(result) mustBe INTERNAL_SERVER_ERROR
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.createEvent(), mockAuthConnector, request) {
+          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        }
       }
     }
 
     "return a forbidden" when {
       "there was no valid appId in the header" in new Setup {
-        val request = FakeRequest()
-          .withHeaders(
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[FeedItem](testFeedItem).get
-          )
+          ).withBody(DataSecurity.encryptData[FeedItem](testFeedItem).get)
 
-        val result = testController.createEvent()(request)
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.createEvent(), mockAuthConnector, request) {
+          result => status(result) mustBe FORBIDDEN
+        }
       }
     }
   }
@@ -105,14 +115,9 @@ class UserFeedControllerSpec extends CJWWSpec {
         when(mockUserFeedService.getFeedList(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testFeedItemJson)))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
-            CONTENT_TYPE -> TEXT
-          )
-
-        val result = testController.retrieveFeed("testUserId")(request).run()
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndGet(testController.retrieveFeed("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -121,26 +126,9 @@ class UserFeedControllerSpec extends CJWWSpec {
         when(mockUserFeedService.getFeedList(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
-            CONTENT_TYPE -> TEXT
-          )
-
-        val result = testController.retrieveFeed("testUserId")(request).run()
-        status(result) mustBe NOT_FOUND
-      }
-    }
-
-    "return a forbidden" when {
-      "list of feed items is found" in new Setup {
-        val request = FakeRequest()
-          .withHeaders(
-            CONTENT_TYPE -> TEXT
-          )
-
-        val result = testController.retrieveFeed("testUserId")(request).run()
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndGet(testController.retrieveFeed("user-766543"), mockAuthConnector) {
+          result => status(result) mustBe NOT_FOUND
+        }
       }
     }
   }

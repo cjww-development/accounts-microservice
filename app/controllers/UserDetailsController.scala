@@ -18,21 +18,25 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
+import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
+import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{BasicDetails, Enrolments, Settings}
-import play.api.Environment
 import play.api.mvc.{Action, AnyContent}
 import services.GetDetailsService
-import utils.application.{Authorised, BackendController, NotAuthorised}
+import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UserDetailsController @Inject()(detailsService: GetDetailsService) extends BackendController {
+class UserDetailsController @Inject()(detailsService: GetDetailsService, authConnect: AuthConnector) extends BackendController with Authorisation {
+
+  val authConnector = authConnect
+
   def getBasicDetails(userId: String) : Action[AnyContent] = Action.async {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           detailsService.getBasicDetails(userId) map {
             case Some(details) => Ok(DataSecurity.encryptData[BasicDetails](details).get)
@@ -44,7 +48,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService) extends
 
   def getEnrolments(userId: String) : Action[AnyContent] = Action.async {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           detailsService.getEnrolments(userId) map {
             case Some(enrolments) => Ok(DataSecurity.encryptData[Enrolments](enrolments).get)
@@ -56,7 +60,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService) extends
 
   def getSettings(userId : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           detailsService.getSettings(userId) map {
             case Some(settings) => Ok(DataSecurity.encryptData[Settings](settings).get)

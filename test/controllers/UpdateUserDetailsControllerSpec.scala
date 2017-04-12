@@ -18,6 +18,7 @@ package controllers
 import com.cjwwdev.security.encryption.DataSecurity
 import config.ApplicationConfiguration
 import helpers.CJWWSpec
+import mocks.AuthBuilder
 import models.{AccountSettings, UpdatedPassword, UserProfile}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
@@ -51,7 +52,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     )
 
   class Setup {
-    val testController = new UpdateUserDetailsController(mockAccountService)
+    val testController = new UpdateUserDetailsController(mockAccountService, mockAuthConnector)
   }
 
   "updateProfileInformation" should {
@@ -60,17 +61,20 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(false))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UserProfile](testProfile).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
 
-        val result = testController.updateProfileInformation("testUserId")(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -79,32 +83,38 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(true))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UserProfile](testProfile).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
 
-        val result = testController.updateProfileInformation("testUserId")(request)
-        status(result) mustBe INTERNAL_SERVER_ERROR
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        }
       }
     }
 
     "return a forbidden" when {
       "an invalid application is found or none is present in the header" in new Setup {
-        val request = FakeRequest()
-          .withHeaders(
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UserProfile](testProfile).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
 
-        val result = testController.updateProfileInformation("testUserId")(request)
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe FORBIDDEN
+        }
       }
     }
   }
@@ -115,17 +125,20 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(PasswordUpdate(false)))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
 
-        val result = testController.updateUserPassword("testUserId")(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -134,17 +147,20 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(PasswordUpdate(true)))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
 
-        val result = testController.updateUserPassword("testUserId")(request)
-        status(result) mustBe INTERNAL_SERVER_ERROR
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        }
       }
     }
 
@@ -153,32 +169,39 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(InvalidOldPassword))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
 
-        val result = testController.updateUserPassword("testUserId")(request)
-        status(result) mustBe CONFLICT
+
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe CONFLICT
+        }
       }
     }
 
     "return a forbidden" when {
       "an invalid application is found or none is present in the header" in new Setup {
-        val request = FakeRequest()
-          .withHeaders(
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get
-          )
+          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
 
-        val result = testController.updateUserPassword("testUserId")(request)
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe FORBIDDEN
+        }
       }
     }
   }
@@ -189,17 +212,20 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(UpdatedSettingsSuccess))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[AccountSettings](testSettings).get
-          )
+          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
 
-        val result = testController.updateUserSettings("testUserId")(request)
-        status(result) mustBe OK
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe OK
+        }
       }
     }
 
@@ -208,32 +234,38 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
         when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(UpdatedSettingsFailed))
 
-        val request = FakeRequest()
-          .withHeaders(
-            "appId" -> AUTH_ID,
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
+            "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[AccountSettings](testSettings).get
-          )
+          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
 
-        val result = testController.updateUserSettings("testUserId")(request)
-        status(result) mustBe INTERNAL_SERVER_ERROR
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        }
       }
     }
 
     "return a forbidden" when {
       "an invalid application is found or none is present in the header" in new Setup {
-        val request = FakeRequest()
-          .withHeaders(
+        val request =
+          FakeRequest().withSession(
+            "cookieId"  -> "session-0987654321",
+            "contextId" -> "context-1234567890",
+            "firstName" -> "testFirstName",
+            "lastName"  -> "testLastName"
+          ).withHeaders(
             CONTENT_TYPE -> TEXT
-          )
-          .withBody(
-            DataSecurity.encryptData[AccountSettings](testSettings).get
-          )
+          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
 
-        val result = testController.updateUserSettings("testUserId")(request)
-        status(result) mustBe FORBIDDEN
+        AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
+          result => status(result) mustBe FORBIDDEN
+        }
       }
     }
   }

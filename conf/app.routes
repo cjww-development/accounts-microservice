@@ -2,6 +2,8 @@
 # This file defines all application app.routes (Higher priority app.routes first)
 # ~~~~
 
+POST        /account/create-new-user                   controllers.RegistrationController.createNewUser
+
 PATCH       /account/:userId/update-profile            controllers.UpdateUserDetailsController.updateProfileInformation(userId)
 PATCH       /account/:userId/update-password           controllers.UpdateUserDetailsController.updateUserPassword(userId)
 PATCH       /account/:userId/update-settings           controllers.UpdateUserDetailsController.updateUserSettings(userId)
@@ -12,3 +14,6 @@ GET         /account/:userId/settings                  controllers.UserDetailsCo
 GET         /account/:userId/get-user-feed             controllers.UserFeedController.retrieveFeed(userId)
 
 POST        /create-feed-item                          controllers.UserFeedController.createEvent()
+
+GET         /validate/user-name/:username              controllers.ValidationController.validateUserName(username : String)
+GET         /validate/email/:email                     controllers.ValidationController.validateEmail(email : String)

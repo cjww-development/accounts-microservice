@@ -18,43 +18,34 @@ package utils.application
 
 import com.cjwwdev.logging.Logger
 import com.cjwwdev.security.encryption.DataSecurity
-import config.ApplicationConfiguration
 import play.api.libs.json.{Format, Reads}
 import play.api.mvc.{Controller, Request, Result}
 
 import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
-sealed trait AuthorisationResponse
-case object NotAuthorised extends AuthorisationResponse
-case object Authorised extends AuthorisationResponse
-
-trait BackendController extends Controller with ApplicationConfiguration {
+trait BackendController extends Controller {
   protected def decryptRequest[T](f : T => Future[Result])(implicit request : Request[String], manifest: Manifest[T], reads : Reads[T], format : Format[T]) = {
-    Try(DataSecurity.decryptInto[T](request.body)) match {
+    Try(DataSecurity.decryptInto[T](request.body.toString)) match {
+      case Success(Some(data)) =>
+        Logger.info("[BackendController] - [decryptRequest] : Request decryption successful")
+        f(data)
+      case Success(None) => Future.successful(BadRequest)
+      case Failure(e) =>
+        Logger.error(s"[BackendController] - [decryptRequest] : Request body decryption has FAILED BODY: ${request.body.toString}")
+        Future.successful(BadRequest)
+    }
+  }
+
+  protected def decryptUrl[T](enc: String)(f : T => Future[Result])(implicit format : Format[T]) = {
+    Try(DataSecurity.decryptInto[T](enc)) match {
       case Success(Some(data)) =>
         Logger.info("[BackendController] - [decryptRequest] : Request decryption successful")
         f(data)
       case Success(None) => Future.successful(BadRequest)
       case Failure(e) =>
         Logger.error(s"[BackendController] - [decryptRequest] : Request body decryption has FAILED")
-        e.printStackTrace()
         Future.successful(BadRequest)
-    }
-  }
-
-  protected def openActionVerification(f: AuthorisationResponse => Future[Result])(implicit request: Request[_]) = {
-    Try(request.headers("appId")) match {
-      case Success(appId) => appId match {
-        case AUTH_MICROSERVICE_ID | AUTH_ID | DIAG_ID | DEV_ID => f(Authorised)
-        case _ =>
-          Logger.warn("[BackendController] - [checkAuth] : API CALL FROM UNKNOWN SOURCE - ACTION DENIED")
-          f(NotAuthorised)
-      }
-      case Failure(_) =>
-        Logger.error("[BackendController] - [checkAuth] : AppId not found in header")
-        Logger.warn("[BackendController] - [checkAuth] : API CALL FROM UNKNOWN SOURCE - ACTION DENIED")
-        f(NotAuthorised)
     }
   }
 }

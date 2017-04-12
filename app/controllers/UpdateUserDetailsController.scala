@@ -18,19 +18,24 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
+import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
+import com.cjwwdev.auth.connectors.AuthConnector
 import models.{AccountSettings, UpdatedPassword, UserProfile}
 import play.api.mvc.Action
 import services._
-import utils.application.{Authorised, BackendController, NotAuthorised}
+import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UpdateUserDetailsController @Inject()(accountService: AccountService) extends BackendController {
+class UpdateUserDetailsController @Inject()(accountService: AccountService, authConnect: AuthConnector) extends BackendController with Authorisation {
+
+  val authConnector = authConnect
+
   def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           decryptRequest[UserProfile] { profile =>
             accountService.updateProfileInformation(userId, profile) map {
@@ -44,7 +49,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService) exte
 
   def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           decryptRequest[UpdatedPassword] { passwordSet =>
             accountService.updatePassword(userId, passwordSet) map {
@@ -61,7 +66,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService) exte
 
   def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
-      openActionVerification {
+      authorised(userId) {
         case Authorised =>
           decryptRequest[AccountSettings] { settings =>
             accountService.updateSettings(userId, settings) map {

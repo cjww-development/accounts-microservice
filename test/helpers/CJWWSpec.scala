@@ -18,9 +18,10 @@ package helpers
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.mongo.MongoConnector
 import config.ApplicationConfiguration
-import mocks.MongoMocks
+import mocks.{MongoMocks, SessionBuild}
 import org.mockito.Mockito.reset
 import org.scalatest.{BeforeAndAfter, TestSuite}
 import org.scalatest.mockito.MockitoSugar
@@ -39,7 +40,8 @@ trait CJWWSpec
     with ApplicationConfiguration
     with BeforeAndAfter
     with OneAppPerSuite
-    with TestSuite {
+    with TestSuite
+    with SessionBuild {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
@@ -47,6 +49,7 @@ trait CJWWSpec
 
   def await[T](future : Awaitable[T]) : T = Await.result(future, 5.seconds)
 
+  val mockAuthConnector = mock[AuthConnector]
   val mockUserFeedRepo = mock[UserFeedRepository]
   val mockAccountDetailsRepo = mock[AccountDetailsRepository]
   val mockMongoConnector = mock[MongoConnector]
@@ -56,6 +59,7 @@ trait CJWWSpec
   val mockGetDetailsService = mock[GetDetailsService]
 
   before(
+    reset(mockAuthConnector),
     reset(mockUserFeedRepo),
     reset(mockAccountDetailsRepo),
     reset(mockMongoConnector),

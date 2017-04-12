@@ -15,46 +15,44 @@
 // limitations under the License.
 package controllers
 
-import javax.inject.{Inject, Singleton}
-
-import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
+import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.security.encryption.DataSecurity
-import models.FeedItem
-import play.api.libs.json.JsObject
+import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent}
-import services.UserFeedService
-import utils.application.BackendController
+import services.ValidationService
+import utils.application._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class ValidationController @Inject()(validationService : ValidationService, authConnect: AuthConnector) extends BackendController with BaseAuth {
 
   val authConnector = authConnect
 
-  def createEvent() : Action[String] = Action.async(parse.text) {
+  def validateUserName(username : String) : Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[FeedItem] { fi =>
-            userFeedService.createFeedItem(fi) map {
-              case true => InternalServerError
+          decryptUrl[String](username) { userName =>
+            validationService.isUserNameInUse(userName) map {
               case false => Ok
+              case true => Conflict
             }
           }
         case NotAuthorised => Future.successful(Forbidden)
       }
   }
 
-  def retrieveFeed(userId: String) : Action[AnyContent] = Action.async {
+  def validateEmail(email : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(userId) {
+      openActionVerification {
         case Authorised =>
-          userFeedService.getFeedList(userId) map {
-            case Some(json) => Ok(DataSecurity.encryptData[JsObject](json).get)
-            case None => NotFound
+          decryptUrl[String](email) { emailAddress =>
+            validationService.isEmailInUse(emailAddress) map {
+              case false => Ok
+              case true => Conflict
+            }
           }
         case NotAuthorised => Future.successful(Forbidden)
       }

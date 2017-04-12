@@ -15,6 +15,8 @@
 // limitations under the License.
 package models
 
+import java.util.UUID
+
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 
@@ -29,6 +31,11 @@ case class UserAccount(_id : Option[String],
                        settings : Option[Map[String, String]])
 
 object UserAccount {
+
+  def newUser(user : UserAccount) : UserAccount = {
+    user.copy(_id = Some(s"user-${UUID.randomUUID()}"), metadata = Some(Map("createdAt" -> DateTime.now())))
+  }
+
   implicit val dateTimeRead: Reads[DateTime] =
     (__ \ "$date").read[Long].map { dateTime =>
       new DateTime(dateTime, DateTimeZone.UTC)

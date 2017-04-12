@@ -13,19 +13,27 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package config
+package services
 
-import com.cjwwdev.bootstrap.config.BaseConfiguration
+import com.google.inject.{Inject, Singleton}
+import repositories._
 
-trait ApplicationConfiguration extends BaseConfiguration {
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
-  val authMicroservice        = config.getString("routes.auth-microservice")
+@Singleton
+class ValidationService @Inject()(regRepo : RegistrationRepository) {
+  def isUserNameInUse(username : String) : Future[Boolean] = {
+    regRepo.verifyUserName(username) map {
+      case UserNameNotInUse => false
+      case UserNameInUse => true
+    }
+  }
 
-  val databaseUri             = config.getString("mongo.uri")
-
-  val USER_ACCOUNTS           = "user-accounts"
-  val ORG_ACCOUNTS            = "org-accounts"
-  val USER_FEED               = "user-feed"
-
-  val MAX_USER_FEED           = 10
+  def isEmailInUse(email : String) : Future[Boolean] = {
+    regRepo.verifyEmail(email) map {
+      case EmailNotInUse => false
+      case EmailInUse => true
+    }
+  }
 }
