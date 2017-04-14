@@ -13,7 +13,7 @@ val btVersion: String = {
 name := """accounts-microservice"""
 version := btVersion
 scalaVersion := "2.11.10"
-organization := "com.cjww-dev.libs"
+organization := "com.cjww-dev.backends"
 
 lazy val playSettings : Seq[Setting[_]] = Seq.empty
 
@@ -53,3 +53,8 @@ resolvers += "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases"
 resolvers += "cjww-dev" at "http://dl.bintray.com/cjww-development/releases"
 
 herokuAppName in Compile := "cjww-accounts-microservice"
+
+bintrayOrganization := Some("cjww-development")
+bintrayReleaseOnPublish in ThisBuild := false
+bintrayRepository := "releases"
+bintrayOmitLicense := true
