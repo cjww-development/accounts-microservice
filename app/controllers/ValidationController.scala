@@ -28,7 +28,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class ValidationController @Inject()(validationService : ValidationService, authConnect: AuthConnector) extends BackendController with BaseAuth {
 
-  val authConnector = authConnect
+  val authConnector: AuthConnector = authConnect
 
   def validateUserName(username : String) : Action[AnyContent] = Action.async {
     implicit request =>

@@ -15,16 +15,24 @@
 // limitations under the License.
 package services
 
-import com.cjwwdev.mongo.MongoCreateResponse
+import com.cjwwdev.reactivemongo.MongoCreateResponse
 import com.google.inject.{Inject, Singleton}
-import models.UserAccount
-import repositories.RegistrationRepository
+import models.{OrgAccount, UserAccount}
+import repositories.{OrgAccountRepo, OrgAccountRepository, UserAccountRepo, UserAccountRepository}
 
 import scala.concurrent.Future
 
 @Singleton
-class RegistrationService @Inject()(regRepo : RegistrationRepository) {
+class RegistrationService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
+
+  val userAccountStore: UserAccountRepo = userAccountRepository.store
+  val orgAccountstore: OrgAccountRepo = orgAccountRepository.store
+
   def createNewUser(newUser : UserAccount) : Future[MongoCreateResponse] = {
-    regRepo.insertNewUser(UserAccount.newUser(newUser))
+    userAccountStore.insertNewUser(UserAccount.newUser(newUser))
+  }
+
+  def createNewOrgUser(newOrgUser: OrgAccount): Future[MongoCreateResponse] = {
+    orgAccountstore.insertNewOrgUser(OrgAccount.newOrgUser(newOrgUser))
   }
 }

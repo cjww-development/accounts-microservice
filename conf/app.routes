@@ -2,18 +2,31 @@
 # This file defines all application app.routes (Higher priority app.routes first)
 # ~~~~
 
-POST        /account/create-new-user                   controllers.RegistrationController.createNewUser
+POST        /account/create-new-user                                        controllers.RegistrationController.createNewUser
+POST        /account/create-new-org-user                                    controllers.RegistrationController.createNewOrgUser
 
-PATCH       /account/:userId/update-profile            controllers.UpdateUserDetailsController.updateProfileInformation(userId)
-PATCH       /account/:userId/update-password           controllers.UpdateUserDetailsController.updateUserPassword(userId)
-PATCH       /account/:userId/update-settings           controllers.UpdateUserDetailsController.updateUserSettings(userId)
+PATCH       /account/:userId/update-profile                                 controllers.UpdateUserDetailsController.updateProfileInformation(userId)
+PATCH       /account/:userId/update-password                                controllers.UpdateUserDetailsController.updateUserPassword(userId)
+PATCH       /account/:userId/update-settings                                controllers.UpdateUserDetailsController.updateUserSettings(userId)
 
-GET         /account/:userId/basic-details             controllers.UserDetailsController.getBasicDetails(userId)
-GET         /account/:userId/enrolments                controllers.UserDetailsController.getEnrolments(userId)
-GET         /account/:userId/settings                  controllers.UserDetailsController.getSettings(userId)
-GET         /account/:userId/get-user-feed             controllers.UserFeedController.retrieveFeed(userId)
+GET         /account/:userId/basic-details                                  controllers.UserDetailsController.getBasicDetails(userId)
+GET         /account/:userId/enrolments                                     controllers.UserDetailsController.getEnrolments(userId)
+GET         /account/:userId/settings                                       controllers.UserDetailsController.getSettings(userId)
+GET         /account/:userId/get-user-feed                                  controllers.UserFeedController.retrieveFeed(userId)
 
-POST        /create-feed-item                          controllers.UserFeedController.createEvent()
+GET         /account/:orgId/org-basic-details                               controllers.UserDetailsController.getOrgBasicDetails(orgId)
+GET         /account/:orgId/teachers                                        controllers.OrgAccountController.getOrganisationsTeachers(orgId)
 
-GET         /validate/user-name/:username              controllers.ValidationController.validateUserName(username : String)
-GET         /validate/email/:email                     controllers.ValidationController.validateEmail(email : String)
+POST        /create-feed-item                                               controllers.UserFeedController.createEvent()
+
+GET         /validate/user-name/:username                                   controllers.ValidationController.validateUserName(username : String)
+GET         /validate/email/:email                                          controllers.ValidationController.validateEmail(email : String)
+GET         /validate/school/:orgUserName                                   controllers.DeversityController.findSchool(orgUserName)
+GET         /validate/teacher/:userName/school/:schoolName                  controllers.DeversityController.findTeacher(userName, schoolName)
+
+GET         /school/:orgUserName/details                                    controllers.DeversityController.getSchoolDetails(orgUserName)
+GET         /teacher/:userName/school/:schoolName/details                   controllers.DeversityController.getTeacherDetails(userName, schoolName)
+
+GET         /account/:userId/deversity-info                                 controllers.DeversityController.getDeversityInformation(userId)
+PATCH       /account/:userId/deversity-info                                 controllers.DeversityController.updateDeversityInformation(userId)
+PATCH       /account/:userId/deversity-id                                   controllers.DeversityController.updatedDeversityId(userId)

@@ -15,29 +15,54 @@
 // limitations under the License.
 package services
 
-import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import helpers.CJWWSpec
-import models.UserAccount
+import models.{OrgAccount, UserAccount}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import repositories.RegistrationRepository
+import repositories.{OrgAccountRepo, UserAccountRepo}
 
 import scala.concurrent.Future
 
 class RegistrationServiceSpec extends CJWWSpec {
 
-  val mockRepo = mock[RegistrationRepository]
+  val user = UserAccount(
+    None,
+    "testFirstName",
+    "testLastName",
+    "testUserName",
+    "test@email.com",
+    "testPass",
+    None,
+    None,
+    None,
+    None
+  )
 
-  val user = UserAccount(None, "testFirstName", "testLastName", "testUserName", "test@email.com", "testPass", None, None, None)
+  val orgUser = OrgAccount(
+    None,
+    "testOrgName",
+    "TI",
+    "testOrgUserName",
+    "testLocation",
+    "test@email.com",
+    Some("testCredentialType"),
+    "testPass",
+    None,
+    None
+  )
 
   class Setup {
-    val testService = new RegistrationService(mockRepo)
+    val testService = new RegistrationService(mockUserAccountRepo, mockOrgAccountRepo) {
+      override val userAccountStore: UserAccountRepo = mockUserAccountStore
+      override val orgAccountstore: OrgAccountRepo = mockOrgAccountStore
+    }
   }
 
   "createNewUser" should {
     "return a MongoSuccessCreate" when {
       "the given user has been inserted into the database" in new Setup {
-        when(mockRepo.insertNewUser(ArgumentMatchers.any[UserAccount]()))
+        when(mockUserAccountStore.insertNewUser(ArgumentMatchers.any[UserAccount]()))
           .thenReturn(Future.successful(MongoSuccessCreate))
 
         val result = await(testService.createNewUser(user))
@@ -47,10 +72,32 @@ class RegistrationServiceSpec extends CJWWSpec {
 
     "return a MongoFailedCreate" when {
       "there were problems inserting the given into the database" in new Setup {
-        when(mockRepo.insertNewUser(ArgumentMatchers.any[UserAccount]()))
+        when(mockUserAccountStore.insertNewUser(ArgumentMatchers.any[UserAccount]()))
           .thenReturn(Future.successful(MongoFailedCreate))
 
         val result = await(testService.createNewUser(user))
+        result mustBe MongoFailedCreate
+      }
+    }
+  }
+
+  "createNewOrgUser" should {
+    "return a MongoSuccessCreate" when {
+      "the given org user has been inserted into the database" in new Setup {
+        when(mockOrgAccountStore.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
+          .thenReturn(Future.successful(MongoSuccessCreate))
+
+        val result = await(testService.createNewOrgUser(orgUser))
+        result mustBe MongoSuccessCreate
+      }
+    }
+
+    "return a MongoFailedCreate" when {
+      "there were problems inserting the given org user into the database" in new Setup {
+        when(mockOrgAccountStore.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
+          .thenReturn(Future.successful(MongoFailedCreate))
+
+        val result = await(testService.createNewOrgUser(orgUser))
         result mustBe MongoFailedCreate
       }
     }

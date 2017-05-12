@@ -13,13 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+package config
 
-package models
+sealed trait UserNameUse
+case object UserNameInUse extends UserNameUse
+case object UserNameNotInUse extends UserNameUse
 
-import play.api.libs.json.{Json, OFormat}
-
-case class AccountSettings(settings : Map[String, String])
-
-object AccountSettings {
-  implicit val format: OFormat[AccountSettings] = Json.format[AccountSettings]
-}
+sealed trait EmailUse
+case object EmailInUse extends EmailUse
+case object EmailNotInUse extends EmailUse

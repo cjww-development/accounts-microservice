@@ -18,26 +18,49 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.mongo._
-import config.ApplicationConfiguration
+import com.cjwwdev.reactivemongo.{MongoConnector, MongoCreateResponse, MongoRepository, MongoSuccessCreate}
+import config.Exceptions.FailedToCreateException
 import models.FeedItem
 import play.api.libs.json.OFormat
+import reactivemongo.api.DB
+import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
+import reactivemongo.play.json._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class UserFeedRepository @Inject()(mongoConnector: MongoConnector) extends ApplicationConfiguration {
+class UserFeedRepository @Inject()() extends MongoConnector {
+  val store = new UserFeedRepo(db)
+}
+
+class UserFeedRepo(db: () => DB) extends MongoRepository("user-feed", db) {
+
+  override def indexes: Seq[Index] = Seq(
+    Index(
+      key = Seq("feedId" -> IndexType.Ascending),
+      name = Some("FeedId"),
+      unique = true,
+      sparse = false
+    ),
+    Index(
+      key = Seq("userId" -> IndexType.Ascending),
+      name = Some("UserId"),
+      unique = true,
+      sparse = false
+    )
+  )
+
+  private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
+
   def createFeedItem(feedItem : FeedItem)(implicit format : OFormat[FeedItem]) : Future[MongoCreateResponse] = {
-    mongoConnector.create[FeedItem](USER_FEED, feedItem.withId)
+    collection.insert(feedItem.withId) map { writeResult =>
+      if(writeResult.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create feed item")
+    }
   }
 
-  def getFeedItems(userId : String) : Future[Option[List[FeedItem]]] = {
-    val query = BSONDocument("userId" -> userId)
-    mongoConnector.readBulk[FeedItem](USER_FEED, query) map {
-      case MongoSuccessRead(result) => Some(result.asInstanceOf[List[FeedItem]])
-      case MongoFailedRead => None
-    }
+  def getFeedItems(userId : String) : Future[List[FeedItem]] = {
+    collection.find(userIdSelector(userId)).cursor[FeedItem]().collect[List]()
   }
 }

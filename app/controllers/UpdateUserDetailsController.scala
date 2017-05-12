@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import models.{AccountSettings, UpdatedPassword, UserProfile}
 import play.api.mvc.Action
 import services._
@@ -31,7 +32,7 @@ import scala.concurrent.Future
 @Singleton
 class UpdateUserDetailsController @Inject()(accountService: AccountService, authConnect: AuthConnector) extends BackendController with Authorisation {
 
-  val authConnector = authConnect
+  val authConnector: AuthConnector = authConnect
 
   def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
@@ -39,8 +40,8 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService, auth
         case Authorised =>
           decryptRequest[UserProfile] { profile =>
             accountService.updateProfileInformation(userId, profile) map {
-              case false => Ok
-              case true => InternalServerError
+              case MongoSuccessUpdate => Ok
+              case MongoFailedUpdate  => InternalServerError
             }
           }
         case NotAuthorised => Future.successful(Forbidden)
@@ -54,10 +55,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService, auth
           decryptRequest[UpdatedPassword] { passwordSet =>
             accountService.updatePassword(userId, passwordSet) map {
               case InvalidOldPassword => Conflict
-              case PasswordUpdate(success) => success match {
-                case true => InternalServerError
-                case false => Ok
-              }
+              case PasswordUpdate(success) => if(success) Ok else InternalServerError
             }
           }
         case NotAuthorised => Future.successful(Forbidden)

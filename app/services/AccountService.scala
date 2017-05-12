@@ -18,9 +18,9 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.mongo.{MongoFailedUpdate, MongoSuccessUpdate}
+import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate, MongoUpdatedResponse}
 import models.{AccountSettings, UpdatedPassword, UserProfile}
-import repositories.AccountDetailsRepository
+import repositories.{UserAccountRepo, UserAccountRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -34,28 +34,28 @@ case object UpdatedSettingsSuccess extends UpdatedSettingsResponse
 case object UpdatedSettingsFailed extends UpdatedSettingsResponse
 
 @Singleton
-class AccountService @Inject()(accountDetailsRepo : AccountDetailsRepository) {
-  def updateProfileInformation(userId: String, userProfile: UserProfile) : Future[Boolean] = {
-    accountDetailsRepo.updateAccountData(userId, userProfile) map {
-      case MongoFailedUpdate => true
-      case MongoSuccessUpdate => false
-    }
+class AccountService @Inject()(userAccountRepository: UserAccountRepository) {
+
+  val userAccountStore: UserAccountRepo = userAccountRepository.store
+
+  def updateProfileInformation(userId: String, userProfile: UserProfile) : Future[MongoUpdatedResponse] = {
+    userAccountStore.updateAccountData(userId, userProfile)
   }
 
   def updatePassword(userId: String, passwordSet : UpdatedPassword) : Future[UpdatedPasswordResponse] = {
-    accountDetailsRepo.findPassword(userId, passwordSet) flatMap {
-      case false => Future.successful(InvalidOldPassword)
-      case true => accountDetailsRepo.updatePassword(userId, passwordSet) map {
-        case MongoFailedUpdate => PasswordUpdate(true)
-        case MongoSuccessUpdate => PasswordUpdate(false)
+    userAccountStore.findPassword(userId, passwordSet) flatMap {
+      case false  => Future.successful(InvalidOldPassword)
+      case true   => userAccountStore.updatePassword(userId, passwordSet) map {
+        case MongoSuccessUpdate => PasswordUpdate(true)
+        case MongoFailedUpdate  => PasswordUpdate(false)
       }
     }
   }
 
   def updateSettings(userId: String, accountSettings : AccountSettings) : Future[UpdatedSettingsResponse] = {
-    accountDetailsRepo.updateSettings(userId, accountSettings) map {
-      case MongoFailedUpdate => UpdatedSettingsFailed
-      case MongoSuccessUpdate => UpdatedSettingsSuccess
+    userAccountStore.updateSettings(userId, accountSettings) map {
+      case MongoFailedUpdate    => UpdatedSettingsFailed
+      case MongoSuccessUpdate   => UpdatedSettingsSuccess
     }
   }
 }

@@ -15,6 +15,7 @@
 // limitations under the License.
 package controllers
 
+import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.security.encryption.DataSecurity
 import config.ApplicationConfiguration
 import helpers.CJWWSpec
@@ -59,7 +60,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an ok" when {
       "a valid userId is given the profile has been updated" in new Setup {
         when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(false))
+          .thenReturn(Future.successful(MongoSuccessUpdate))
 
         val request =
           FakeRequest().withSession(
@@ -81,7 +82,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an internal server error" when {
       "there was a problem updating the users profile information" in new Setup {
         when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(true))
+          .thenReturn(Future.successful(MongoFailedUpdate))
 
         val request =
           FakeRequest().withSession(
@@ -123,7 +124,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an ok" when {
       "the users password has been updated" in new Setup {
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdate(false)))
+          .thenReturn(Future.successful(PasswordUpdate(true)))
 
         val request =
           FakeRequest().withSession(
@@ -145,7 +146,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an internal server error" when {
       "there was a problem updating the users password" in new Setup {
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdate(true)))
+          .thenReturn(Future.successful(PasswordUpdate(false)))
 
         val request =
           FakeRequest().withSession(

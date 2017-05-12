@@ -19,7 +19,6 @@ package helpers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.mongo.MongoConnector
 import config.ApplicationConfiguration
 import mocks.{MongoMocks, SessionBuild}
 import org.mockito.Mockito.reset
@@ -27,8 +26,8 @@ import org.scalatest.{BeforeAndAfter, TestSuite}
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.{OneAppPerSuite, PlaySpec}
 import play.api.libs.ws.ahc.AhcWSClient
-import repositories.{AccountDetailsRepository, RetrievalRepository, UserFeedRepository}
-import services.{AccountService, GetDetailsService, UserFeedService}
+import repositories._
+import services.{AccountService, GetDetailsService, OrgAccountService, UserFeedService}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Awaitable}
@@ -49,23 +48,32 @@ trait CJWWSpec
 
   def await[T](future : Awaitable[T]) : T = Await.result(future, 5.seconds)
 
-  val mockAuthConnector = mock[AuthConnector]
+  val mockUserAccountRepo = mock[UserAccountRepository]
+  val mockUserAccountStore = mock[UserAccountRepo]
+
+  val mockOrgAccountRepo = mock[OrgAccountRepository]
+  val mockOrgAccountStore = mock[OrgAccountRepo]
+
   val mockUserFeedRepo = mock[UserFeedRepository]
-  val mockAccountDetailsRepo = mock[AccountDetailsRepository]
-  val mockMongoConnector = mock[MongoConnector]
-  val mockRetrievalRepo = mock[RetrievalRepository]
+  val mockUserFeedStore = mock[UserFeedRepo]
+
+  val mockAuthConnector = mock[AuthConnector]
+
   val mockAccountService = mock[AccountService]
-  val mockUserFeedService = mock[UserFeedService]
   val mockGetDetailsService = mock[GetDetailsService]
+  val mockUserFeedService = mock[UserFeedService]
+
+  val mockOrgAccountService = mock[OrgAccountService]
 
   before(
+    reset(mockUserAccountRepo),
+    reset(mockUserAccountStore),
+    reset(mockOrgAccountStore),
+    reset(mockOrgAccountStore),
     reset(mockAuthConnector),
-    reset(mockUserFeedRepo),
-    reset(mockAccountDetailsRepo),
-    reset(mockMongoConnector),
-    reset(mockRetrievalRepo),
     reset(mockAccountService),
+    reset(mockGetDetailsService),
     reset(mockUserFeedService),
-    reset(mockGetDetailsService)
+    reset(mockOrgAccountService)
   )
 }

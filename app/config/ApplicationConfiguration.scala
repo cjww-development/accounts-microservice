@@ -13,19 +13,12 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package config
 
 import com.cjwwdev.bootstrap.config.BaseConfiguration
 
 trait ApplicationConfiguration extends BaseConfiguration {
-
-  val authMicroservice        = config.getString("routes.auth-microservice")
-
-  val databaseUri             = config.getString("mongo.uri")
-
-  val USER_ACCOUNTS           = "user-accounts"
-  val ORG_ACCOUNTS            = "org-accounts"
-  val USER_FEED               = "user-feed"
-
-  val MAX_USER_FEED           = 10
+  val authMicroservice: String  = config.getString("routes.auth-microservice")
+  val MAX_USER_FEED             = 10
 }

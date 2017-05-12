@@ -15,11 +15,11 @@
 // limitations under the License.
 package services
 
-import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import helpers.CJWWSpec
 import models.{EventDetail, FeedItem, SourceDetail}
 import org.joda.time.DateTime
-import repositories.UserFeedRepository
+import repositories.{UserFeedRepo, UserFeedRepository}
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers
 import play.api.libs.json.{JsObject, Json}
@@ -77,13 +77,15 @@ class UserFeedServiceSpec extends CJWWSpec {
   val testFeedList = List(testFeedItem, testFeedItem2)
 
   class Setup {
-    val testService = new UserFeedService(mockUserFeedRepo)
+    val testService = new UserFeedService(mockUserFeedRepo) {
+      override val userFeedStore: UserFeedRepo = mockUserFeedStore
+    }
   }
 
   "createFeedItem" should {
     "return false" when {
       "the feed item has been successfully created" in new Setup {
-        when(mockUserFeedRepo.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserFeedStore.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoSuccessCreate))
 
         val result = await(testService.createFeedItem(testFeedItem))
@@ -93,7 +95,7 @@ class UserFeedServiceSpec extends CJWWSpec {
 
     "return true" when {
       "there was a problem creating the feed item" in new Setup {
-        when(mockUserFeedRepo.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserFeedStore.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoFailedCreate))
 
         val result = await(testService.createFeedItem(testFeedItem))
@@ -105,14 +107,14 @@ class UserFeedServiceSpec extends CJWWSpec {
   "flipList" should {
     "return a reversed list" when {
       "given an optional list" in new Setup {
-        val result = testService.flipList(Some(testFeedList))
+        val result = testService.flipList(testFeedList)
         result mustBe Some(testFeedList.reverse)
       }
     }
 
     "return none" when {
-      "the given list is not defined" in new Setup {
-        val result = testService.flipList(None)
+      "the given list is empty" in new Setup {
+        val result = testService.flipList(List())
         result mustBe None
       }
     }
@@ -121,8 +123,8 @@ class UserFeedServiceSpec extends CJWWSpec {
   "getFeedList" should {
     "return a JsObject with a feed-array JsArray in it" when {
       "given a userId" in new Setup {
-        when(mockUserFeedRepo.getFeedItems(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(Some(List(testFeedItem))))
+        when(mockUserFeedStore.getFeedItems(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(List(testFeedItem)))
 
         val result = await(testService.getFeedList("testUserId"))
         result.get.value.contains("feed-array") mustBe true

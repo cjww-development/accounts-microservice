@@ -18,8 +18,13 @@ package models
 
 import play.api.libs.json.{Json, OFormat}
 
-case class AccountSettings(settings : Map[String, String])
+case class DeversityEnrolment(statusConfirmed: String,
+                              schoolName: String,
+                              role: String,
+                              title: Option[String],
+                              room: Option[String],
+                              teacher: Option[String])
 
-object AccountSettings {
-  implicit val format: OFormat[AccountSettings] = Json.format[AccountSettings]
+object DeversityEnrolment {
+  implicit val format: OFormat[DeversityEnrolment] = Json.format[DeversityEnrolment]
 }

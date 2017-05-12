@@ -17,7 +17,7 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import models.FeedItem
 import play.api.libs.json.{JsObject, Json}
 import repositories.UserFeedRepository
@@ -27,30 +27,32 @@ import scala.concurrent.Future
 
 @Singleton
 class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
+
+  val userFeedStore = userFeedRepository.store
+
   private val MIN = 0
   private val MAX = 10
 
   def createFeedItem(feedItem: FeedItem) : Future[Boolean] = {
-    userFeedRepository.createFeedItem(feedItem) map {
+    userFeedStore.createFeedItem(feedItem) map {
       case MongoSuccessCreate => false
       case MongoFailedCreate => true
     }
   }
 
-  def flipList(list : Option[List[FeedItem]]) : Option[List[FeedItem]] = {
-    list match {
-      case Some(feedList) => Some(feedList.reverse.slice(MIN, MAX))
-      case None => None
+  def flipList(list : List[FeedItem]) : Option[List[FeedItem]] = {
+    if(list.nonEmpty) {
+      Some(list.reverse.slice(MIN, MAX))
+    } else {
+      None
     }
   }
 
   def getFeedList(userId : String) : Future[Option[JsObject]] = {
-    userFeedRepository.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
+    userFeedStore.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
   }
 
   private def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {
-    for {
-      fi <- list
-    } yield Json.obj("feed-array" -> fi)
+    for(fi <- list) yield Json.obj("feed-array" -> fi)
   }
 }

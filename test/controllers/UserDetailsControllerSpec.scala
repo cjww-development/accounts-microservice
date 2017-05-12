@@ -51,14 +51,14 @@ class UserDetailsControllerSpec extends CJWWSpec {
     )
 
   class Setup {
-    val testController = new UserDetailsController(mockGetDetailsService, mockAuthConnector)
+    val testController = new UserDetailsController(mockGetDetailsService, mockOrgAccountService, mockAuthConnector)
   }
 
   "getBasicDetails" should {
     "return an ok" when {
       "the users basic details have been found" in new Setup {
         when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(Some(testBasicDetails)))
+          .thenReturn(Future.successful(testBasicDetails))
 
         val request = FakeRequest().withSession(
           "cookieId"  -> "session-0987654321",
@@ -72,17 +72,6 @@ class UserDetailsControllerSpec extends CJWWSpec {
 
         AuthBuilder.buildAuthorisedUserAndGet(testController.getBasicDetails("user-766543"), mockAuthConnector) {
           result => status(result) mustBe OK
-        }
-      }
-    }
-
-    "return a not found" when {
-      "no basic details have been found" in new Setup {
-        when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(None))
-
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getBasicDetails("user-766543"), mockAuthConnector) {
-          result => status(result) mustBe NOT_FOUND
         }
       }
     }

@@ -37,8 +37,11 @@ object AuthBuilder extends SessionBuild {
       "context-1234567890",
       User(
         "user-766543",
-        "testFirstName",
-        "testLastName"
+        Some("testFirstName"),
+        Some("testLastName"),
+        None,
+        "individual",
+        None
       ),
       "testLink",
       "testLink",

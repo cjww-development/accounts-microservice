@@ -14,12 +14,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package models
+package config
 
-import play.api.libs.json.{Json, OFormat}
+import scala.util.control.NoStackTrace
 
-case class AccountSettings(settings : Map[String, String])
+object Exceptions {
+  class MissingAccountException(msg: String) extends NoStackTrace
+  class FailedToUpdateException(msg: String) extends NoStackTrace
+  class FailedToCreateException(msg: String) extends NoStackTrace
 
-object AccountSettings {
-  implicit val format: OFormat[AccountSettings] = Json.format[AccountSettings]
+  class OrganisationNotFoundException(msg: String) extends NoStackTrace
+  class FeedListEmptyException(msg: String) extends NoStackTrace
 }

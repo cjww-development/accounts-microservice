@@ -15,11 +15,11 @@
 // limitations under the License.
 package services
 
-import com.cjwwdev.mongo.{MongoFailedRead, MongoSuccessRead}
 import helpers.CJWWSpec
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
+import repositories.UserAccountRepo
 
 import scala.concurrent.Future
 
@@ -33,6 +33,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
       "testUser",
       "test@email.com",
       "testPassword",
+      None,
       None,
       Some(Enrolments(
         Some("testOtherId"),
@@ -54,6 +55,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
       "testUser",
       "test@email.com",
       "testPassword",
+      None,
       None,
       Some(Enrolments(
         Some("testOtherId"),
@@ -87,27 +89,19 @@ class GetDetailsServiceSpec extends CJWWSpec {
     )
 
   class Setup {
-    val testService = new GetDetailsService(mockRetrievalRepo)
+    val testService = new GetDetailsService(mockUserAccountRepo) {
+      override val userAccountStore: UserAccountRepo = mockUserAccountStore
+    }
   }
 
   "getBasicDetails" should {
     "return a basic details" when {
       "given a userId" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoSuccessRead(testAccount)))
+        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+          .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getBasicDetails("testId"))
-        result mustBe Some(testBasicDetails)
-      }
-    }
-
-    "return None" when {
-      "given a userId but there was no matching account" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoFailedRead))
-
-        val result = await(testService.getBasicDetails("testId"))
-        result mustBe None
+        result mustBe testBasicDetails
       }
     }
   }
@@ -115,21 +109,11 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getEnrolments" should {
     "return an enrolments model" when {
       "given a userId" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoSuccessRead(testAccount)))
+        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+          .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getEnrolments("testId"))
         result mustBe Some(testEnrolments)
-      }
-    }
-
-    "return none" when {
-      "given a userId but there was no matching account" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoFailedRead))
-
-        val result = await(testService.getEnrolments("testId"))
-        result mustBe None
       }
     }
   }
@@ -137,8 +121,8 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getSettings" should {
     "return a settings map" when {
       "given a userId" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoSuccessRead(testAccount)))
+        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+          .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getSettings("testId"))
         result mustBe Some(testSettings)
@@ -147,18 +131,8 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
     "return no settings map" when {
       "given a userId" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoSuccessRead(testAccount2)))
-
-        val result = await(testService.getSettings("testId"))
-        result mustBe None
-      }
-    }
-
-    "return none" when {
-      "given a userId but there was no matching account" in new Setup {
-        when(mockRetrievalRepo.getAccount(ArgumentMatchers.anyString()))
-          .thenReturn(Future.successful(MongoFailedRead))
+        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+          .thenReturn(Future.successful(testAccount2))
 
         val result = await(testService.getSettings("testId"))
         result mustBe None

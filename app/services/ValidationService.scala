@@ -16,24 +16,33 @@
 package services
 
 import com.google.inject.{Inject, Singleton}
+import config.{EmailInUse, UserNameInUse}
 import repositories._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class ValidationService @Inject()(regRepo : RegistrationRepository) {
+class ValidationService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
+
+  val userAccountStore: UserAccountRepo = userAccountRepository.store
+  val orgAccountStore: OrgAccountRepo = orgAccountRepository.store
+
   def isUserNameInUse(username : String) : Future[Boolean] = {
-    regRepo.verifyUserName(username) map {
-      case UserNameNotInUse => false
-      case UserNameInUse => true
+    for {
+      user  <- userAccountStore.verifyUserName(username)
+      org   <- orgAccountStore.verifyUserName(username)
+    } yield {
+      if(user == UserNameInUse || org == UserNameInUse) true else false
     }
   }
 
   def isEmailInUse(email : String) : Future[Boolean] = {
-    regRepo.verifyEmail(email) map {
-      case EmailNotInUse => false
-      case EmailInUse => true
+    for {
+      user  <- userAccountStore.verifyEmail(email)
+      org   <- orgAccountStore.verifyEmail(email)
+    } yield {
+      if(user == EmailInUse || org == EmailInUse) true else false
     }
   }
 }

@@ -13,6 +13,7 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package models
 
 import java.util.UUID
@@ -20,21 +21,20 @@ import java.util.UUID
 import org.joda.time.{DateTime, DateTimeZone}
 import play.api.libs.json._
 
-case class UserAccount(userId : Option[String],
-                       firstName : String,
-                       lastName : String,
-                       userName : String,
-                       email : String,
-                       password : String,
-                       deversityDetails: Option[DeversityEnrolment],
-                       metadata : Option[Map[String, DateTime]],
-                       enrolments: Option[Enrolments],
-                       settings : Option[Map[String, String]])
+case class OrgAccount(orgId: Option[String],
+                      orgName: String,
+                      initials: String,
+                      orgUserName: String,
+                      location: String,
+                      orgEmail: String,
+                      credentialType: Option[String],
+                      password: String,
+                      metaData: Option[Map[String, DateTime]],
+                      settings: Option[Map[String, String]])
 
-object UserAccount {
-
-  def newUser(user : UserAccount) : UserAccount = {
-    user.copy(userId = Some(s"user-${UUID.randomUUID()}"), metadata = Some(Map("createdAt" -> DateTime.now())))
+object OrgAccount {
+  def newOrgUser(orgAccount: OrgAccount): OrgAccount = {
+    orgAccount.copy(orgId = Some(s"org-user-${UUID.randomUUID()}"), credentialType = Some("organisation"),metaData = Some(Map("createdAt" -> DateTime.now())))
   }
 
   implicit val dateTimeRead: Reads[DateTime] =
@@ -48,16 +48,11 @@ object UserAccount {
     )
   }
 
-  implicit val formatEnr = Json.format[Enrolments]
-  implicit val format = Json.format[UserAccount]
+  implicit val format = Json.format[OrgAccount]
 }
 
-case class BasicDetails(firstName : String,
-                        lastName : String,
-                        userName : String,
-                        email : String,
-                        metadata : Option[Map[String, DateTime]])
+case class OrgDetails(orgName: String, initials: String, location: String)
 
-object BasicDetails {
-  implicit val format = Json.format[BasicDetails]
+object OrgDetails {
+  implicit val format = Json.format[OrgDetails]
 }

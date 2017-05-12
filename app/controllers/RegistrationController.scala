@@ -16,9 +16,9 @@
 package controllers
 
 import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
-import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import com.google.inject.{Inject, Singleton}
-import models.UserAccount
+import models.{OrgAccount, UserAccount}
 import play.api.mvc.Action
 import services.RegistrationService
 import utils.application.BackendController
@@ -35,8 +35,22 @@ class RegistrationController @Inject()(registrationService : RegistrationService
         case Authorised =>
           decryptRequest[UserAccount] { user =>
             registrationService.createNewUser(user) map {
-              case MongoSuccessCreate => Created
-              case MongoFailedCreate => InternalServerError
+              case MongoSuccessCreate   => Created
+              case MongoFailedCreate    => InternalServerError
+            }
+          }
+        case NotAuthorised => Future.successful(Forbidden)
+      }
+  }
+
+  def createNewOrgUser: Action[String] = Action.async(parse.text) {
+    implicit request =>
+      openActionVerification {
+        case Authorised =>
+          decryptRequest[OrgAccount] { orgUser =>
+            registrationService.createNewOrgUser(orgUser) map {
+              case MongoSuccessCreate   => Created
+              case MongoFailedCreate    => InternalServerError
             }
           }
         case NotAuthorised => Future.successful(Forbidden)

@@ -14,20 +14,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package repositories
+package models
 
-import javax.inject.{Inject, Singleton}
+import play.api.libs.json.Json
 
-import com.cjwwdev.mongo.{MongoConnector, MongoReadResponse}
-import config.ApplicationConfiguration
-import models.UserAccount
-import reactivemongo.bson.BSONDocument
+case class TeacherDetails(title: String, lastName: String, room: String, status: String)
 
-import scala.concurrent.Future
-
-@Singleton
-class RetrievalRepository @Inject()(mongoConnector: MongoConnector) extends ApplicationConfiguration {
-  def getAccount(userId : String) : Future[MongoReadResponse] = {
-    mongoConnector.read[UserAccount](USER_ACCOUNTS, BSONDocument("_id" -> userId))
-  }
+object TeacherDetails {
+  implicit val format = Json.format[TeacherDetails]
 }

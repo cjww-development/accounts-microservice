@@ -21,26 +21,29 @@ import javax.inject.{Inject, Singleton}
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.security.encryption.DataSecurity
-import models.{BasicDetails, Enrolments, Settings}
+import models.{BasicDetails, Enrolments, OrgDetails, Settings}
 import play.api.mvc.{Action, AnyContent}
-import services.GetDetailsService
+import services.{GetDetailsService, OrgAccountService}
 import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UserDetailsController @Inject()(detailsService: GetDetailsService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class UserDetailsController @Inject()(detailsService: GetDetailsService,
+                                      orgDetailsService: OrgAccountService,
+                                      authConnect: AuthConnector) extends BackendController with Authorisation {
 
-  val authConnector = authConnect
+  val authConnector: AuthConnector = authConnect
 
   def getBasicDetails(userId: String) : Action[AnyContent] = Action.async {
     implicit request =>
       authorised(userId) {
         case Authorised =>
-          detailsService.getBasicDetails(userId) map {
-            case Some(details) => Ok(DataSecurity.encryptData[BasicDetails](details).get)
-            case None => NotFound
+          detailsService.getBasicDetails(userId) map { details =>
+             Ok(DataSecurity.encryptData[BasicDetails](details).get)
+          } recover {
+            case _: Throwable => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)
       }
@@ -64,6 +67,18 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService, authCon
         case Authorised =>
           detailsService.getSettings(userId) map {
             case Some(settings) => Ok(DataSecurity.encryptData[Settings](settings).get)
+            case None => NotFound
+          }
+        case NotAuthorised => Future.successful(Forbidden)
+      }
+  }
+
+  def getOrgBasicDetails(orgId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      authorised(orgId) {
+        case Authorised =>
+          orgDetailsService.getOrganisationBasicDetails(orgId) map {
+            case Some(details) => Ok(DataSecurity.encryptData[OrgDetails](details).get)
             case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)

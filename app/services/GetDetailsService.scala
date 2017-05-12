@@ -18,35 +18,27 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.mongo.{MongoFailedRead, MongoSuccessRead}
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
-import repositories.RetrievalRepository
+import repositories.{UserAccountRepo, UserAccountRepository}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class GetDetailsService @Inject()(retrievalRepository : RetrievalRepository) {
+class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) {
 
-  def getBasicDetails(userId : String) : Future[Option[BasicDetails]] = {
-    retrievalRepository.getAccount(userId) map {
-      case MongoSuccessRead(account) => Some(extractBasicDetails(account.asInstanceOf[UserAccount]))
-      case MongoFailedRead => None
-    }
+  val userAccountStore: UserAccountRepo = userAccountRepository.store
+
+  def getBasicDetails(userId : String) : Future[BasicDetails] = {
+    userAccountStore.getAccount(userId) map(acc => extractBasicDetails(acc))
   }
 
   def getEnrolments(userId : String) : Future[Option[Enrolments]] = {
-    retrievalRepository.getAccount(userId) map {
-      case MongoSuccessRead(account) => extractEnrolments(account.asInstanceOf[UserAccount])
-      case MongoFailedRead => None
-    }
+    userAccountStore.getAccount(userId) map(acc => extractEnrolments(acc))
   }
 
   def getSettings(userId : String) : Future[Option[Settings]] = {
-    retrievalRepository.getAccount(userId) map {
-      case MongoSuccessRead(account) => extractSettings(account.asInstanceOf[UserAccount])
-      case MongoFailedRead => None
-    }
+    userAccountStore.getAccount(userId) map(acc => extractSettings(acc))
   }
 
   private def extractBasicDetails(user : UserAccount) : BasicDetails = {
@@ -64,16 +56,16 @@ class GetDetailsService @Inject()(retrievalRepository : RetrievalRepository) {
   }
 
   private def extractSettings(user : UserAccount) : Option[Settings] = {
-    user.settings.isDefined match {
-      case false => None
-      case true =>
-        Some(
-          Settings(
-            user.settings.get.get("displayName"),
-            user.settings.get.get("displayNameColour"),
-            user.settings.get.get("displayImageURL")
-          )
+    if(user.settings.isDefined) {
+      Some(
+        Settings(
+          user.settings.get.get("displayName"),
+          user.settings.get.get("displayNameColour"),
+          user.settings.get.get("displayImageURL")
         )
+      )
+    } else {
+      None
     }
   }
 }

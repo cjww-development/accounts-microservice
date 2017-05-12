@@ -15,7 +15,7 @@
 // limitations under the License.
 package controllers
 
-import com.cjwwdev.mongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import com.cjwwdev.security.encryption.DataSecurity
 import helpers.CJWWSpec
 import models.UserAccount
@@ -39,6 +39,7 @@ class RegistrationControllerSpec extends CJWWSpec {
       "testUserName",
       "test@email.com",
       "testPass",
+      None,
       None,
       None,
       None
