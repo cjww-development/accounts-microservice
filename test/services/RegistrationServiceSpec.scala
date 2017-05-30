@@ -18,6 +18,7 @@ package services
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import helpers.CJWWSpec
 import models.{OrgAccount, UserAccount}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
 import repositories.{OrgAccountRepo, UserAccountRepo}
@@ -26,29 +27,31 @@ import scala.concurrent.Future
 
 class RegistrationServiceSpec extends CJWWSpec {
 
+  final val now = new DateTime(DateTimeZone.UTC)
+
   val user = UserAccount(
-    None,
+    "new-user-id-1",
     "testFirstName",
     "testLastName",
     "testUserName",
     "test@email.com",
     "testPass",
     None,
-    None,
+    now,
     None,
     None
   )
 
   val orgUser = OrgAccount(
-    None,
+    "new-org-id-1",
     "testOrgName",
     "TI",
     "testOrgUserName",
     "testLocation",
     "test@email.com",
-    Some("testCredentialType"),
+    "testCredentialType",
     "testPass",
-    None,
+    now,
     None
   )
 

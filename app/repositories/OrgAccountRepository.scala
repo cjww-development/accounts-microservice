@@ -48,7 +48,6 @@ class OrgAccountRepo(db: () => DB) extends MongoRepository("org-accounts", db) {
 
   private def orgUserNameSelector(orgUserName: String): BSONDocument = BSONDocument("orgUserName" -> orgUserName)
   private def orgIdSelector(orgId: String): BSONDocument = BSONDocument("orgId" -> orgId)
-  private def enroledSchoolSelector(orgUserName: String): BSONDocument = BSONDocument("deversityDetails." -> orgUserName)
 
   def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
     collection.insert(orgUser) map { writeResult =>

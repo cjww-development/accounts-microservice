@@ -16,10 +16,17 @@
 
 package models
 
-import play.api.libs.json.Json
+import com.cjwwdev.json.JsonFormats
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class TeacherDetails(title: String, lastName: String, room: String, status: String)
 
-object TeacherDetails {
-  implicit val format = Json.format[TeacherDetails]
+object TeacherDetails extends JsonFormats[TeacherDetails] {
+  implicit val standardFormat: OFormat[TeacherDetails] = (
+    (__ \ "title").format[String] and
+    (__ \ "lastName").format[String] and
+    (__ \ "room").format[String] and
+    (__ \ "status").format[String]
+  )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
 }

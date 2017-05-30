@@ -16,13 +16,11 @@
 
 package config
 
-import scala.util.control.NoStackTrace
-
 object Exceptions {
-  class MissingAccountException(msg: String) extends NoStackTrace
-  class FailedToUpdateException(msg: String) extends NoStackTrace
-  class FailedToCreateException(msg: String) extends NoStackTrace
+  class MissingAccountException(msg: String) extends Exception
+  class FailedToUpdateException(msg: String) extends Exception
+  class FailedToCreateException(msg: String) extends Exception
 
-  class OrganisationNotFoundException(msg: String) extends NoStackTrace
-  class FeedListEmptyException(msg: String) extends NoStackTrace
+  class OrganisationNotFoundException(msg: String) extends Exception
+  class FeedListEmptyException(msg: String) extends Exception
 }

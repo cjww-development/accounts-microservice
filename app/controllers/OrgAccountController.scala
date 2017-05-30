@@ -20,18 +20,16 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.logging.Logger
 import com.cjwwdev.security.encryption.DataSecurity
 import models.TeacherDetails
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import services.OrgAccountService
-import utils.application.BackendController
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authConnect: AuthConnector) extends Controller with Authorisation {
 
   val authConnector = authConnect
 
@@ -40,7 +38,7 @@ class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authC
       authorised(orgId) {
         case Authorised =>
           orgAccountService.getOrganisationsTeachers(orgId) map { list =>
-            Ok(DataSecurity.encryptData[List[TeacherDetails]](list).get)
+            Ok(DataSecurity.encryptType[List[TeacherDetails]](list).get)
           } recover {
             case _: Throwable => InternalServerError
           }

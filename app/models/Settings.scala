@@ -16,12 +16,11 @@
 
 package models
 
-import play.api.libs.json.Json
+import com.cjwwdev.json.JsonFormats
+import play.api.libs.json.{Json, OFormat}
 
-case class Settings(displayName : Option[String],
-                    displayNameColour : Option[String],
-                    displayImageURL : Option[String])
+case class Settings(settings : Map[String, String])
 
-object Settings {
-  implicit val format = Json.format[Settings]
+object Settings extends JsonFormats[Settings] {
+  implicit val standardFormat: OFormat[Settings] = Json.format[Settings]
 }

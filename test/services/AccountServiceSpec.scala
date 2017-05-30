@@ -16,8 +16,9 @@
 package services
 
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
+import config._
 import helpers.CJWWSpec
-import models.{AccountSettings, UpdatedPassword, UserProfile}
+import models.{Settings, UpdatedPassword, UserProfile}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 import repositories.UserAccountRepo
@@ -32,14 +33,13 @@ class AccountServiceSpec extends CJWWSpec {
       "testLast",
       "testUser",
       "test@email.com",
-      None,
       None
     )
 
   val testUpdatePasswordSet = UpdatedPassword("testOldPassword","testNewPassword")
 
   val testAccountSettings =
-    AccountSettings(
+    Settings(
       Map(
         "displayName" -> "full",
         "displayNameColour" -> "#FFFFFF",
@@ -95,7 +95,7 @@ class AccountServiceSpec extends CJWWSpec {
           .thenReturn(Future.successful(MongoFailedUpdate))
 
         val result = await(testService.updatePassword("testUserId", testUpdatePasswordSet))
-        result mustBe PasswordUpdate(false)
+        result mustBe PasswordUpdateFailed
       }
     }
 
@@ -108,7 +108,7 @@ class AccountServiceSpec extends CJWWSpec {
           .thenReturn(Future.successful(MongoSuccessUpdate))
 
         val result = await(testService.updatePassword("testUserId", testUpdatePasswordSet))
-        result mustBe PasswordUpdate(true)
+        result mustBe PasswordUpdated
       }
     }
   }
@@ -116,7 +116,7 @@ class AccountServiceSpec extends CJWWSpec {
   "updateSettings" should {
     "return a UpdatedSettingsFailed" when {
       "there was a problem updating the settings" in new Setup {
-        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoFailedUpdate))
 
         val result = await(testService.updateSettings("testUserId", testAccountSettings))
@@ -126,7 +126,7 @@ class AccountServiceSpec extends CJWWSpec {
 
     "return a UpdatedSettingsSuccess" when {
       "there was a problem updating the settings" in new Setup {
-        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoSuccessUpdate))
 
         val result = await(testService.updateSettings("testUserId", testAccountSettings))

@@ -47,7 +47,7 @@ class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) 
       lastName = user.lastName,
       userName = user.userName,
       email = user.email,
-      metadata = user.metadata
+      createdAt = user.createdAt
     )
   }
 
@@ -56,16 +56,9 @@ class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) 
   }
 
   private def extractSettings(user : UserAccount) : Option[Settings] = {
-    if(user.settings.isDefined) {
-      Some(
-        Settings(
-          user.settings.get.get("displayName"),
-          user.settings.get.get("displayNameColour"),
-          user.settings.get.get("displayImageURL")
-        )
-      )
-    } else {
-      None
+    user.settings match {
+      case Some(setting) => Some(Settings(setting))
+      case _             => None
     }
   }
 }

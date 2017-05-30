@@ -16,16 +16,22 @@
 
 package models
 
-import org.joda.time.DateTime
-import play.api.libs.json.Json
+import com.cjwwdev.json.JsonFormats
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class UserProfile(firstName : String,
                        lastName : String,
                        userName : String,
                        email : String,
-                       settings : Option[Map[String, String]],
-                       details : Option[Map[String,DateTime]])
+                       settings : Option[Map[String, String]])
 
-object UserProfile {
-  implicit val format = Json.format[UserProfile]
+object UserProfile extends JsonFormats[UserProfile] {
+  implicit val standardFormat: OFormat[UserProfile] = (
+    (__ \ "firstName").format[String] and
+    (__ \ "lastName").format[String] and
+    (__ \ "userName").format[String] and
+    (__ \ "email").format[String] and
+    (__ \ "settings").formatNullable[Map[String, String]]
+  )(UserProfile.apply, unlift(UserProfile.unapply))
 }

@@ -17,16 +17,16 @@ package controllers
 
 import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.request.RequestParsers
 import com.google.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import services.ValidationService
-import utils.application._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class ValidationController @Inject()(validationService : ValidationService, authConnect: AuthConnector) extends BackendController with BaseAuth {
+class ValidationController @Inject()(validationService : ValidationService, authConnect: AuthConnector) extends Controller with RequestParsers with BaseAuth {
 
   val authConnector: AuthConnector = authConnect
 
@@ -34,7 +34,7 @@ class ValidationController @Inject()(validationService : ValidationService, auth
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](username) { userName =>
+          decryptUrl(username) { userName =>
             validationService.isUserNameInUse(userName) map {
               case false => Ok
               case true => Conflict
@@ -48,7 +48,7 @@ class ValidationController @Inject()(validationService : ValidationService, auth
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](email) { emailAddress =>
+          decryptUrl(email) { emailAddress =>
             validationService.isEmailInUse(emailAddress) map {
               case false => Ok
               case true => Conflict

@@ -29,10 +29,10 @@ class RegistrationService @Inject()(userAccountRepository: UserAccountRepository
   val orgAccountstore: OrgAccountRepo = orgAccountRepository.store
 
   def createNewUser(newUser : UserAccount) : Future[MongoCreateResponse] = {
-    userAccountStore.insertNewUser(UserAccount.newUser(newUser))
+    userAccountStore.insertNewUser(newUser)
   }
 
   def createNewOrgUser(newOrgUser: OrgAccount): Future[MongoCreateResponse] = {
-    orgAccountstore.insertNewOrgUser(OrgAccount.newOrgUser(newOrgUser))
+    orgAccountstore.insertNewOrgUser(newOrgUser)
   }
 }

@@ -21,16 +21,18 @@ import javax.inject.{Inject, Singleton}
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
-import models.{AccountSettings, UpdatedPassword, UserProfile}
-import play.api.mvc.Action
+import com.cjwwdev.request.RequestParsers
+import config._
+import models.{Settings, UpdatedPassword, UserProfile}
+import play.api.mvc.{Action, Controller}
 import services._
-import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UpdateUserDetailsController @Inject()(accountService: AccountService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class UpdateUserDetailsController @Inject()(accountService: AccountService,
+                                            authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation {
 
   val authConnector: AuthConnector = authConnect
 
@@ -38,7 +40,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService, auth
     implicit request =>
       authorised(userId) {
         case Authorised =>
-          decryptRequest[UserProfile] { profile =>
+          decryptRequest[UserProfile](UserProfile.standardFormat) { profile =>
             accountService.updateProfileInformation(userId, profile) map {
               case MongoSuccessUpdate => Ok
               case MongoFailedUpdate  => InternalServerError
@@ -52,10 +54,11 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService, auth
     implicit request =>
       authorised(userId) {
         case Authorised =>
-          decryptRequest[UpdatedPassword] { passwordSet =>
+          decryptRequest[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
             accountService.updatePassword(userId, passwordSet) map {
-              case InvalidOldPassword => Conflict
-              case PasswordUpdate(success) => if(success) Ok else InternalServerError
+              case PasswordUpdated      => Ok
+              case InvalidOldPassword   => Conflict
+              case PasswordUpdateFailed => InternalServerError
             }
           }
         case NotAuthorised => Future.successful(Forbidden)
@@ -66,7 +69,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService, auth
     implicit request =>
       authorised(userId) {
         case Authorised =>
-          decryptRequest[AccountSettings] { settings =>
+          decryptRequest[Settings](Settings.standardFormat) { settings =>
             accountService.updateSettings(userId, settings) map {
               case UpdatedSettingsSuccess => Ok
               case UpdatedSettingsFailed => InternalServerError

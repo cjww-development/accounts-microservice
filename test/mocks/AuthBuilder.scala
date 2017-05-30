@@ -20,6 +20,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.auth.models.{AuthContext, User}
+import org.joda.time.{DateTime, DateTimeZone}
 import play.api.mvc.{Action, AnyContent, Result}
 import play.api.test.FakeRequest
 import org.mockito.Mockito.when
@@ -31,6 +32,8 @@ object AuthBuilder extends SessionBuild {
 
   implicit val system = ActorSystem()
   implicit val materializer = ActorMaterializer()
+
+  final val now = new DateTime(DateTimeZone.UTC)
 
   implicit val testContext =
     AuthContext(
@@ -45,7 +48,8 @@ object AuthBuilder extends SessionBuild {
       ),
       "testLink",
       "testLink",
-      "testLink"
+      "testLink",
+      now
     )
 
   def buildAuthorisedUserAndGet(action: Action[AnyContent],

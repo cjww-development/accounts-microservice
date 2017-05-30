@@ -30,7 +30,7 @@ class UserFeedServiceSpec extends CJWWSpec {
 
   val testFeedItem =
     FeedItem(
-      Some("testFeedItemId"),
+      "testFeedItemId",
       "testUserId",
       SourceDetail(
         "testService",
@@ -45,7 +45,7 @@ class UserFeedServiceSpec extends CJWWSpec {
 
   val testFeedItem2 =
     FeedItem(
-      Some("testFeedItemId"),
+      "testFeedItemId",
       "testUserId2",
       SourceDetail(
         "testService",

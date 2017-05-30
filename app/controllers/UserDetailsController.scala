@@ -22,9 +22,8 @@ import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{BasicDetails, Enrolments, OrgDetails, Settings}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import services.{GetDetailsService, OrgAccountService}
-import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -32,7 +31,7 @@ import scala.concurrent.Future
 @Singleton
 class UserDetailsController @Inject()(detailsService: GetDetailsService,
                                       orgDetailsService: OrgAccountService,
-                                      authConnect: AuthConnector) extends BackendController with Authorisation {
+                                      authConnect: AuthConnector) extends Controller with Authorisation {
 
   val authConnector: AuthConnector = authConnect
 
@@ -41,7 +40,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
       authorised(userId) {
         case Authorised =>
           detailsService.getBasicDetails(userId) map { details =>
-             Ok(DataSecurity.encryptData[BasicDetails](details).get)
+             Ok(DataSecurity.encryptType[BasicDetails](details).get)
           } recover {
             case _: Throwable => NotFound
           }
@@ -54,7 +53,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
       authorised(userId) {
         case Authorised =>
           detailsService.getEnrolments(userId) map {
-            case Some(enrolments) => Ok(DataSecurity.encryptData[Enrolments](enrolments).get)
+            case Some(enrolments) => Ok(DataSecurity.encryptType[Enrolments](enrolments).get)
             case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)
@@ -66,7 +65,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
       authorised(userId) {
         case Authorised =>
           detailsService.getSettings(userId) map {
-            case Some(settings) => Ok(DataSecurity.encryptData[Settings](settings).get)
+            case Some(settings) => Ok(DataSecurity.encryptType[Settings](settings).get)
             case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)
@@ -78,7 +77,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
       authorised(orgId) {
         case Authorised =>
           orgDetailsService.getOrganisationBasicDetails(orgId) map {
-            case Some(details) => Ok(DataSecurity.encryptData[OrgDetails](details).get)
+            case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details).get)
             case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)

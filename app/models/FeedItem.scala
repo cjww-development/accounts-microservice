@@ -15,39 +15,61 @@
 // limitations under the License.
 package models
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, DateTimeZone}
+import com.cjwwdev.json.JsonFormats
+import org.joda.time.DateTime
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
-
-case class FeedItem(feedId : Option[String],
-                    userId : String,
-                    sourceDetail: SourceDetail,
-                    eventDetail: EventDetail,
-                    generated : DateTime) {
-
-  def withId : FeedItem = {
-    copy(feedId = Some(s"feed-item-${UUID.randomUUID()}"))
-  }
-}
+import services.IdService
 
 case class SourceDetail(service : String, location : String)
 
+object SourceDetail extends JsonFormats[SourceDetail] {
+  implicit val standardFormat: OFormat[SourceDetail] = (
+    (__ \ "service").format[String] and
+    (__ \ "location").format[String]
+  )(SourceDetail.apply, unlift(SourceDetail.unapply))
+}
+
 case class EventDetail(title : String, description : String)
 
-object FeedItem {
-  implicit val dateTimeRead: Reads[DateTime] =
-    (__ \ "$date").read[Long].map { dateTime =>
-      new DateTime(dateTime, DateTimeZone.UTC)
-    }
+object EventDetail extends JsonFormats[EventDetail] {
+  implicit val standardFormat: OFormat[EventDetail] = (
+    (__ \ "title").format[String] and
+    (__ \ "description").format[String]
+  )(EventDetail.apply, unlift(EventDetail.unapply))
+}
 
-  implicit val dateTimeWrite: Writes[DateTime] = new Writes[DateTime] {
-    def writes(dateTime: DateTime): JsValue = Json.obj(
-      "$date" -> dateTime.getMillis
-    )
+case class FeedItem(feedId : String,
+                    userId : String,
+                    sourceDetail: SourceDetail,
+                    eventDetail: EventDetail,
+                    generated : DateTime)
+
+object FeedItem extends JsonFormats[FeedItem] with IdService {
+
+  val newFeedItemReads: Reads[FeedItem] = new Reads[FeedItem] {
+    override def reads(json: JsValue): JsResult[FeedItem] = {
+      JsSuccess(FeedItem(
+        feedId = generateFeedId,
+        userId = json.\("userId").as[String],
+        sourceDetail = SourceDetail(
+          service = json.\("service").as[String],
+          location = json.\("location").as[String]
+        ),
+        eventDetail = EventDetail(
+          title = json.\("title").as[String],
+          description = json.\("description").as[String]
+        ),
+        generated = DateTime.now
+      ))
+    }
   }
 
-  implicit val formatSource = Json.format[SourceDetail]
-  implicit val formatEvent = Json.format[EventDetail]
-  implicit val format = Json.format[FeedItem]
+  implicit val standardFormat: OFormat[FeedItem] = (
+    (__ \ "feedId").format[String] and
+    (__ \ "userId").format[String] and
+    (__ \ "sourceDetail").format[SourceDetail](SourceDetail.standardFormat) and
+    (__ \ "eventDetail").format[EventDetail](EventDetail.standardFormat) and
+    (__ \ "generated").format[DateTime](dateTimeRead)(dateTimeWrite)
+  )(FeedItem.apply, unlift(FeedItem.unapply))
 }

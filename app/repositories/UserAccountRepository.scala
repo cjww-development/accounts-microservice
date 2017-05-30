@@ -127,15 +127,11 @@ class UserAccountRepo(db: () => DB) extends MongoRepository("user-accounts", db)
     }
   }
 
-  def updateSettings(userId: String, accSettings : AccountSettings)(implicit format: OFormat[AccountSettings]) : Future[MongoUpdatedResponse] = {
+  def updateSettings(userId: String, settings : Map[String, String]): Future[MongoUpdatedResponse] = {
     collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
       case Some(acc) =>
         val updatedData = acc.copy(
-          settings = Some(Map(
-            "displayName" -> accSettings.settings("displayName"),
-            "displayNameColour" -> accSettings.settings("displayNameColour"),
-            "displayImageURL" -> accSettings.settings("displayImageURL")
-          ))
+          settings = Some(settings)
         )
         collection.update(userIdSelector(userId), updatedData) map { writeResult =>
           if(writeResult.ok) {

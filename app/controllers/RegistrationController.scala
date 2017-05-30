@@ -17,23 +17,23 @@ package controllers
 
 import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.request.RequestParsers
 import com.google.inject.{Inject, Singleton}
 import models.{OrgAccount, UserAccount}
-import play.api.mvc.Action
+import play.api.mvc.{Action, Controller}
 import services.RegistrationService
-import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class RegistrationController @Inject()(registrationService : RegistrationService) extends BackendController with BaseAuth {
+class RegistrationController @Inject()(registrationService : RegistrationService) extends Controller with RequestParsers with BaseAuth {
 
   def createNewUser : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[UserAccount] { user =>
+          decryptRequest[UserAccount](UserAccount.newUserReads) { user =>
             registrationService.createNewUser(user) map {
               case MongoSuccessCreate   => Created
               case MongoFailedCreate    => InternalServerError
@@ -47,7 +47,7 @@ class RegistrationController @Inject()(registrationService : RegistrationService
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[OrgAccount] { orgUser =>
+          decryptRequest[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
             registrationService.createNewOrgUser(orgUser) map {
               case MongoSuccessCreate   => Created
               case MongoFailedCreate    => InternalServerError
