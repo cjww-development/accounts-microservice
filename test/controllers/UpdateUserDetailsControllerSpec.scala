@@ -17,19 +17,21 @@ package controllers
 
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.security.encryption.DataSecurity
-import config.ApplicationConfiguration
+import config._
 import helpers.CJWWSpec
 import mocks.AuthBuilder
-import models.{AccountSettings, UpdatedPassword, UserProfile}
+import models.{Settings, UpdatedPassword, UserProfile}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
-import services.{InvalidOldPassword, PasswordUpdate, UpdatedSettingsFailed, UpdatedSettingsSuccess}
 
 import scala.concurrent.Future
 
 class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfiguration {
+
+  final val now = new DateTime(DateTimeZone.UTC)
 
   val testProfile =
     UserProfile(
@@ -37,14 +39,13 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
       "testLast",
       "testUser",
       "test@email.com",
-      None,
       None
     )
 
   val testPasswordUpdate = UpdatedPassword("testOldPassword", "testNewPassword")
 
   val testSettings =
-    AccountSettings(
+    Settings(
       Map(
         "displayName" -> "full",
         "displayNameColour" -> "#FFFFFF",
@@ -71,7 +72,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
+          ).withBody[String](DataSecurity.encryptType[UserProfile](testProfile).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe OK
@@ -93,7 +94,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
+          ).withBody[String](DataSecurity.encryptType[UserProfile](testProfile).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe INTERNAL_SERVER_ERROR
@@ -111,7 +112,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
             "lastName"  -> "testLastName"
           ).withHeaders(
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UserProfile](testProfile).get)
+          ).withBody[String](DataSecurity.encryptType[UserProfile](testProfile).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateProfileInformation("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe FORBIDDEN
@@ -124,7 +125,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an ok" when {
       "the users password has been updated" in new Setup {
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdate(true)))
+          .thenReturn(Future.successful(PasswordUpdated))
 
         val request =
           FakeRequest().withSession(
@@ -135,7 +136,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
+          ).withBody[String](DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe OK
@@ -146,7 +147,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
     "return an internal server error" when {
       "there was a problem updating the users password" in new Setup {
         when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdate(false)))
+          .thenReturn(Future.successful(PasswordUpdateFailed))
 
         val request =
           FakeRequest().withSession(
@@ -157,7 +158,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
+          ).withBody[String](DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe INTERNAL_SERVER_ERROR
@@ -179,7 +180,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
+          ).withBody[String](DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate).get)
 
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
@@ -198,7 +199,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
             "lastName"  -> "testLastName"
           ).withHeaders(
             CONTENT_TYPE -> TEXT
-          ).withBody[String](DataSecurity.encryptData[UpdatedPassword](testPasswordUpdate).get)
+          ).withBody[String](DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserPassword("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe FORBIDDEN
@@ -222,7 +223,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
+          ).withBody(DataSecurity.encryptType[Settings](testSettings).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe OK
@@ -244,7 +245,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
           ).withHeaders(
             "appId" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
             CONTENT_TYPE -> TEXT
-          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
+          ).withBody(DataSecurity.encryptType[Settings](testSettings).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe INTERNAL_SERVER_ERROR
@@ -262,7 +263,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
             "lastName"  -> "testLastName"
           ).withHeaders(
             CONTENT_TYPE -> TEXT
-          ).withBody(DataSecurity.encryptData[AccountSettings](testSettings).get)
+          ).withBody(DataSecurity.encryptType[Settings](testSettings).get)
 
         AuthBuilder.buildAuthorisedUserAndPost[String](testController.updateUserSettings("user-766543"), mockAuthConnector, request) {
           result => status(result) mustBe FORBIDDEN

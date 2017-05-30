@@ -78,6 +78,6 @@ class DeversityService @Inject()(userAccountRepository: UserAccountRepository, o
   }
 
   def createOrUpdateEnrolments(userId: String): Future[String] = {
-    userAccountStore.updateDeversityEnrolment(userId) map(devId => DataSecurity.encryptData[String](devId).get)
+    userAccountStore.updateDeversityEnrolment(userId) map(devId => DataSecurity.encryptString(devId).get)
   }
 }

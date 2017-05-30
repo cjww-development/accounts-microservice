@@ -21,17 +21,17 @@ import javax.inject.{Inject, Singleton}
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
+import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{DeversityEnrolment, OrgDetails, TeacherDetails}
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import services.DeversityService
-import utils.application.BackendController
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class DeversityController @Inject()(deversityService: DeversityService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class DeversityController @Inject()(deversityService: DeversityService, authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation {
 
   val authConnector: AuthConnector = authConnect
 
@@ -39,7 +39,7 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       authorised(userId) {
         case Authorised => deversityService.getDeversityUserInformation(userId) map {
-          case Some(deversityDetails)   => Ok(DataSecurity.encryptData[DeversityEnrolment](deversityDetails).get)
+          case Some(deversityDetails)   => Ok(DataSecurity.encryptType[DeversityEnrolment](deversityDetails).get)
           case None                     => NotFound
         }
         case NotAuthorised => Future.successful(Forbidden)
@@ -50,7 +50,7 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       authorised(userId) {
         case Authorised =>
-          decryptRequest[DeversityEnrolment] { details =>
+          decryptRequest[DeversityEnrolment](DeversityEnrolment.standardFormat) { details =>
             deversityService.updateDeversityUserInformation(userId, details) map {
               case MongoSuccessUpdate => Ok
               case MongoFailedUpdate  => InternalServerError
@@ -76,7 +76,7 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](orgName) { name =>
+          decryptUrl(orgName) { name =>
             deversityService.findSchool(name) map (found => if(found) Ok else NotFound)
           }
         case NotAuthorised => Future.successful(Forbidden)
@@ -87,9 +87,9 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](orgName) { name =>
+          decryptUrl(orgName) { name =>
             deversityService.getSchoolDetails(name) map {
-              case Some(details) => Ok(DataSecurity.encryptData[OrgDetails](details).get)
+              case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details).get)
               case None => NotFound
             }
           }
@@ -101,8 +101,8 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](userName) { uName =>
-            decryptUrl[String](schoolName) { sName =>
+          decryptUrl(userName) { uName =>
+            decryptUrl(schoolName) { sName =>
               deversityService.findTeacher(uName, sName) map(found => if(found) Ok else NotFound)
             }
           }
@@ -114,10 +114,10 @@ class DeversityController @Inject()(deversityService: DeversityService, authConn
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptUrl[String](orgName) { oName =>
-            decryptUrl[String](schoolName) { sName =>
+          decryptUrl(orgName) { oName =>
+            decryptUrl(schoolName) { sName =>
               deversityService.getTeacherDetails(oName, sName) map {
-                case Some(details) => Ok(DataSecurity.encryptData[TeacherDetails](details).get)
+                case Some(details) => Ok(DataSecurity.encryptType[TeacherDetails](details).get)
                 case None => NotFound
               }
             }

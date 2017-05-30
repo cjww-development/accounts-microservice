@@ -17,6 +17,7 @@ package services
 
 import helpers.CJWWSpec
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 import repositories.UserAccountRepo
@@ -25,22 +26,24 @@ import scala.concurrent.Future
 
 class GetDetailsServiceSpec extends CJWWSpec {
 
+  final val now = new DateTime(DateTimeZone.UTC)
+
   val testAccount =
     UserAccount(
-      Some("testId"),
-      "testFirst",
-      "testLast",
-      "testUser",
-      "test@email.com",
-      "testPassword",
-      None,
-      None,
-      Some(Enrolments(
+      userId = "testId",
+      firstName = "testFirst",
+      lastName = "testLast",
+      userName = "testUser",
+      email = "test@email.com",
+      password = "testPassword",
+      deversityDetails = None,
+      createdAt = now,
+      enrolments = Some(Enrolments(
         Some("testOtherId"),
         Some("testOtherId"),
         Some("testOtherId")
       )),
-      Some(Map(
+      settings = Some(Map(
         "displayName" -> "full",
         "displayNameColour" -> "#FFFFFF",
         "displayImageURL" -> "/test-uri"
@@ -49,14 +52,14 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
   val testAccount2 =
     UserAccount(
-      Some("testId"),
+      "testId",
       "testFirst",
       "testLast",
       "testUser",
       "test@email.com",
       "testPassword",
       None,
-      None,
+      now,
       Some(Enrolments(
         Some("testOtherId"),
         Some("testOtherId"),
@@ -71,7 +74,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
       lastName = "testLast",
       userName = "testUser",
       email = "test@email.com",
-      metadata = None
+      createdAt = now
     )
 
   val testEnrolments =
@@ -83,9 +86,11 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
   val testSettings =
     Settings(
-      Some("full"),
-      Some("#FFFFFF"),
-      Some("/test-uri")
+      Map(
+        "displayName" -> "full",
+        "displayNameColour" -> "#FFFFFF",
+        "displayImageURL" -> "/test-uri"
+      )
     )
 
   class Setup {

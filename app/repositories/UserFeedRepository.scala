@@ -55,7 +55,7 @@ class UserFeedRepo(db: () => DB) extends MongoRepository("user-feed", db) {
   private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
 
   def createFeedItem(feedItem : FeedItem)(implicit format : OFormat[FeedItem]) : Future[MongoCreateResponse] = {
-    collection.insert(feedItem.withId) map { writeResult =>
+    collection.insert(feedItem) map { writeResult =>
       if(writeResult.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create feed item")
     }
   }

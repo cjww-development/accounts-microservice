@@ -22,3 +22,12 @@ case object UserNameNotInUse extends UserNameUse
 sealed trait EmailUse
 case object EmailInUse extends EmailUse
 case object EmailNotInUse extends EmailUse
+
+sealed trait UpdatedPasswordResponse
+case object InvalidOldPassword extends UpdatedPasswordResponse
+case object PasswordUpdated extends UpdatedPasswordResponse
+case object PasswordUpdateFailed extends UpdatedPasswordResponse
+
+sealed trait UpdatedSettingsResponse
+case object UpdatedSettingsSuccess extends UpdatedSettingsResponse
+case object UpdatedSettingsFailed extends UpdatedSettingsResponse

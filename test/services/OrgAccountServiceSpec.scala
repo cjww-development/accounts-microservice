@@ -16,9 +16,9 @@
 
 package services
 
-import config.Exceptions.MissingAccountException
 import helpers.CJWWSpec
 import models._
+import org.joda.time.{DateTime, DateTimeZone}
 import repositories.{OrgAccountRepo, UserAccountRepo}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
@@ -27,16 +27,18 @@ import scala.concurrent.Future
 
 class OrgAccountServiceSpec extends CJWWSpec {
 
+  final val now = new DateTime(DateTimeZone.UTC)
+
   val testOrgAccount = OrgAccount(
-    orgId           = Some("org-test-org-id"),
+    orgId           = "org-test-org-id",
     orgName         = "testOrgName",
     initials        = "TI",
     orgUserName     = "testOrgUserName",
     location        = "testLocation",
     orgEmail        = "test@email.com",
-    credentialType  = Some("organisation"),
+    credentialType  = "organisation",
     password        = "testPass",
-    metaData        = None,
+    createdAt       = now,
     settings        = None
   )
 
@@ -47,7 +49,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
   )
 
   val testAccount1 = UserAccount(
-    userId            = Some("testUserId"),
+    userId            = "testUserId",
     firstName         = "testFirstName",
     lastName          = "testLastName",
     userName          = "testUserName",
@@ -61,13 +63,13 @@ class OrgAccountServiceSpec extends CJWWSpec {
       room            = Some("testRoom"),
       teacher         = None
     )),
-    metadata          = None,
+    createdAt         = now,
     enrolments        = None,
     settings          = None
   )
 
   val testAccount2 = UserAccount(
-    userId            = Some("testUserId2"),
+    userId            = "testUserId2",
     firstName         = "testFirstName2",
     lastName          = "testLastName2",
     userName          = "testUserName2",
@@ -81,7 +83,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
       room            = Some("testRoom2"),
       teacher         = None
     )),
-    metadata          = None,
+    createdAt         = now,
     enrolments        = None,
     settings          = None
   )

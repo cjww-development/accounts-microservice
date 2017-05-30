@@ -16,10 +16,15 @@
 
 package models
 
-import play.api.libs.json.Json
+import com.cjwwdev.json.JsonFormats
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 case class UpdatedPassword(previousPassword : String, newPassword : String)
 
-object UpdatedPassword {
-  implicit val format = Json.format[UpdatedPassword]
+object UpdatedPassword extends JsonFormats[UpdatedPassword] {
+  implicit val standardFormat: OFormat[UpdatedPassword] = (
+    (__ \ "previousPassword").format[String] and
+    (__ \ "newPassword").format[String]
+  )(UpdatedPassword.apply, unlift(UpdatedPassword.unapply))
 }

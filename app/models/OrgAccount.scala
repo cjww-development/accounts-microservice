@@ -16,43 +16,62 @@
 
 package models
 
-import java.util.UUID
-
-import org.joda.time.{DateTime, DateTimeZone}
+import com.cjwwdev.json.JsonFormats
+import org.joda.time.DateTime
+import play.api.libs.functional.syntax._
 import play.api.libs.json._
+import services.IdService
 
-case class OrgAccount(orgId: Option[String],
+case class OrgAccount(orgId: String,
                       orgName: String,
                       initials: String,
                       orgUserName: String,
                       location: String,
                       orgEmail: String,
-                      credentialType: Option[String],
+                      credentialType: String,
                       password: String,
-                      metaData: Option[Map[String, DateTime]],
+                      createdAt: DateTime,
                       settings: Option[Map[String, String]])
 
-object OrgAccount {
-  def newOrgUser(orgAccount: OrgAccount): OrgAccount = {
-    orgAccount.copy(orgId = Some(s"org-user-${UUID.randomUUID()}"), credentialType = Some("organisation"),metaData = Some(Map("createdAt" -> DateTime.now())))
-  }
+object OrgAccount extends JsonFormats[OrgAccount] with IdService {
 
-  implicit val dateTimeRead: Reads[DateTime] =
-    (__ \ "$date").read[Long].map { dateTime =>
-      new DateTime(dateTime, DateTimeZone.UTC)
+  val newOrgAccountReads: Reads[OrgAccount] = new Reads[OrgAccount] {
+    override def reads(json: JsValue): JsResult[OrgAccount] = {
+      JsSuccess(OrgAccount(
+        orgId = generateOrgId,
+        orgName = json.\("orgName").as[String],
+        initials = json.\("initials").as[String],
+        orgUserName = json.\("orgUserName").as[String],
+        location = json.\("location").as[String],
+        orgEmail = json.\("orgEmail").as[String],
+        credentialType = "organisation",
+        password = json.\("password").as[String],
+        createdAt = DateTime.now,
+        settings = None
+      ))
     }
-
-  implicit val dateTimeWrite: Writes[DateTime] = new Writes[DateTime] {
-    def writes(dateTime: DateTime): JsValue = Json.obj(
-      "$date" -> dateTime.getMillis
-    )
   }
 
-  implicit val format = Json.format[OrgAccount]
+  implicit val standardFormat: OFormat[OrgAccount] = (
+    (__ \ "orgId").format[String] and
+    (__ \ "orgName").format[String] and
+    (__ \ "initials").format[String] and
+    (__ \ "orgUserName").format[String] and
+    (__ \ "location").format[String] and
+    (__ \ "orgEmail").format[String] and
+    (__ \ "credentialType").format[String] and
+    (__ \ "password").format[String] and
+    (__ \ "createdAt").format[DateTime](dateTimeRead)(dateTimeWrite) and
+    (__ \ "settings").formatNullable[Map[String, String]]
+  )(OrgAccount.apply, unlift(OrgAccount.unapply))
 }
 
 case class OrgDetails(orgName: String, initials: String, location: String)
 
-object OrgDetails {
-  implicit val format = Json.format[OrgDetails]
+object OrgDetails extends JsonFormats[OrgDetails] {
+  implicit val standardFormat: OFormat[OrgDetails] = (
+    (__ \ "orgName").format[String] and
+    (__ \ "initials").format[String] and
+    (__ \ "location").format[String]
+  )(OrgDetails.apply, unlift(OrgDetails.unapply))
 }

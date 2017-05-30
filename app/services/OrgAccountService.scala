@@ -18,7 +18,6 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.logging.Logger
 import config.Exceptions.MissingAccountException
 import models.{OrgDetails, TeacherDetails}
 import repositories.{OrgAccountRepository, UserAccountRepository}

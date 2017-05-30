@@ -18,6 +18,7 @@ package controllers
 import helpers.CJWWSpec
 import mocks.AuthBuilder
 import models.{BasicDetails, Enrolments, Settings}
+import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 import play.api.test.FakeRequest
@@ -27,13 +28,15 @@ import scala.concurrent.Future
 
 class UserDetailsControllerSpec extends CJWWSpec {
 
+  final val now = new DateTime(DateTimeZone.UTC)
+
   val testBasicDetails =
     BasicDetails(
       "testFirstName",
       "testLastName",
       "testUserName",
       "test@email.com",
-      None
+      now
     )
 
   val testEnrolments =
@@ -45,9 +48,11 @@ class UserDetailsControllerSpec extends CJWWSpec {
 
   val testSettings =
     Settings(
-      Some("full"),
-      Some("#FFFFFF"),
-      Some("/test/uri")
+      Map(
+        "displayName" -> "full",
+        "displayNameColour" -> "#FFFFFF",
+        "displayImageURL" -> "/test-uri"
+      )
     )
 
   class Setup {

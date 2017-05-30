@@ -19,18 +19,18 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
 import models.FeedItem
 import play.api.libs.json.JsObject
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Controller}
 import services.UserFeedService
-import utils.application.BackendController
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect: AuthConnector) extends BackendController with Authorisation {
+class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation {
 
   val authConnector: AuthConnector = authConnect
 
@@ -38,7 +38,7 @@ class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect
     implicit request =>
       openActionVerification {
         case Authorised =>
-          decryptRequest[FeedItem] { fi =>
+          decryptRequest[FeedItem](FeedItem.newFeedItemReads) { fi =>
             userFeedService.createFeedItem(fi) map {
               case true => InternalServerError
               case false => Ok
@@ -53,7 +53,7 @@ class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect
       authorised(userId) {
         case Authorised =>
           userFeedService.getFeedList(userId) map {
-            case Some(json) => Ok(DataSecurity.encryptData[JsObject](json).get)
+            case Some(json) => Ok(DataSecurity.encryptType[JsObject](json).get)
             case None => NotFound
           }
         case NotAuthorised => Future.successful(Forbidden)

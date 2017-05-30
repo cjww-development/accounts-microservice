@@ -13,14 +13,13 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package models
 
-import play.api.libs.json.Json
+package services
 
-case class Enrolments(hubId : Option[String],
-                      diagId : Option[String],
-                      deversityId : Option[String])
+import java.util.UUID
 
-object Enrolments {
-  implicit val format = Json.format[Enrolments]
+trait IdService {
+  def generateUserId: String = s"user-${UUID.randomUUID}"
+  def generateOrgId: String = s"org-user-${UUID.randomUUID}"
+  def generateFeedId: String = s"feed-item-${UUID.randomUUID}"
 }
