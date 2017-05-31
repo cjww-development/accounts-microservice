@@ -46,7 +46,7 @@ class AccountService @Inject()(userAccountRepository: UserAccountRepository) {
   }
 
   def updateSettings(userId: String, accountSettings : Settings) : Future[UpdatedSettingsResponse] = {
-    userAccountStore.updateSettings(userId, accountSettings.settings) map {
+    userAccountStore.updateSettings(userId, accountSettings) map {
       case MongoFailedUpdate    => UpdatedSettingsFailed
       case MongoSuccessUpdate   => UpdatedSettingsSuccess
     }

@@ -56,9 +56,6 @@ class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) 
   }
 
   private def extractSettings(user : UserAccount) : Option[Settings] = {
-    user.settings match {
-      case Some(setting) => Some(Settings(setting))
-      case _             => None
-    }
+    user.settings
   }
 }

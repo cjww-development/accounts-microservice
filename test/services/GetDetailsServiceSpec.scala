@@ -43,10 +43,10 @@ class GetDetailsServiceSpec extends CJWWSpec {
         Some("testOtherId"),
         Some("testOtherId")
       )),
-      settings = Some(Map(
-        "displayName" -> "full",
-        "displayNameColour" -> "#FFFFFF",
-        "displayImageURL" -> "/test-uri"
+      settings = Some(Settings(
+        displayName = Some("full"),
+        displayNameColour = Some("#FFFFFF"),
+        displayImageURL  = Some("/test/uri")
       ))
     )
 
@@ -86,11 +86,9 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
   val testSettings =
     Settings(
-      Map(
-        "displayName" -> "full",
-        "displayNameColour" -> "#FFFFFF",
-        "displayImageURL" -> "/test-uri"
-      )
+      displayName = Some("full"),
+      displayNameColour = Some("#FFFFFF"),
+      displayImageURL  = Some("/test/uri")
     )
 
   class Setup {

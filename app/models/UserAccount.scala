@@ -61,7 +61,7 @@ case class UserAccount(userId : String,
                        deversityDetails: Option[DeversityEnrolment],
                        createdAt : DateTime,
                        enrolments: Option[Enrolments],
-                       settings : Option[Map[String, String]])
+                       settings : Option[Settings])
 
 object UserAccount extends JsonFormats[UserAccount] with IdService {
   val newUserReads: Reads[UserAccount] = new Reads[UserAccount] {
@@ -91,7 +91,7 @@ object UserAccount extends JsonFormats[UserAccount] with IdService {
     (__ \ "deversityDetails").formatNullable[DeversityEnrolment] and
     (__ \ "createdAt").format[DateTime](dateTimeRead)(dateTimeWrite) and
     (__ \ "enrolments").formatNullable[Enrolments] and
-    (__ \ "settings").formatNullable[Map[String, String]]
+    (__ \ "settings").formatNullable[Settings]
   )(UserAccount.apply, unlift(UserAccount.unapply))
 }
 

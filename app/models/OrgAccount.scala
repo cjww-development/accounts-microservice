@@ -31,7 +31,7 @@ case class OrgAccount(orgId: String,
                       credentialType: String,
                       password: String,
                       createdAt: DateTime,
-                      settings: Option[Map[String, String]])
+                      settings: Option[Settings])
 
 object OrgAccount extends JsonFormats[OrgAccount] with IdService {
 
@@ -62,7 +62,7 @@ object OrgAccount extends JsonFormats[OrgAccount] with IdService {
     (__ \ "credentialType").format[String] and
     (__ \ "password").format[String] and
     (__ \ "createdAt").format[DateTime](dateTimeRead)(dateTimeWrite) and
-    (__ \ "settings").formatNullable[Map[String, String]]
+    (__ \ "settings").formatNullable[Settings]
   )(OrgAccount.apply, unlift(OrgAccount.unapply))
 }
 

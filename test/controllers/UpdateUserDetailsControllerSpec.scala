@@ -46,11 +46,9 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec with ApplicationConfigura
 
   val testSettings =
     Settings(
-      Map(
-        "displayName" -> "full",
-        "displayNameColour" -> "#FFFFFF",
-        "displayImageURL" -> "/test/uri"
-      )
+      displayName = Some("full"),
+      displayNameColour = Some("#FFFFFF"),
+      displayImageURL  = Some("/test/uri")
     )
 
   class Setup {

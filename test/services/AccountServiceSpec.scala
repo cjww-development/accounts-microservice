@@ -40,11 +40,9 @@ class AccountServiceSpec extends CJWWSpec {
 
   val testAccountSettings =
     Settings(
-      Map(
-        "displayName" -> "full",
-        "displayNameColour" -> "#FFFFFF",
-        "displayImageURL" -> "/test-uri"
-      )
+      displayName = Some("full"),
+      displayNameColour = Some("#FFFFFF"),
+      displayImageURL  = Some("/test/uri")
     )
 
   class Setup {

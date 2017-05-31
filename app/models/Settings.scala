@@ -17,10 +17,17 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
-case class Settings(settings : Map[String, String])
+case class Settings(displayName : Option[String],
+                    displayNameColour : Option[String],
+                    displayImageURL : Option[String])
 
 object Settings extends JsonFormats[Settings] {
-  implicit val standardFormat: OFormat[Settings] = Json.format[Settings]
+  implicit val standardFormat: OFormat[Settings] = (
+    (__ \ "displayName").formatNullable[String] and
+    (__ \ "displayNameColour").formatNullable[String] and
+    (__ \ "displayImageURL").formatNullable[String]
+  )(Settings.apply, unlift(Settings.unapply))
 }
