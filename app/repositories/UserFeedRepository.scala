@@ -19,7 +19,7 @@ package repositories
 import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.reactivemongo.{MongoConnector, MongoCreateResponse, MongoRepository, MongoSuccessCreate}
-import config.Exceptions.FailedToCreateException
+import config.FailedToCreateException
 import models.FeedItem
 import play.api.libs.json.OFormat
 import reactivemongo.api.DB
@@ -47,7 +47,7 @@ class UserFeedRepo(db: () => DB) extends MongoRepository("user-feed", db) {
     Index(
       key = Seq("userId" -> IndexType.Ascending),
       name = Some("UserId"),
-      unique = true,
+      unique = false,
       sparse = false
     )
   )

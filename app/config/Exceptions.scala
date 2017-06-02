@@ -16,11 +16,9 @@
 
 package config
 
-object Exceptions {
-  class MissingAccountException(msg: String) extends Exception
-  class FailedToUpdateException(msg: String) extends Exception
-  class FailedToCreateException(msg: String) extends Exception
+class MissingAccountException(msg: String) extends Exception
+class FailedToUpdateException(msg: String) extends Exception
+class FailedToCreateException(msg: String) extends Exception
 
-  class OrganisationNotFoundException(msg: String) extends Exception
-  class FeedListEmptyException(msg: String) extends Exception
-}
+class OrganisationNotFoundException(msg: String) extends Exception
+class FeedListEmptyException(msg: String) extends Exception

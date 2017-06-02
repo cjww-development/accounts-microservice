@@ -19,7 +19,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.logging.Logger
 import com.cjwwdev.reactivemongo.{MongoConnector, MongoCreateResponse, MongoRepository, MongoSuccessCreate}
-import config.Exceptions.{FailedToCreateException, MissingAccountException}
+import config.{FailedToCreateException, MissingAccountException}
 import config._
 import models._
 import reactivemongo.api.DB

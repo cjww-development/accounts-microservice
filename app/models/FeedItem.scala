@@ -53,12 +53,12 @@ object FeedItem extends JsonFormats[FeedItem] with IdService {
         feedId = generateFeedId,
         userId = json.\("userId").as[String],
         sourceDetail = SourceDetail(
-          service = json.\("service").as[String],
-          location = json.\("location").as[String]
+          service = json.\("sourceDetail").\("service").as[String],
+          location = json.\("sourceDetail").\("location").as[String]
         ),
         eventDetail = EventDetail(
-          title = json.\("title").as[String],
-          description = json.\("description").as[String]
+          title = json.\("eventDetail").\("title").as[String],
+          description = json.\("eventDetail").\("description").as[String]
         ),
         generated = DateTime.now
       ))

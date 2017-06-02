@@ -18,7 +18,7 @@ package services
 
 import javax.inject.{Inject, Singleton}
 
-import config.Exceptions.MissingAccountException
+import config.MissingAccountException
 import models.{OrgDetails, TeacherDetails}
 import repositories.{OrgAccountRepository, UserAccountRepository}
 

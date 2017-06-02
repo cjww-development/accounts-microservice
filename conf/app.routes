@@ -19,8 +19,8 @@ GET         /account/:orgId/teachers                                        cont
 
 POST        /create-feed-item                                               controllers.UserFeedController.createEvent()
 
-GET         /validate/user-name/:username                                   controllers.ValidationController.validateUserName(username : String)
-GET         /validate/email/:email                                          controllers.ValidationController.validateEmail(email : String)
+HEAD        /validate/user-name/:username                                   controllers.ValidationController.validateUserName(username : String)
+HEAD        /validate/email/:email                                          controllers.ValidationController.validateEmail(email : String)
 GET         /validate/school/:orgUserName                                   controllers.DeversityController.findSchool(orgUserName)
 GET         /validate/teacher/:userName/school/:schoolName                  controllers.DeversityController.findTeacher(userName, schoolName)
 

@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.logging.Logger
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity

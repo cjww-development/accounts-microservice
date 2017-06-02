@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.logging.Logger
 import com.cjwwdev.reactivemongo._
-import config.Exceptions.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
+import config.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
 import config._
 import models._
 import play.api.libs.json.OFormat
@@ -106,7 +106,7 @@ class UserAccountRepo(db: () => DB) extends MongoRepository("user-accounts", db)
   }
 
   def findPassword(userId: String, passwordSet : UpdatedPassword)(implicit format: OFormat[UpdatedPassword]) : Future[Boolean] = {
-    collection.find(BSONDocument("_id" -> userId, "password" -> passwordSet.previousPassword)).one[UserAccount] map {
+    collection.find(BSONDocument("userId" -> userId)).one[UserAccount] map {
       case Some(_)  => true
       case None     => throw new MissingAccountException(s"No user account found for user id $userId")
     }
