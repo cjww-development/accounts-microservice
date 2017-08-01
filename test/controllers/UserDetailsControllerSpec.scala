@@ -15,13 +15,14 @@
 // limitations under the License.
 package controllers
 
+import java.util.UUID
+
 import helpers.CJWWSpec
 import mocks.AuthBuilder
-import models.{BasicDetails, Enrolments, Settings}
+import models.{BasicDetails, Enrolments, OrgDetails, Settings}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
-import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 import scala.concurrent.Future
@@ -30,28 +31,35 @@ class UserDetailsControllerSpec extends CJWWSpec {
 
   final val now = new DateTime(DateTimeZone.UTC)
 
-  val testBasicDetails =
-    BasicDetails(
-      "testFirstName",
-      "testLastName",
-      "testUserName",
-      "test@email.com",
-      now
-    )
+  final val uuid = UUID.randomUUID
 
-  val testEnrolments =
-    Enrolments(
-      Some("testId"),
-      Some("testId"),
-      Some("testId")
-    )
+  val testBasicDetails = BasicDetails(
+    "testFirstName",
+    "testLastName",
+    "testUserName",
+    "test@email.com",
+    now
+  )
 
-  val testSettings =
-    Settings(
-      displayName = Some("full"),
-      displayNameColour = Some("#FFFFFF"),
-      displayImageURL  = Some("/test/uri")
-    )
+  val testEnrolments = Enrolments(
+    Some("testId"),
+    Some("testId"),
+    Some("testId")
+  )
+
+  val testSettings = Settings(
+    displayName = "full",
+    displayNameColour = "#FFFFFF",
+    displayImageURL  = "/test/uri"
+  )
+
+  val testOrgDetails = OrgDetails(
+    orgName = "testOrgName",
+    initials = "TI",
+    location = "testLocation"
+  )
+
+  lazy val request = buildRequest
 
   class Setup {
     val testController = new UserDetailsController(mockGetDetailsService, mockOrgAccountService, mockAuthConnector)
@@ -63,17 +71,7 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testBasicDetails))
 
-        val request = FakeRequest().withSession(
-          "cookieId"  -> "session-0987654321",
-          "contextId" -> "context-1234567890",
-          "firstName" -> "testFirstName",
-          "lastName"  -> "testLastName"
-        ).withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        )
-
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getBasicDetails("user-766543"), mockAuthConnector) {
+        AuthBuilder.getWithAuthorisedUser(testController.getBasicDetails(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
           result => status(result) mustBe OK
         }
       }
@@ -86,7 +84,7 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testEnrolments)))
 
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getEnrolments("user-766543"), mockAuthConnector) {
+        AuthBuilder.getWithAuthorisedUser(testController.getEnrolments(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
           result => status(result) mustBe OK
         }
       }
@@ -97,7 +95,7 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getEnrolments("user-766543"), mockAuthConnector) {
+        AuthBuilder.getWithAuthorisedUser(testController.getEnrolments(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
           result => status(result) mustBe NOT_FOUND
         }
       }
@@ -110,7 +108,7 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getSettings(ArgumentMatchers.any()))
           .thenReturn(Future.successful(Some(testSettings)))
 
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getSettings("user-766543"), mockAuthConnector) {
+        AuthBuilder.getWithAuthorisedUser(testController.getSettings(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
           result => status(result) mustBe OK
         }
       }
@@ -121,7 +119,31 @@ class UserDetailsControllerSpec extends CJWWSpec {
         when(mockGetDetailsService.getSettings(ArgumentMatchers.any()))
           .thenReturn(Future.successful(None))
 
-        AuthBuilder.buildAuthorisedUserAndGet(testController.getSettings("user-766543"), mockAuthConnector) {
+        AuthBuilder.getWithAuthorisedUser(testController.getSettings(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
+          result => status(result) mustBe NOT_FOUND
+        }
+      }
+    }
+  }
+
+  "getOrgBasicDetails" should {
+    "return an OK" when {
+      "an orgs basic details are found" in new Setup {
+        when(mockOrgAccountService.getOrganisationBasicDetails(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(Some(testOrgDetails)))
+
+        AuthBuilder.getWithAuthorisedUser(testController.getOrgBasicDetails(s"org-user-$uuid"), request, mockAuthConnector, uuid, "org") {
+          result => status(result) mustBe OK
+        }
+      }
+    }
+
+    "return a not found" when {
+      "no basic details are found for an org" in new Setup {
+        when(mockOrgAccountService.getOrganisationBasicDetails(ArgumentMatchers.any()))
+          .thenReturn(Future.successful(None))
+
+        AuthBuilder.getWithAuthorisedUser(testController.getOrgBasicDetails(s"org-user-$uuid"), request, mockAuthConnector, uuid, "org") {
           result => status(result) mustBe NOT_FOUND
         }
       }

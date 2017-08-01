@@ -25,24 +25,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class ValidationService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
 
-  val userAccountStore: UserAccountRepo = userAccountRepository.store
-  val orgAccountStore: OrgAccountRepo = orgAccountRepository.store
-
   def isUserNameInUse(username : String) : Future[Boolean] = {
     for {
-      user  <- userAccountStore.verifyUserName(username)
-      org   <- orgAccountStore.verifyUserName(username)
-    } yield {
-      if(user == UserNameInUse || org == UserNameInUse) true else false
-    }
+      user  <- userAccountRepository.verifyUserName(username)
+      org   <- orgAccountRepository.verifyUserName(username)
+    } yield user == UserNameInUse || org == UserNameInUse
   }
 
   def isEmailInUse(email : String) : Future[Boolean] = {
     for {
-      user  <- userAccountStore.verifyEmail(email)
-      org   <- orgAccountStore.verifyEmail(email)
-    } yield {
-      if(user == EmailInUse || org == EmailInUse) true else false
-    }
+      user  <- userAccountRepository.verifyEmail(email)
+      org   <- orgAccountRepository.verifyEmail(email)
+    } yield user == EmailInUse || org == EmailInUse
   }
 }

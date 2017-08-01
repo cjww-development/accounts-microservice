@@ -18,11 +18,11 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.reactivemongo.{MongoConnector, MongoCreateResponse, MongoRepository, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoCreateResponse, MongoDatabase, MongoSuccessCreate}
 import config.FailedToCreateException
 import models.FeedItem
 import play.api.libs.json.OFormat
-import reactivemongo.api.DB
+import reactivemongo.api.Cursor
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
@@ -31,11 +31,9 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class UserFeedRepository @Inject()() extends MongoConnector {
-  val store = new UserFeedRepo(db)
-}
+class UserFeedRepository @Inject()() extends MongoDatabase("user-feed") {
 
-class UserFeedRepo(db: () => DB) extends MongoRepository("user-feed", db) {
+  private val MAX = 10
 
   override def indexes: Seq[Index] = Seq(
     Index(
@@ -55,12 +53,16 @@ class UserFeedRepo(db: () => DB) extends MongoRepository("user-feed", db) {
   private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
 
   def createFeedItem(feedItem : FeedItem)(implicit format : OFormat[FeedItem]) : Future[MongoCreateResponse] = {
-    collection.insert(feedItem) map { writeResult =>
-      if(writeResult.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create feed item")
+    collection flatMap {
+      _.insert(feedItem) map { wr =>
+        if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create feed item")
+      }
     }
   }
 
   def getFeedItems(userId : String) : Future[List[FeedItem]] = {
-    collection.find(userIdSelector(userId)).cursor[FeedItem]().collect[List]()
+    collection flatMap {
+      _.find(userIdSelector(userId)).cursor[FeedItem]().collect[List](MAX, Cursor.FailOnError[List[FeedItem]]())
+    }
   }
 }

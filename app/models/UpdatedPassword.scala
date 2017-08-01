@@ -17,14 +17,17 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
 case class UpdatedPassword(previousPassword : String, newPassword : String)
 
 object UpdatedPassword extends JsonFormats[UpdatedPassword] {
+  private val passwordValidation = Reads.StringReads.filter(ValidationError("Invalid password; too short"))(_.length == 128)
+
   implicit val standardFormat: OFormat[UpdatedPassword] = (
-    (__ \ "previousPassword").format[String] and
-    (__ \ "newPassword").format[String]
+    (__ \ "previousPassword").format[String](passwordValidation) and
+    (__ \ "newPassword").format[String](passwordValidation)
   )(UpdatedPassword.apply, unlift(UpdatedPassword.unapply))
 }

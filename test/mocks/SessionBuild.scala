@@ -21,23 +21,8 @@ import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
 trait SessionBuild extends ApplicationConfiguration {
-
-  def appendSession(request : FakeRequest[_]) : FakeRequest[_] = {
-    request.withSession(
-      "cookieId"  -> s"session-0987654321",
-      "contextId" -> s"context-1234567890",
-      "firstName" -> "firstName",
-      "lastName"  -> "lastName"
-    )
-  }
-
-  def buildRequestWithSession: FakeRequest[_] = {
-    FakeRequest().withSession(
-      "cookieId"  -> "session-0987654321",
-      "contextId" -> "context-1234567890",
-      "firstName" -> "testFirstName",
-      "lastName"  -> "testLastName"
-    ).withHeaders(
+  def buildRequest: FakeRequest[_] = {
+    FakeRequest().withHeaders(
       "appId" -> AUTH_SERVICE_ID,
       CONTENT_TYPE -> TEXT
     )

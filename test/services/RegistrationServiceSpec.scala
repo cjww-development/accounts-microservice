@@ -21,7 +21,6 @@ import models.{OrgAccount, UserAccount}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import repositories.{OrgAccountRepo, UserAccountRepo}
 
 import scala.concurrent.Future
 
@@ -56,16 +55,13 @@ class RegistrationServiceSpec extends CJWWSpec {
   )
 
   class Setup {
-    val testService = new RegistrationService(mockUserAccountRepo, mockOrgAccountRepo) {
-      override val userAccountStore: UserAccountRepo = mockUserAccountStore
-      override val orgAccountstore: OrgAccountRepo = mockOrgAccountStore
-    }
+    val testService = new RegistrationService(mockUserAccountRepo, mockOrgAccountRepo)
   }
 
   "createNewUser" should {
     "return a MongoSuccessCreate" when {
       "the given user has been inserted into the database" in new Setup {
-        when(mockUserAccountStore.insertNewUser(ArgumentMatchers.any[UserAccount]()))
+        when(mockUserAccountRepo.insertNewUser(ArgumentMatchers.any[UserAccount]()))
           .thenReturn(Future.successful(MongoSuccessCreate))
 
         val result = await(testService.createNewUser(user))
@@ -75,7 +71,7 @@ class RegistrationServiceSpec extends CJWWSpec {
 
     "return a MongoFailedCreate" when {
       "there were problems inserting the given into the database" in new Setup {
-        when(mockUserAccountStore.insertNewUser(ArgumentMatchers.any[UserAccount]()))
+        when(mockUserAccountRepo.insertNewUser(ArgumentMatchers.any[UserAccount]()))
           .thenReturn(Future.successful(MongoFailedCreate))
 
         val result = await(testService.createNewUser(user))
@@ -87,7 +83,7 @@ class RegistrationServiceSpec extends CJWWSpec {
   "createNewOrgUser" should {
     "return a MongoSuccessCreate" when {
       "the given org user has been inserted into the database" in new Setup {
-        when(mockOrgAccountStore.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
+        when(mockOrgAccountRepo.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
           .thenReturn(Future.successful(MongoSuccessCreate))
 
         val result = await(testService.createNewOrgUser(orgUser))
@@ -97,7 +93,7 @@ class RegistrationServiceSpec extends CJWWSpec {
 
     "return a MongoFailedCreate" when {
       "there were problems inserting the given org user into the database" in new Setup {
-        when(mockOrgAccountStore.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
+        when(mockOrgAccountRepo.insertNewOrgUser(ArgumentMatchers.any[OrgAccount]()))
           .thenReturn(Future.successful(MongoFailedCreate))
 
         val result = await(testService.createNewOrgUser(orgUser))

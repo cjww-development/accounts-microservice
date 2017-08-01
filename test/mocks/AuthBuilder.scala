@@ -16,6 +16,8 @@
 
 package mocks
 
+import java.util.UUID
+
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
@@ -35,40 +37,48 @@ object AuthBuilder extends SessionBuild {
 
   final val now = new DateTime(DateTimeZone.UTC)
 
-  implicit val testContext =
-    AuthContext(
-      "context-1234567890",
-      User(
-        "user-766543",
-        Some("testFirstName"),
-        Some("testLastName"),
-        None,
-        "individual",
-        None
-      ),
-      "testLink",
-      "testLink",
-      "testLink",
-      now
-    )
+  def testContext(accountType: String, uuid: UUID): AuthContext = {
+    accountType match {
+      case "user" => AuthContext(
+        contextId = s"context-$uuid",
+        user = User(s"user-$uuid", Some("testFirstName"), Some("testLastName"), None, "individual", None),
+        basicDetailsUri = "testLink",
+        enrolmentsUri   = "testLink",
+        settingsUri     = "testLink",
+        createdAt       = now
+      )
+      case "org" => AuthContext(
+        contextId = s"context-$uuid",
+        user = User(s"org-user-$uuid", None, None, Some("testOrgName"), "organisation", None),
+        basicDetailsUri  = "testLink",
+        enrolmentsUri    = "testLink",
+        settingsUri      = "testLink",
+        createdAt        = now
+      )
+    }
+  }
 
-  def buildAuthorisedUserAndGet(action: Action[AnyContent],
-                                mockAuthConnector: AuthConnector)(test: Future[Result] => Any): Any = {
+  def getWithAuthorisedUser[T](action: Action[T], request: FakeRequest[_],
+                               mockAuthConnector: AuthConnector, uuid: UUID,
+                               orgType: String)(test: Future[Result] => Any): Any = {
 
-    val request = buildRequestWithSession
+    val context = testContext(orgType, uuid)
 
     when(mockAuthConnector.getContext(ArgumentMatchers.any()))
-      .thenReturn(Future.successful(Some(testContext)))
+      .thenReturn(Future.successful(Some(context)))
 
     val result = action.apply(request).run()
     test(result)
   }
 
-  def buildAuthorisedUserAndPost[T](action: Action[T],
-                             mockAuthConnector: AuthConnector,
-                             request: FakeRequest[T])(test: Future[Result] => Any): Any = {
+  def postWithAuthorisedUser(action: Action[String], request: FakeRequest[String],
+                              mockAuthConnector: AuthConnector, uuid: UUID,
+                              orgType: String)(test: Future[Result] => Any): Any = {
+
+    val context = testContext(orgType, uuid)
+
     when(mockAuthConnector.getContext(ArgumentMatchers.any()))
-      .thenReturn(Future.successful(Some(testContext)))
+      .thenReturn(Future.successful(Some(context)))
 
     val result = action.apply(request)
     test(result)

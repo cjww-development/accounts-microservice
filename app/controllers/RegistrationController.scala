@@ -15,45 +15,59 @@
 // limitations under the License.
 package controllers
 
-import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
+import com.cjwwdev.auth.actions.BaseAuth
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import com.cjwwdev.request.RequestParsers
 import com.google.inject.{Inject, Singleton}
 import models.{OrgAccount, UserAccount}
+import play.api.Logger
 import play.api.mvc.{Action, Controller}
-import services.RegistrationService
+import services.{RegistrationService, ValidationService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 @Singleton
-class RegistrationController @Inject()(registrationService : RegistrationService) extends Controller with RequestParsers with BaseAuth {
+class RegistrationController @Inject()(registrationService : RegistrationService,
+                                       validationService: ValidationService) extends Controller with RequestParsers with BaseAuth {
 
   def createNewUser : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        case Authorised =>
-          decryptRequest[UserAccount](UserAccount.newUserReads) { user =>
-            registrationService.createNewUser(user) map {
-              case MongoSuccessCreate   => Created
-              case MongoFailedCreate    => InternalServerError
+        decryptRequest[UserAccount](UserAccount.newUserReads) { user =>
+          for {
+            userNameInUse <- validationService.isUserNameInUse(user.userName)
+            emailInUse    <- validationService.isEmailInUse(user.email)
+            registered    <- if(!userNameInUse & !emailInUse) {
+              registrationService.createNewUser(user) map {
+                case MongoSuccessCreate   => Created
+                case MongoFailedCreate    => InternalServerError
+              }
+            } else {
+              Future.successful(Conflict)
             }
-          }
-        case NotAuthorised => Future.successful(Forbidden)
+          } yield registered
+        }
       }
   }
 
   def createNewOrgUser: Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        case Authorised =>
-          decryptRequest[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
-            registrationService.createNewOrgUser(orgUser) map {
-              case MongoSuccessCreate   => Created
-              case MongoFailedCreate    => InternalServerError
+        decryptRequest[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
+          for {
+            userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
+            emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)
+            registered    <- if(!userNameInUse & !emailInUse) {
+              registrationService.createNewOrgUser(orgUser) map {
+                case MongoSuccessCreate   => Created
+                case MongoFailedCreate    => InternalServerError
+              }
+            } else {
+              Future.successful(Conflict)
             }
-          }
-        case NotAuthorised => Future.successful(Forbidden)
+          } yield registered
+        }
       }
   }
 }

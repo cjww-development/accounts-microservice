@@ -18,31 +18,32 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
+import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.security.encryption.DataSecurity
 import models.TeacherDetails
 import play.api.mvc.{Action, AnyContent, Controller}
 import services.OrgAccountService
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authConnect: AuthConnector) extends Controller with Authorisation {
+class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authConnect: AuthConnector)
+  extends Controller with Authorisation with IdentifierValidation {
 
   val authConnector = authConnect
 
   def getOrganisationsTeachers(orgId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(orgId) {
-        case Authorised =>
+      validateAs(ORG_USER, orgId) {
+        authorised(orgId) {
           orgAccountService.getOrganisationsTeachers(orgId) map { list =>
-            Ok(DataSecurity.encryptType[List[TeacherDetails]](list).get)
+            Ok(DataSecurity.encryptType[List[TeacherDetails]](list))
           } recover {
             case _: Throwable => InternalServerError
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 }

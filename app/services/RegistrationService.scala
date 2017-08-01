@@ -18,21 +18,18 @@ package services
 import com.cjwwdev.reactivemongo.MongoCreateResponse
 import com.google.inject.{Inject, Singleton}
 import models.{OrgAccount, UserAccount}
-import repositories.{OrgAccountRepo, OrgAccountRepository, UserAccountRepo, UserAccountRepository}
+import repositories.{OrgAccountRepository, UserAccountRepository}
 
 import scala.concurrent.Future
 
 @Singleton
 class RegistrationService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
 
-  val userAccountStore: UserAccountRepo = userAccountRepository.store
-  val orgAccountstore: OrgAccountRepo = orgAccountRepository.store
-
   def createNewUser(newUser : UserAccount) : Future[MongoCreateResponse] = {
-    userAccountStore.insertNewUser(newUser)
+    userAccountRepository.insertNewUser(newUser)
   }
 
   def createNewOrgUser(newOrgUser: OrgAccount): Future[MongoCreateResponse] = {
-    orgAccountstore.insertNewOrgUser(newOrgUser)
+    orgAccountRepository.insertNewOrgUser(newOrgUser)
   }
 }

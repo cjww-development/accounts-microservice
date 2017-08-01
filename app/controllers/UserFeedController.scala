@@ -19,6 +19,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
 import models.FeedItem
@@ -27,36 +28,30 @@ import play.api.mvc.{Action, AnyContent, Controller}
 import services.UserFeedService
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 @Singleton
-class UserFeedController @Inject()(userFeedService: UserFeedService, authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation {
+class UserFeedController @Inject()(userFeedService: UserFeedService,
+                                   authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
 
   val authConnector: AuthConnector = authConnect
 
   def createEvent() : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        case Authorised =>
-          decryptRequest[FeedItem](FeedItem.newFeedItemReads) { fi =>
-            userFeedService.createFeedItem(fi) map {
-              case true => InternalServerError
-              case false => Ok
-            }
-          }
-        case NotAuthorised => Future.successful(Forbidden)
+        decryptRequest[FeedItem](FeedItem.newFeedItemReads) { fi =>
+          userFeedService.createFeedItem(fi) map(created => if(created) Ok else InternalServerError)
+        }
       }
   }
 
-  def retrieveFeed(userId: String) : Action[AnyContent] = Action.async {
-    implicit request =>
+  def retrieveFeed(userId: String) : Action[AnyContent] = Action.async { implicit request =>
+    validateAs(USER, userId) {
       authorised(userId) {
-        case Authorised =>
-          userFeedService.getFeedList(userId) map {
-            case Some(json) => Ok(DataSecurity.encryptType[JsObject](json).get)
-            case None => NotFound
-          }
-        case NotAuthorised => Future.successful(Forbidden)
+        userFeedService.getFeedList(userId) map {
+          case Some(json) => Ok(DataSecurity.encryptType[JsObject](json))
+          case None => NotFound
+        }
       }
+    }
   }
 }

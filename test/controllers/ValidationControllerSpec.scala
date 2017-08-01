@@ -27,10 +27,8 @@ import scala.concurrent.Future
 
 class ValidationControllerSpec extends CJWWSpec {
 
-  val mockValidationService = mock[ValidationService]
-
-  val testEncUserName = DataSecurity.encryptString("testUserName").get
-  val testEncEmail = DataSecurity.encryptString("test@email.com").get
+  val testEncUserName = DataSecurity.encryptString("testUserName")
+  val testEncEmail    = DataSecurity.encryptString("test@email.com")
 
   class Setup {
     val testController = new ValidationController(mockValidationService, mockAuthConnector)

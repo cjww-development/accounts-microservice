@@ -21,115 +21,86 @@ import helpers.CJWWSpec
 import models.{Settings, UpdatedPassword, UserProfile}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
-import repositories.UserAccountRepo
 
 import scala.concurrent.Future
 
 class AccountServiceSpec extends CJWWSpec {
 
-  val testProfile =
-    UserProfile(
-      "testFirst",
-      "testLast",
-      "testUser",
-      "test@email.com",
-      None
-    )
-
-  val testUpdatePasswordSet = UpdatedPassword("testOldPassword","testNewPassword")
-
-  val testAccountSettings =
-    Settings(
-      displayName = Some("full"),
-      displayNameColour = Some("#FFFFFF"),
-      displayImageURL  = Some("/test/uri")
-    )
-
   class Setup {
-    val testService = new AccountService(mockUserAccountRepo) {
-      override val userAccountStore: UserAccountRepo = mockUserAccountStore
-    }
+    val testService = new AccountService(mockUserAccountRepo)
   }
 
   "updateProfileInformation" should {
-    "return true" when {
-      "given a userId and UserProfile but the profile was not updated" in new Setup {
-        when(mockUserAccountStore.updateAccountData(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoFailedUpdate))
+    val testData = UserProfile("testFirstName", "testLastName", "testUserName", "test@email.com", None)
 
-        val result = await(testService.updateProfileInformation("testUserId", testProfile))
-        result mustBe MongoFailedUpdate
-      }
+    "return a MongoSuccessUpdate" in new Setup {
+      when(mockUserAccountRepo.updateAccountData(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoSuccessUpdate))
+
+      val result = await(testService.updateProfileInformation("testId", testData))
+      result mustBe MongoSuccessUpdate
     }
 
-    "return false" when {
-      "given a userId and UserProfile but the profile was not updated" in new Setup {
-        when(mockUserAccountStore.updateAccountData(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoSuccessUpdate))
+    "return a MongoFailedUpdate" in new Setup {
+      when(mockUserAccountRepo.updateAccountData(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoFailedUpdate))
 
-        val result = await(testService.updateProfileInformation("testUserId", testProfile))
-        result mustBe MongoSuccessUpdate
-      }
+      val result = await(testService.updateProfileInformation("testId", testData))
+      result mustBe MongoFailedUpdate
     }
   }
 
   "updatePassword" should {
-    "return an InvalidOldPassword" when {
-      "the provided old password doesn't match" in new Setup {
-        when(mockUserAccountStore.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(false))
+    val testData = UpdatedPassword("testOldPassword", "testNewPassword")
 
-        val result = await(testService.updatePassword("testUserId", testUpdatePasswordSet))
-        result mustBe InvalidOldPassword
-      }
+    "return an InvalidOldPassword" in new Setup {
+      when(mockUserAccountRepo.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(false))
+
+      val result = await(testService.updatePassword("testUserId", testData))
+      result mustBe InvalidOldPassword
     }
 
-    "return a PasswordUpdate(false)" when {
-      "the old password was found but wasn't updated" in new Setup {
-        when(mockUserAccountStore.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(true))
+    "return a PasswordUpdated" in new Setup {
+      when(mockUserAccountRepo.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(true))
 
-        when(mockUserAccountStore.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoFailedUpdate))
+      when(mockUserAccountRepo.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoSuccessUpdate))
 
-        val result = await(testService.updatePassword("testUserId", testUpdatePasswordSet))
-        result mustBe PasswordUpdateFailed
-      }
+      val result = await(testService.updatePassword("testUserId", testData))
+      result mustBe PasswordUpdated
     }
 
-    "return a PasswordUpdate(true)" when {
-      "the old password was found and was updated" in new Setup {
-        when(mockUserAccountStore.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(true))
+    "return a PasswordUpdateFailed" in new Setup {
+      when(mockUserAccountRepo.findPassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(true))
 
-        when(mockUserAccountStore.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoSuccessUpdate))
+      when(mockUserAccountRepo.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoFailedUpdate))
 
-        val result = await(testService.updatePassword("testUserId", testUpdatePasswordSet))
-        result mustBe PasswordUpdated
-      }
+      val result = await(testService.updatePassword("testUserId", testData))
+      result mustBe PasswordUpdateFailed
     }
   }
 
   "updateSettings" should {
-    "return a UpdatedSettingsFailed" when {
-      "there was a problem updating the settings" in new Setup {
-        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoFailedUpdate))
+    val testSettings = Settings("full", "#FFFFFF", "/test/url")
 
-        val result = await(testService.updateSettings("testUserId", testAccountSettings))
-        result mustBe UpdatedSettingsFailed
-      }
+    "return an UpdatedSettingsFailed" in new Setup {
+      when(mockUserAccountRepo.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoFailedUpdate))
+
+      val result = await(testService.updateSettings("testId", testSettings))
+      result mustBe UpdatedSettingsFailed
     }
 
-    "return a UpdatedSettingsSuccess" when {
-      "there was a problem updating the settings" in new Setup {
-        when(mockUserAccountStore.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoSuccessUpdate))
+    "return an UpdatedSettingsSuccess" in new Setup {
+      when(mockUserAccountRepo.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
+        .thenReturn(Future.successful(MongoSuccessUpdate))
 
-        val result = await(testService.updateSettings("testUserId", testAccountSettings))
-        result mustBe UpdatedSettingsSuccess
-      }
+      val result = await(testService.updateSettings("testId", testSettings))
+      result mustBe UpdatedSettingsSuccess
     }
   }
 }

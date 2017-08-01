@@ -20,67 +20,67 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{BasicDetails, Enrolments, OrgDetails, Settings}
 import play.api.mvc.{Action, AnyContent, Controller}
 import services.{GetDetailsService, OrgAccountService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 
 @Singleton
 class UserDetailsController @Inject()(detailsService: GetDetailsService,
                                       orgDetailsService: OrgAccountService,
-                                      authConnect: AuthConnector) extends Controller with Authorisation {
+                                      authConnect: AuthConnector) extends Controller with Authorisation with IdentifierValidation {
 
   val authConnector: AuthConnector = authConnect
 
   def getBasicDetails(userId: String) : Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(userId) {
-        case Authorised =>
+      validateAs(USER, userId) {
+        authorised(userId) {
           detailsService.getBasicDetails(userId) map { details =>
-             Ok(DataSecurity.encryptType[BasicDetails](details).get)
+            Ok(DataSecurity.encryptType[BasicDetails](details))
           } recover {
             case _: Throwable => NotFound
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 
   def getEnrolments(userId: String) : Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(userId) {
-        case Authorised =>
+      validateAs(USER, userId) {
+        authorised(userId) {
           detailsService.getEnrolments(userId) map {
-            case Some(enrolments) => Ok(DataSecurity.encryptType[Enrolments](enrolments).get)
-            case None => NotFound
+            case Some(enrolments) => Ok(DataSecurity.encryptType[Enrolments](enrolments))
+            case None             => NotFound
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 
   def getSettings(userId : String) : Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(userId) {
-        case Authorised =>
+      validateAs(USER, userId) {
+        authorised(userId) {
           detailsService.getSettings(userId) map {
-            case Some(settings) => Ok(DataSecurity.encryptType[Settings](settings).get)
-            case None => NotFound
+            case Some(settings) => Ok(DataSecurity.encryptType[Settings](settings))
+            case None           => NotFound
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 
   def getOrgBasicDetails(orgId: String): Action[AnyContent] = Action.async {
     implicit request =>
-      authorised(orgId) {
-        case Authorised =>
+      validateAs(ORG_USER, orgId) {
+        authorised(orgId) {
           orgDetailsService.getOrganisationBasicDetails(orgId) map {
-            case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details).get)
-            case None => NotFound
+            case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details))
+            case None          => NotFound
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 }

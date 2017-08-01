@@ -20,7 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.reactivemongo.MongoUpdatedResponse
 import com.cjwwdev.security.encryption.DataSecurity
-import models.{DeversityEnrolment, OrgDetails, TeacherDetails, UserAccount}
+import models.{DeversityEnrolment, OrgDetails, TeacherDetails}
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
 import scala.concurrent.Future
@@ -29,11 +29,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class DeversityService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
 
-  val userAccountStore = userAccountRepository.store
-  val orgAccountStore = orgAccountRepository.store
-
   def findSchool(orgUserName: String): Future[Boolean] = {
-    orgAccountStore.findSchool(orgUserName) map {
+    orgAccountRepository.findSchool(orgUserName) map {
       acc => true
     } recover {
       case _: Throwable => false
@@ -41,7 +38,7 @@ class DeversityService @Inject()(userAccountRepository: UserAccountRepository, o
   }
 
   def findTeacher(userName: String, schoolName: String): Future[Boolean] = {
-    userAccountStore.findTeacher(userName, schoolName) map {
+    userAccountRepository.findTeacher(userName, schoolName) map {
       acc => true
     } recover {
       case _: Throwable => false
@@ -49,18 +46,18 @@ class DeversityService @Inject()(userAccountRepository: UserAccountRepository, o
   }
 
   def getTeacherDetails(userName: String, schoolName: String): Future[Option[TeacherDetails]] = {
-    userAccountStore.findTeacher(userName, schoolName) map {
+    userAccountRepository.findTeacher(userName, schoolName) map {
       acc => acc.deversityDetails match {
         case Some(details)  => Some(TeacherDetails(details.title.get, acc.lastName, details.room.get, details.statusConfirmed))
         case None           => None
       }
     } recover {
-      case e: Throwable     => None
+      case _: Throwable     => None
     }
   }
 
   def getSchoolDetails(orgUserName: String): Future[Option[OrgDetails]] = {
-    orgAccountStore.getSchoolDetails(orgUserName) map {
+    orgAccountRepository.getSchoolDetails(orgUserName) map {
       details => Some(details)
     } recover {
       case _: Throwable => None
@@ -68,16 +65,16 @@ class DeversityService @Inject()(userAccountRepository: UserAccountRepository, o
   }
 
   def getDeversityUserInformation(userId: String): Future[Option[DeversityEnrolment]] = {
-    userAccountStore.getDeversityUserDetails(userId) map {
+    userAccountRepository.getAccount(userId) map {
       acc => acc.deversityDetails
     }
   }
 
   def updateDeversityUserInformation(userId: String, deversityDetails: DeversityEnrolment): Future[MongoUpdatedResponse] = {
-    userAccountStore.updateDeversityDataBlock(userId, deversityDetails)
+    userAccountRepository.updateDeversityDataBlock(userId, deversityDetails)
   }
 
   def createOrUpdateEnrolments(userId: String): Future[String] = {
-    userAccountStore.updateDeversityEnrolment(userId) map(devId => DataSecurity.encryptString(devId).get)
+    userAccountRepository.updateDeversityEnrolment(userId) map(devId => DataSecurity.encryptString(devId))
   }
 }

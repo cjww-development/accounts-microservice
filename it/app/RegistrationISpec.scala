@@ -15,41 +15,40 @@
 // limitations under the License.
 package app
 
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
 import play.api.libs.json.{JsValue, Json}
-import play.api.test.Helpers.{CREATED, FORBIDDEN}
+import play.api.test.Helpers._
 import utils.CJWWIntegrationUtils
 
 class RegistrationISpec extends CJWWIntegrationUtils {
-
   val testNewUserJson = Json.parse(
-    """
-      |{
-      | "firstName" : "testFirstName",
-      | "lastName" : "testLastName",
-      | "userName" : "testUserName",
-      | "email" : "test@email.com",
-      | "password" : "testPass"
-      |}
+    s"""
+       |{
+       | "firstName" : "testFirstName",
+       | "lastName" : "testLastName",
+       | "userName" : "tUserName",
+       | "email" : "test@email.com",
+       | "password" : "${SHA512.encrypt("testPass")}"
+       |}
     """.stripMargin
   )
 
-  val encryptedUserJson = DataSecurity.encryptType[JsValue](testNewUserJson).get
+  val encryptedUserJson = DataSecurity.encryptType[JsValue](testNewUserJson)
 
   val testNewOrgUserJson = Json.parse(
-    """
+    s"""
       |{
       | "orgName" : "testOrgName",
       | "initials" : "TI",
-      | "orgUserName" : "testOrgUserName",
+      | "orgUserName" : "oUserName",
       | "location" : "testLocation",
       | "orgEmail" : "test@email.com",
-      | "password" : "testPass"
+      | "password" : "${SHA512.encrypt("testPass")}"
       |}
     """.stripMargin
   )
 
-  val encryptedOrgUserJson = DataSecurity.encryptType[JsValue](testNewOrgUserJson).get
+  val encryptedOrgUserJson = DataSecurity.encryptType[JsValue](testNewOrgUserJson)
 
   "/account/create-new-user" should {
     "return a Created" when {
@@ -63,15 +62,15 @@ class RegistrationISpec extends CJWWIntegrationUtils {
 
         afterITest()
       }
-    }
 
-    "return a Forbidden" when {
-      "the request is not authorised" in {
-        val request = client(s"$baseUrl/account/create-new-user")
-          .post(encryptedUserJson)
+      "return a Forbidden" when {
+        "the request is not authorised" in {
+          val request = client(s"$baseUrl/account/create-new-user")
+            .post(encryptedUserJson)
 
-        val result = await(request)
-        result.status mustBe FORBIDDEN
+          val result = await(request)
+          result.status mustBe FORBIDDEN
+        }
       }
     }
   }

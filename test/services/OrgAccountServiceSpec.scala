@@ -16,10 +16,10 @@
 
 package services
 
+import config.MissingAccountException
 import helpers.CJWWSpec
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
-import repositories.{OrgAccountRepo, UserAccountRepo}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
 
@@ -107,18 +107,15 @@ class OrgAccountServiceSpec extends CJWWSpec {
   val testTeacherDetailsList = List(testTeacherDetails1, testTeacherDetails2)
 
   class Setup {
-    val testService = new OrgAccountService(mockOrgAccountRepo, mockUserAccountRepo) {
-      override val userAccountStore: UserAccountRepo = mockUserAccountStore
-      override val orgAccountStore: OrgAccountRepo = mockOrgAccountStore
-    }
+    val testService = new OrgAccountService(mockOrgAccountRepo, mockUserAccountRepo)
   }
 
   "getOrganisationsTeachers" should {
     "return a list of teacher details" in new Setup {
-      when(mockOrgAccountStore.getOrgAccount(ArgumentMatchers.any()))
+      when(mockOrgAccountRepo.getOrgAccount(ArgumentMatchers.any()))
         .thenReturn(Future.successful(testOrgAccount))
 
-      when(mockUserAccountStore.getAllTeacherForOrg(ArgumentMatchers.any()))
+      when(mockUserAccountRepo.getAllTeacherForOrg(ArgumentMatchers.any()))
         .thenReturn(Future.successful(testAccountList))
 
       val result = await(testService.getOrganisationsTeachers("org-test-org-id"))
@@ -129,12 +126,20 @@ class OrgAccountServiceSpec extends CJWWSpec {
   "getOrganisationBasicDetails" should {
     "return org details" when {
       "given a valid org id" in new Setup {
-        when(mockOrgAccountStore.getOrgDetails(ArgumentMatchers.any()))
+        when(mockOrgAccountRepo.getOrgDetails(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testOrgDetails))
 
         val result = await(testService.getOrganisationBasicDetails("org-test-org-id"))
         result mustBe Some(testOrgDetails)
       }
+    }
+
+    "throw a MissingAccountException" in new Setup {
+      when(mockOrgAccountRepo.getOrgDetails(ArgumentMatchers.any()))
+        .thenReturn(Future.failed(new MissingAccountException("")))
+
+      val result = await(testService.getOrganisationBasicDetails("org-test-org-id"))
+      result mustBe None
     }
   }
 }
