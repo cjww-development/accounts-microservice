@@ -19,7 +19,6 @@ import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import helpers.CJWWSpec
 import models.{EventDetail, FeedItem, SourceDetail}
 import org.joda.time.DateTime
-import repositories.{UserFeedRepo, UserFeedRepository}
 import org.mockito.Mockito._
 import org.mockito.ArgumentMatchers
 import play.api.libs.json.{JsObject, Json}
@@ -77,29 +76,27 @@ class UserFeedServiceSpec extends CJWWSpec {
   val testFeedList = List(testFeedItem, testFeedItem2)
 
   class Setup {
-    val testService = new UserFeedService(mockUserFeedRepo) {
-      override val userFeedStore: UserFeedRepo = mockUserFeedStore
-    }
+    val testService = new UserFeedService(mockUserFeedRepo)
   }
 
   "createFeedItem" should {
-    "return false" when {
+    "return true" when {
       "the feed item has been successfully created" in new Setup {
-        when(mockUserFeedStore.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserFeedRepo.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoSuccessCreate))
 
         val result = await(testService.createFeedItem(testFeedItem))
-        result mustBe false
+        result mustBe true
       }
     }
 
-    "return true" when {
+    "return false" when {
       "there was a problem creating the feed item" in new Setup {
-        when(mockUserFeedStore.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockUserFeedRepo.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(MongoFailedCreate))
 
         val result = await(testService.createFeedItem(testFeedItem))
-        result mustBe true
+        result mustBe false
       }
     }
   }
@@ -123,7 +120,7 @@ class UserFeedServiceSpec extends CJWWSpec {
   "getFeedList" should {
     "return a JsObject with a feed-array JsArray in it" when {
       "given a userId" in new Setup {
-        when(mockUserFeedStore.getFeedItems(ArgumentMatchers.any()))
+        when(mockUserFeedRepo.getFeedItems(ArgumentMatchers.any()))
           .thenReturn(Future.successful(List(testFeedItem)))
 
         val result = await(testService.getFeedList("testUserId"))

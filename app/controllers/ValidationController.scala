@@ -15,14 +15,13 @@
 // limitations under the License.
 package controllers
 
-import com.cjwwdev.auth.actions.{Authorised, BaseAuth, NotAuthorised}
+import com.cjwwdev.auth.actions.BaseAuth
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.request.RequestParsers
 import com.google.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, Controller}
 import services.ValidationService
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
@@ -33,28 +32,24 @@ class ValidationController @Inject()(validationService : ValidationService, auth
   def validateUserName(username : String) : Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        case Authorised =>
-          decryptUrl(username) { userName =>
-            validationService.isUserNameInUse(userName) map {
-              case false => Ok
-              case true => Conflict
-            }
+        decryptUrl(username) { userName =>
+          validationService.isUserNameInUse(userName) map {
+            case false => Ok
+            case true => Conflict
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 
   def validateEmail(email : String) : Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        case Authorised =>
-          decryptUrl(email) { emailAddress =>
-            validationService.isEmailInUse(emailAddress) map {
-              case false => Ok
-              case true => Conflict
-            }
+        decryptUrl(email) { emailAddress =>
+          validationService.isEmailInUse(emailAddress) map {
+            case false => Ok
+            case true => Conflict
           }
-        case NotAuthorised => Future.successful(Forbidden)
+        }
       }
   }
 }

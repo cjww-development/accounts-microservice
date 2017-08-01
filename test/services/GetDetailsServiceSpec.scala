@@ -20,7 +20,6 @@ import models.{BasicDetails, Enrolments, Settings, UserAccount}
 import org.joda.time.{DateTime, DateTimeZone}
 import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
-import repositories.UserAccountRepo
 
 import scala.concurrent.Future
 
@@ -28,79 +27,72 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
   final val now = new DateTime(DateTimeZone.UTC)
 
-  val testAccount =
-    UserAccount(
-      userId = "testId",
-      firstName = "testFirst",
-      lastName = "testLast",
-      userName = "testUser",
-      email = "test@email.com",
-      password = "testPassword",
-      deversityDetails = None,
-      createdAt = now,
-      enrolments = Some(Enrolments(
-        Some("testOtherId"),
-        Some("testOtherId"),
-        Some("testOtherId")
-      )),
-      settings = Some(Settings(
-        displayName = Some("full"),
-        displayNameColour = Some("#FFFFFF"),
-        displayImageURL  = Some("/test/uri")
-      ))
-    )
-
-  val testAccount2 =
-    UserAccount(
-      "testId",
-      "testFirst",
-      "testLast",
-      "testUser",
-      "test@email.com",
-      "testPassword",
-      None,
-      now,
-      Some(Enrolments(
-        Some("testOtherId"),
-        Some("testOtherId"),
-        Some("testOtherId")
-      )),
-      None
-    )
-
-  val testBasicDetails =
-    BasicDetails(
-      firstName = "testFirst",
-      lastName = "testLast",
-      userName = "testUser",
-      email = "test@email.com",
-      createdAt = now
-    )
-
-  val testEnrolments =
-    Enrolments(
+  val testAccount = UserAccount(
+    userId = "testId",
+    firstName = "testFirst",
+    lastName = "testLast",
+    userName = "testUser",
+    email = "test@email.com",
+    password = "testPassword",
+    deversityDetails = None,
+    createdAt = now,
+    enrolments = Some(Enrolments(
       Some("testOtherId"),
       Some("testOtherId"),
       Some("testOtherId")
-    )
+    )),
+    settings = Some(Settings(
+      displayName = "full",
+      displayNameColour = "#FFFFFF",
+      displayImageURL  = "/test/uri"
+    ))
+  )
 
-  val testSettings =
-    Settings(
-      displayName = Some("full"),
-      displayNameColour = Some("#FFFFFF"),
-      displayImageURL  = Some("/test/uri")
-    )
+  val testAccount2 = UserAccount(
+    "testId",
+    "testFirst",
+    "testLast",
+    "testUser",
+    "test@email.com",
+    "testPassword",
+    None,
+    now,
+    Some(Enrolments(
+      Some("testOtherId"),
+      Some("testOtherId"),
+      Some("testOtherId")
+    )),
+    None
+  )
+
+  val testBasicDetails = BasicDetails(
+    firstName = "testFirst",
+    lastName = "testLast",
+    userName = "testUser",
+    email = "test@email.com",
+    createdAt = now
+  )
+
+  val testEnrolments = Enrolments(
+    Some("testOtherId"),
+    Some("testOtherId"),
+    Some("testOtherId")
+  )
+
+  val testSettings = Settings(
+    displayName = "full",
+    displayNameColour = "#FFFFFF",
+    displayImageURL  = "/test/uri"
+  )
 
   class Setup {
-    val testService = new GetDetailsService(mockUserAccountRepo) {
-      override val userAccountStore: UserAccountRepo = mockUserAccountStore
-    }
+    val testService = new GetDetailsService(mockUserAccountRepo)
   }
 
   "getBasicDetails" should {
     "return a basic details" when {
       "given a userId" in new Setup {
-        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getBasicDetails("testId"))
@@ -112,7 +104,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getEnrolments" should {
     "return an enrolments model" when {
       "given a userId" in new Setup {
-        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getEnrolments("testId"))
@@ -124,7 +116,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getSettings" should {
     "return a settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getSettings("testId"))
@@ -134,7 +126,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
     "return no settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountStore.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
           .thenReturn(Future.successful(testAccount2))
 
         val result = await(testService.getSettings("testId"))

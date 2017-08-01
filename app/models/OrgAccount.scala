@@ -17,7 +17,9 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
+import com.cjwwdev.regex.RegexPack
 import org.joda.time.DateTime
+import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
@@ -33,24 +35,26 @@ case class OrgAccount(orgId: String,
                       createdAt: DateTime,
                       settings: Option[Settings])
 
-object OrgAccount extends JsonFormats[OrgAccount] with IdService {
+object OrgAccount extends JsonFormats[OrgAccount] with IdService with RegexPack {
+  private val orgNameValidation     = Reads.StringReads.filter(ValidationError("Invalid org name"))(_.matches(orgNameRegex.regex))
+  private val initialsValidation    = Reads.StringReads.filter(ValidationError("Invalid initials"))(_.matches(initialsRegex.regex))
+  private val orgUserNameValidation = Reads.StringReads.filter(ValidationError("Invalid org user name"))(_.matches(userNameRegex.regex))
+  private val locationValidation    = Reads.StringReads.filter(ValidationError("Invalid location"))(_.matches(locationRegex.regex))
+  private val emailValidation       = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+  private val passwordValidation    = Reads.StringReads.filter(ValidationError("Invalid password"))(_.length == 128)
 
-  val newOrgAccountReads: Reads[OrgAccount] = new Reads[OrgAccount] {
-    override def reads(json: JsValue): JsResult[OrgAccount] = {
-      JsSuccess(OrgAccount(
-        orgId = generateOrgId,
-        orgName = json.\("orgName").as[String],
-        initials = json.\("initials").as[String],
-        orgUserName = json.\("orgUserName").as[String],
-        location = json.\("location").as[String],
-        orgEmail = json.\("orgEmail").as[String],
-        credentialType = "organisation",
-        password = json.\("password").as[String],
-        createdAt = DateTime.now,
-        settings = None
-      ))
-    }
-  }
+  def newOrgAccountReads: Reads[OrgAccount] = (
+    (__ \ "orgId").read(generateOrgId) and
+    (__ \ "orgName").read[String](orgNameValidation) and
+    (__ \ "initials").read[String](initialsValidation) and
+    (__ \ "orgUserName").read[String](orgUserNameValidation) and
+    (__ \ "location").read[String](locationValidation) and
+    (__ \ "orgEmail").read[String](emailValidation) and
+    (__ \ "credentialType").read("organisation") and
+    (__ \ "password").read[String](passwordValidation) and
+    (__ \ "createdAt").read(DateTime.now) and
+    (__ \ "settings").read(None)
+  )(OrgAccount.apply _)
 
   implicit val standardFormat: OFormat[OrgAccount] = (
     (__ \ "orgId").format[String] and

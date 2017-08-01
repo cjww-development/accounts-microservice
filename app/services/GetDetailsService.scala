@@ -19,7 +19,7 @@ package services
 import javax.inject.{Inject, Singleton}
 
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
-import repositories.{UserAccountRepo, UserAccountRepository}
+import repositories.UserAccountRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -27,18 +27,16 @@ import scala.concurrent.Future
 @Singleton
 class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) {
 
-  val userAccountStore: UserAccountRepo = userAccountRepository.store
-
   def getBasicDetails(userId : String) : Future[BasicDetails] = {
-    userAccountStore.getAccount(userId) map(acc => extractBasicDetails(acc))
+    userAccountRepository.getAccount(userId) map(acc => extractBasicDetails(acc))
   }
 
   def getEnrolments(userId : String) : Future[Option[Enrolments]] = {
-    userAccountStore.getAccount(userId) map(acc => extractEnrolments(acc))
+    userAccountRepository.getAccount(userId) map(acc => extractEnrolments(acc))
   }
 
   def getSettings(userId : String) : Future[Option[Settings]] = {
-    userAccountStore.getAccount(userId) map(acc => extractSettings(acc))
+    userAccountRepository.getAccount(userId) map(acc => extractSettings(acc))
   }
 
   private def extractBasicDetails(user : UserAccount) : BasicDetails = {

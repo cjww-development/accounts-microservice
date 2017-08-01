@@ -28,11 +28,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 @Singleton
 class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, userAccountRepository: UserAccountRepository) {
 
-  val orgAccountStore = orgAccountRepository.store
-  val userAccountStore = userAccountRepository.store
-
   def getOrganisationBasicDetails(orgId: String): Future[Option[OrgDetails]] = {
-    orgAccountStore.getOrgDetails(orgId) map {
+    orgAccountRepository.getOrgDetails(orgId) map {
       details => Some(details)
     } recover {
       case _: MissingAccountException => None
@@ -41,8 +38,8 @@ class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, us
 
   def getOrganisationsTeachers(orgId: String): Future[List[TeacherDetails]] = {
     for {
-      orgAcc    <- orgAccountStore.getOrgAccount(orgId)
-      teachers  <- userAccountStore.getAllTeacherForOrg(orgAcc.orgUserName)
+      orgAcc    <- orgAccountRepository.getOrgAccount(orgId)
+      teachers  <- userAccountRepository.getAllTeacherForOrg(orgAcc.orgUserName)
     } yield {
       for {
         teacher <- teachers

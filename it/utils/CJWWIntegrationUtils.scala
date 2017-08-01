@@ -17,10 +17,10 @@ package utils
 
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
-import play.api.libs.ws.{WS, WSRequest}
-import reactivemongo.bson.BSONDocument
-import reactivemongo.play.json._
+import play.api.libs.ws.{WSClient, WSRequest}
 import repositories.{OrgAccountRepository, UserAccountRepository}
+import reactivemongo.play.json._
+import reactivemongo.bson.BSONDocument
 
 import scala.concurrent.{Await, Awaitable}
 import scala.concurrent.duration._
@@ -33,12 +33,14 @@ trait CJWWIntegrationUtils extends PlaySpec with GuiceOneServerPerSuite {
 
   val baseUrl = s"http://localhost:$port/accounts"
 
-  def client(url: String): WSRequest = WS.url(url)
+  lazy val ws = app.injector.instanceOf(classOf[WSClient])
+
+  def client(url: String): WSRequest = ws.url(url)
 
   def await[T](awaitable: Awaitable[T]): T = Await.result(awaitable, 5.seconds)
 
   def afterITest(): Unit = {
-    userAccountRepository.store.collection.remove(BSONDocument("userName" -> "testUserName"))
-    orgAccountRepository.store.collection.remove(BSONDocument("orgUserName" -> "testOrgUserName"))
+    userAccountRepository.collection.flatMap(_.remove(BSONDocument("userName" -> "tUserName")))
+    orgAccountRepository.collection.flatMap(_.remove(BSONDocument("orgUserName" -> "oUserName")))
   }
 }

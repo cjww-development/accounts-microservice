@@ -19,26 +19,22 @@ import config.{EmailInUse, EmailNotInUse, UserNameInUse, UserNameNotInUse}
 import helpers.CJWWSpec
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
-import repositories._
 
 import scala.concurrent.Future
 
 class ValidationServiceSpec extends CJWWSpec {
 
   class Setup {
-    val testService = new ValidationService(mockUserAccountRepo, mockOrgAccountRepo) {
-      override val userAccountStore: UserAccountRepo = mockUserAccountStore
-      override val orgAccountStore: OrgAccountRepo = mockOrgAccountStore
-    }
+    val testService = new ValidationService(mockUserAccountRepo, mockOrgAccountRepo)
   }
 
   "isUserNameInUse" should {
     "return a false" when {
       "the given user name is not in use" in new Setup {
-        when(mockUserAccountStore.verifyUserName(ArgumentMatchers.eq("testUserName")))
+        when(mockUserAccountRepo.verifyUserName(ArgumentMatchers.eq("testUserName")))
           .thenReturn(Future.successful(UserNameNotInUse))
 
-        when(mockOrgAccountStore.verifyUserName(ArgumentMatchers.eq("testUserName")))
+        when(mockOrgAccountRepo.verifyUserName(ArgumentMatchers.eq("testUserName")))
           .thenReturn(Future.successful(UserNameNotInUse))
 
         val result = await(testService.isUserNameInUse("testUserName"))
@@ -48,10 +44,10 @@ class ValidationServiceSpec extends CJWWSpec {
 
     "return a true" when {
       "the given user name is already in use" in new Setup {
-        when(mockUserAccountStore.verifyUserName(ArgumentMatchers.eq("testUserName")))
+        when(mockUserAccountRepo.verifyUserName(ArgumentMatchers.eq("testUserName")))
           .thenReturn(Future.successful(UserNameInUse))
 
-        when(mockOrgAccountStore.verifyUserName(ArgumentMatchers.eq("testUserName")))
+        when(mockOrgAccountRepo.verifyUserName(ArgumentMatchers.eq("testUserName")))
           .thenReturn(Future.successful(UserNameNotInUse))
 
         val result = await(testService.isUserNameInUse("testUserName"))
@@ -63,10 +59,10 @@ class ValidationServiceSpec extends CJWWSpec {
   "isEmailInUse" should {
     "return a continue" when {
       "the given email is not in use" in new Setup {
-        when(mockUserAccountStore.verifyEmail(ArgumentMatchers.eq("test@email.com")))
+        when(mockUserAccountRepo.verifyEmail(ArgumentMatchers.eq("test@email.com")))
           .thenReturn(Future.successful(EmailNotInUse))
 
-        when(mockOrgAccountStore.verifyEmail(ArgumentMatchers.eq("test@email.com")))
+        when(mockOrgAccountRepo.verifyEmail(ArgumentMatchers.eq("test@email.com")))
           .thenReturn(Future.successful(EmailNotInUse))
 
         val result = await(testService.isEmailInUse("test@email.com"))
@@ -76,10 +72,10 @@ class ValidationServiceSpec extends CJWWSpec {
 
     "return a conflict" when {
       "the given user name is already in use" in new Setup {
-        when(mockUserAccountStore.verifyEmail(ArgumentMatchers.eq("test@email.com")))
+        when(mockUserAccountRepo.verifyEmail(ArgumentMatchers.eq("test@email.com")))
           .thenReturn(Future.successful(EmailInUse))
 
-        when(mockOrgAccountStore.verifyEmail(ArgumentMatchers.eq("test@email.com")))
+        when(mockOrgAccountRepo.verifyEmail(ArgumentMatchers.eq("test@email.com")))
           .thenReturn(Future.successful(EmailNotInUse))
 
         val result = await(testService.isEmailInUse("test@email.com"))

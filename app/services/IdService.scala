@@ -19,7 +19,7 @@ package services
 import java.util.UUID
 
 trait IdService {
-  def generateUserId: String = s"user-${UUID.randomUUID}"
-  def generateOrgId: String = s"org-user-${UUID.randomUUID}"
-  def generateFeedId: String = s"feed-item-${UUID.randomUUID}"
+  def generateUserId: String  = s"user-${UUID.randomUUID}"
+  def generateOrgId: String   = s"org-user-${UUID.randomUUID}"
+  def generateFeedId: String  = s"feed-item-${UUID.randomUUID}"
 }

@@ -28,28 +28,23 @@ import scala.concurrent.Future
 @Singleton
 class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
 
-  val userFeedStore = userFeedRepository.store
-
-  private val MIN = 0
-  private val MAX = 10
-
   def createFeedItem(feedItem: FeedItem) : Future[Boolean] = {
-    userFeedStore.createFeedItem(feedItem) map {
-      case MongoSuccessCreate => false
-      case MongoFailedCreate => true
+    userFeedRepository.createFeedItem(feedItem) map {
+      case MongoSuccessCreate => true
+      case MongoFailedCreate  => false
     }
   }
 
   def flipList(list : List[FeedItem]) : Option[List[FeedItem]] = {
     if(list.nonEmpty) {
-      Some(list.reverse.slice(MIN, MAX))
+      Some(list.reverse)
     } else {
       None
     }
   }
 
   def getFeedList(userId : String) : Future[Option[JsObject]] = {
-    userFeedStore.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
+    userFeedRepository.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
   }
 
   private def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {

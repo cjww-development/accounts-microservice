@@ -16,11 +16,12 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
+import com.cjwwdev.regex.RegexPack
 import org.joda.time.DateTime
+import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
-
 
 case class DeversityEnrolment(statusConfirmed: String,
                               schoolName: String,
@@ -29,11 +30,21 @@ case class DeversityEnrolment(statusConfirmed: String,
                               room: Option[String],
                               teacher: Option[String])
 
-object DeversityEnrolment extends JsonFormats[DeversityEnrolment] {
+object DeversityEnrolment extends JsonFormats[DeversityEnrolment] with RegexPack {
+  val statusConfirmedRead = Reads.StringReads.filter(ValidationError("Invalid status"))(status => status.equals("pending") || status.equals("confirmed"))
+  val statusConfirmedWrite: Writes[String] = new Writes[String] {
+    override def writes(o: String) = Json.obj("statusConfirmed" -> o)
+  }
+
+  val roleRead = Reads.StringReads.filter(ValidationError("Invalid role"))(role => role.equals("teacher") || role.equals("student"))
+  val roleWrite: Writes[String] = new OWrites[String] {
+    override def writes(o: String) = Json.obj("role" -> o)
+  }
+
   implicit val standardFormat: OFormat[DeversityEnrolment] = (
-    (__ \ "statusConfirmed").format[String] and
+    (__ \ "statusConfirmed").format[String](statusConfirmedRead) and
     (__ \ "schoolName").format[String] and
-    (__ \ "role").format[String] and
+    (__ \ "role").format[String](roleRead) and
     (__ \ "title").formatNullable[String] and
     (__ \ "room").formatNullable[String] and
     (__ \ "teacher").formatNullable[String]
@@ -63,23 +74,25 @@ case class UserAccount(userId : String,
                        enrolments: Option[Enrolments],
                        settings : Option[Settings])
 
-object UserAccount extends JsonFormats[UserAccount] with IdService {
-  val newUserReads: Reads[UserAccount] = new Reads[UserAccount] {
-    override def reads(json: JsValue): JsResult[UserAccount] = {
-      JsSuccess(UserAccount(
-        userId = generateUserId,
-        firstName = json.\("firstName").as[String],
-        lastName = json.\("lastName").as[String],
-        userName = json.\("userName").as[String],
-        email = json.\("email").as[String],
-        password = json.\("password").as[String],
-        deversityDetails = None,
-        createdAt = DateTime.now,
-        enrolments = None,
-        settings = None
-      ))
-    }
-  }
+object UserAccount extends JsonFormats[UserAccount] with IdService with RegexPack {
+  private val firstNameValidation = Reads.StringReads.filter(ValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))
+  private val lastNameValidation  = Reads.StringReads.filter(ValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
+  private val userNameValidation  = Reads.StringReads.filter(ValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
+  private val emailValidation     = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+  private val passwordValidation  = Reads.StringReads.filter(ValidationError("Invalid password"))(_.length == 128)
+
+  def newUserReads: Reads[UserAccount] = (
+    (__ \ "userId").read[String](generateUserId) and
+    (__ \ "firstName").read[String](firstNameValidation) and
+    (__ \ "lastName").read[String](lastNameValidation) and
+    (__ \ "userName").read[String](userNameValidation) and
+    (__ \ "email").read[String](emailValidation) and
+    (__ \ "password").read[String](passwordValidation) and
+    (__ \ "deversityDetails").read(None) and
+    (__ \ "createdAt").read(DateTime.now) and
+    (__ \ "enrolments").read(None) and
+    (__ \ "settings").read(None)
+  )(UserAccount.apply _)
 
   implicit val standardFormat: OFormat[UserAccount] = (
     (__ \ "userId").format[String] and

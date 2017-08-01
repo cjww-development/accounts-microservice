@@ -15,17 +15,25 @@
 // limitations under the License.
 package models
 
+import java.util.UUID
+
 import com.cjwwdev.json.JsonFormats
 import org.joda.time.DateTime
+import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
 
+import scala.util.{Failure, Success, Try}
+
 case class SourceDetail(service : String, location : String)
 
 object SourceDetail extends JsonFormats[SourceDetail] {
+  private val frontendServices = List("auth-service", "deversity-frontend", "diagnostics-frontend")
+  private val serviceValidation = Reads.StringReads.filter(ValidationError("Invalid service"))(service => frontendServices.contains(service))
+
   implicit val standardFormat: OFormat[SourceDetail] = (
-    (__ \ "service").format[String] and
+    (__ \ "service").format[String](serviceValidation) and
     (__ \ "location").format[String]
   )(SourceDetail.apply, unlift(SourceDetail.unapply))
 }
@@ -47,23 +55,24 @@ case class FeedItem(feedId : String,
 
 object FeedItem extends JsonFormats[FeedItem] with IdService {
 
-  val newFeedItemReads: Reads[FeedItem] = new Reads[FeedItem] {
-    override def reads(json: JsValue): JsResult[FeedItem] = {
-      JsSuccess(FeedItem(
-        feedId = generateFeedId,
-        userId = json.\("userId").as[String],
-        sourceDetail = SourceDetail(
-          service = json.\("sourceDetail").\("service").as[String],
-          location = json.\("sourceDetail").\("location").as[String]
-        ),
-        eventDetail = EventDetail(
-          title = json.\("eventDetail").\("title").as[String],
-          description = json.\("eventDetail").\("description").as[String]
-        ),
-        generated = DateTime.now
-      ))
+  private val userIdValidation = Reads.StringReads.filter(ValidationError("Invalid user id"))(userId =>
+    if(userId.contains("user")) {
+      Try(UUID.fromString(userId.replace(s"user-", ""))) match {
+        case Success(_) => true
+        case Failure(_) => false
+      }
+    } else {
+      false
     }
-  }
+  )
+
+  val newFeedItemReads: Reads[FeedItem] = (
+    (__ \ "feedId").read(generateFeedId) and
+    (__ \ "userId").read[String](userIdValidation) and
+    (__ \ "sourceDetail").read[SourceDetail] and
+    (__ \ "eventDetail").read[EventDetail] and
+    (__ \ "generated").read(DateTime.now())
+  )(FeedItem.apply _)
 
   implicit val standardFormat: OFormat[FeedItem] = (
     (__ \ "feedId").format[String] and

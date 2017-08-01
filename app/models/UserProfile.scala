@@ -17,6 +17,8 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
+import com.cjwwdev.regex.RegexPack
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
@@ -24,14 +26,20 @@ case class UserProfile(firstName : String,
                        lastName : String,
                        userName : String,
                        email : String,
-                       settings : Option[Map[String, String]])
+                       settings : Option[Settings])
 
-object UserProfile extends JsonFormats[UserProfile] {
+object UserProfile extends JsonFormats[UserProfile] with RegexPack {
+  private val firstNameValidation = Reads.StringReads.filter(ValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))
+  private val lastNameValidation = Reads.StringReads.filter(ValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
+  private val userNameValidation = Reads.StringReads.filter(ValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
+  private val emailValidation = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+
+
   implicit val standardFormat: OFormat[UserProfile] = (
-    (__ \ "firstName").format[String] and
-    (__ \ "lastName").format[String] and
-    (__ \ "userName").format[String] and
-    (__ \ "email").format[String] and
-    (__ \ "settings").formatNullable[Map[String, String]]
+    (__ \ "firstName").format[String](firstNameValidation) and
+    (__ \ "lastName").format[String](lastNameValidation) and
+    (__ \ "userName").format[String](userNameValidation) and
+    (__ \ "email").format[String](emailValidation) and
+    (__ \ "settings").formatNullable[Settings]
   )(UserProfile.apply, unlift(UserProfile.unapply))
 }

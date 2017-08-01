@@ -18,13 +18,13 @@ package repositories
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.logging.Logger
 import com.cjwwdev.reactivemongo._
 import config.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
 import config._
 import models._
-import play.api.libs.json.OFormat
-import reactivemongo.api.DB
+import play.api.Logger
+import play.api.libs.json.{JsObject, Json, OFormat}
+import reactivemongo.api.Cursor
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
@@ -33,12 +33,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class UserAccountRepository @Inject()() extends MongoConnector {
-  val store = new UserAccountRepo(db)
-}
-
-class UserAccountRepo(db: () => DB) extends MongoRepository("user-accounts", db) {
-
+class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   override def indexes: Seq[Index] = Seq(
     Index(
       key = Seq("userId" -> IndexType.Ascending),
@@ -48,6 +43,8 @@ class UserAccountRepo(db: () => DB) extends MongoRepository("user-accounts", db)
     )
   )
 
+  private val ALL = -1
+
   private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
   private def deversitySchoolSelector(orgName: String): BSONDocument = BSONDocument(
     "deversityDetails.schoolName" -> orgName,
@@ -56,146 +53,126 @@ class UserAccountRepo(db: () => DB) extends MongoRepository("user-accounts", db)
   private def generateDeversityId: String = s"deversity-${UUID.randomUUID()}"
 
   def insertNewUser(user : UserAccount) : Future[MongoCreateResponse] = {
-    collection.insert(user) map { writeResult =>
-      if(writeResult.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new UserAccount")
+    collection flatMap {
+      _.insert(user) map { wr =>
+        if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException(s"Failed to create new UserAccount")
+      }
     }
   }
 
   def verifyUserName(username : String) : Future[UserNameUse] = {
-    collection.find(BSONDocument("userName" -> username)).one[UserAccount] map {
-      case Some(_)  =>
-        Logger.info(s"[UserAccountRepo] - [verifyUserName] : This user name is already in use on this system")
-        UserNameInUse
-      case None     => UserNameNotInUse
+    collection flatMap {
+      _.find(BSONDocument("userName" -> username)).one[UserAccount] map {
+        case Some(_) =>
+          Logger.info(s"[UserAccountRepo] - [verifyUserName] : This user name is already in use on this system")
+          UserNameInUse
+        case None => UserNameNotInUse
+      }
     }
   }
 
   def verifyEmail(email : String) : Future[EmailUse] = {
-    collection.find(BSONDocument("email" -> email)).one[UserAccount] map {
-      case Some(_)  =>
-        Logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
-        EmailInUse
-      case None     => EmailNotInUse
+    collection flatMap {
+      _.find(BSONDocument("email" -> email)).one[UserAccount] map {
+        case Some(_) =>
+          Logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
+          EmailInUse
+        case None => EmailNotInUse
+      }
     }
   }
 
   def getAccount(userId : String) : Future[UserAccount] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] map {
-      case Some(acc)  => acc
-      case None       => throw new MissingAccountException(s"No user account found for user id $userId")
+    collection flatMap {
+      _.find(userIdSelector(userId)).one[UserAccount] map {
+        case Some(acc) => acc
+        case None => throw new MissingAccountException(s"No user account found for user id $userId")
+      }
     }
   }
 
   def updateAccountData(userId: String, userProfile: UserProfile)(implicit format: OFormat[UserProfile]) : Future[MongoUpdatedResponse] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
-      case Some(acc) =>
-        val updatedData = acc.copy(
-          firstName = userProfile.firstName,
-          lastName  = userProfile.lastName,
-          email     = userProfile.email
-        )
-        collection.update(userIdSelector(userId),updatedData) map { writeResult =>
-          if(writeResult.ok) {
-            MongoSuccessUpdate
-          } else {
-            throw new FailedToUpdateException(s"Failed to update user profile for user id $userId")
-          }
-        }
-      case None => throw new MissingAccountException(s"No user account found for user id $userId")
+    val updatedData = BSONDocument("$set" -> BSONDocument(
+      "firstName" -> userProfile.firstName,
+      "lastName"  -> userProfile.lastName,
+      "email"     -> userProfile.email
+    ))
+    collection.flatMap {
+      _.update(userIdSelector(userId), updatedData) map { wr =>
+        if(wr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update user profile for user id $userId")
+      }
     }
   }
 
-  def findPassword(userId: String, passwordSet : UpdatedPassword)(implicit format: OFormat[UpdatedPassword]) : Future[Boolean] = {
-    collection.find(BSONDocument("userId" -> userId)).one[UserAccount] map {
-      case Some(_)  => true
-      case None     => throw new MissingAccountException(s"No user account found for user id $userId")
+  def findPassword(userId: String, oldPassword: String)(implicit format: OFormat[UpdatedPassword]) : Future[Boolean] = {
+    collection flatMap {
+      _.find(BSONDocument("userId" -> userId, "password" -> oldPassword)).one[UserAccount] map {
+        case Some(_) => true
+        case None => throw new MissingAccountException(s"No matching user account for user id $userId")
+      }
     }
   }
 
-  def updatePassword(userId: String, passwordSet : UpdatedPassword)(implicit format: OFormat[UpdatedPassword]) : Future[MongoUpdatedResponse] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
-      case Some(acc) =>
-        val updatedData = acc.copy(password = passwordSet.newPassword)
-        collection.update(userIdSelector(userId), updatedData) map { writeResult =>
-          if(writeResult.ok) {
-            MongoSuccessUpdate
-          } else {
-            throw new FailedToUpdateException(s"Failed to update password for user id $userId")
-          }
-        }
-      case None => throw new MissingAccountException(s"No user account found for user id $userId")
+  def updatePassword(userId: String, newPassword : String)(implicit format: OFormat[UpdatedPassword]) : Future[MongoUpdatedResponse] = {
+    collection flatMap {
+      _.update(userIdSelector(userId), BSONDocument("$set" -> BSONDocument("password" -> newPassword))) map { wr =>
+        if(wr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update password for user id $userId")
+      }
     }
   }
 
   def updateSettings(userId: String, newSettings : Settings): Future[MongoUpdatedResponse] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
-      case Some(acc) =>
-        val updatedData = acc.copy(settings = Some(newSettings))
-        collection.update(userIdSelector(userId), updatedData) map { writeResult =>
-          if(writeResult.ok) {
-            MongoSuccessUpdate
-          } else {
-            throw new FailedToUpdateException(s"Failed to update user settings for user id $userId")
-          }
-        }
-      case None => throw new MissingAccountException(s"No user account for user id $userId")
-    }
-  }
+    val settings = BSONDocument("$set" -> BSONDocument("settings" -> BSONDocument(
+      "displayName"       -> newSettings.displayName,
+      "displayNameColour" -> newSettings.displayNameColour,
+      "displayImageURL"   -> newSettings.displayImageURL
+    )))
 
-  def getDeversityUserDetails(userId: String): Future[UserAccount] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] map {
-      case Some(acc)  => acc
-      case None       => throw new MissingAccountException(s"No user account found for $userId")
+    collection flatMap {
+      _.update(userIdSelector(userId), settings) map { wr =>
+        if(wr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update user settings for user id $userId")
+      }
     }
   }
 
   def updateDeversityEnrolment(userId: String): Future[String] = {
     val generatedDevId = generateDeversityId
-    collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
-      case Some(acc) => acc.enrolments match {
-        case Some(enr) => collection.update(userIdSelector(userId), acc.copy(enrolments = Some(enr.copy(deversityId = Some(generatedDevId))))) map {
-          writeResult =>
-            if(writeResult.ok) {
-              generatedDevId
-            } else {
-              throw new FailedToUpdateException(s"Failed to update dev id for user $userId")
-            }
-        }
-        case None => collection.update(userIdSelector(userId), acc.copy(enrolments = Some(Enrolments(None, None, Some(generatedDevId))))) map { writeResult =>
-          if(writeResult.ok) {
-            generatedDevId
-          } else {
-            throw new FailedToUpdateException(s"Failed to update dev id for user $userId")
-          }
-        }
+    val enrolment = BSONDocument("$set" -> BSONDocument("enrolments" -> BSONDocument(
+      "deversityId" -> generatedDevId
+    )))
+
+    collection flatMap {
+      _.update(userIdSelector(userId), enrolment) map { wr =>
+        if(wr.ok) generatedDevId else throw new FailedToUpdateException(s"Failed to update dev id for user $userId")
       }
-      case None => throw new MissingAccountException(s"No user account found for $userId")
     }
   }
 
   def updateDeversityDataBlock(userId: String, deversityEnrolmentDetails: DeversityEnrolment): Future[MongoUpdatedResponse] = {
-    collection.find(userIdSelector(userId)).one[UserAccount] flatMap {
-      case Some(acc) => collection.update(userIdSelector(userId), acc.copy(deversityDetails = Some(deversityEnrolmentDetails))) map {
-        writeResult =>
-          if(writeResult.ok) {
-            MongoSuccessUpdate
-          } else {
-            throw new FailedToUpdateException(s"There was a problem updating the deversity enrolment block for $userId")
-          }
+    val update = BSONDocument("$set" -> BSONDocument(
+      "deversityDetails" -> Json.toJson(deversityEnrolmentDetails).as[JsObject]
+    ))
+
+    collection flatMap {
+      _.update(userIdSelector(userId), update) map { wr =>
+        if(wr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"There was a problem updating the deversity enrolment block for $userId")
       }
-      case None => throw new MissingAccountException(s"No user account found for $userId")
     }
   }
 
   def findTeacher(teacherName: String, schoolName: String): Future[UserAccount] = {
     val query = BSONDocument("userName" -> teacherName, "deversityDetails.schoolName" -> schoolName)
-    collection.find(query).one[UserAccount] map {
-      case Some(acc)  => acc
-      case None       => throw new MissingAccountException(s"No user account found matching teacher name $teacherName and school name $schoolName")
+    collection flatMap {
+      _.find(query).one[UserAccount] map {
+        case Some(acc) => acc
+        case None => throw new MissingAccountException(s"No user account found matching teacher name $teacherName and school name $schoolName")
+      }
     }
   }
 
   def getAllTeacherForOrg(orgName: String): Future[List[UserAccount]] = {
-    collection.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List]()
+    collection flatMap {
+      _.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List](ALL, Cursor.FailOnError[List[UserAccount]]())
+    }
   }
 }

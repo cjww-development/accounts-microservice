@@ -17,17 +17,27 @@
 package models
 
 import com.cjwwdev.json.JsonFormats
+import com.cjwwdev.regex.RegexPack
+import play.api.data.validation.ValidationError
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
 
-case class Settings(displayName : Option[String],
-                    displayNameColour : Option[String],
-                    displayImageURL : Option[String])
+case class Settings(displayName : String,
+                    displayNameColour : String,
+                    displayImageURL : String)
 
-object Settings extends JsonFormats[Settings] {
+object Settings extends JsonFormats[Settings] with RegexPack {
+  private val displayNameValidation = {
+    val options = List("full", "short", "user")
+    Reads.StringReads.filter(ValidationError("Invalid display name option"))(option => options.contains(option))
+  }
+
+  private val displayNameColourValidation = Reads.StringReads.filter(ValidationError("Invalid hex colour"))(_.matches(hexadecimalColourRegex.regex))
+  private val displayImageUrlValidation = Reads.StringReads.filter(ValidationError("Invalid url"))(url => url.matches(urlRegex.regex) || url.equals(defaultUrl))
+
   implicit val standardFormat: OFormat[Settings] = (
-    (__ \ "displayName").formatNullable[String] and
-    (__ \ "displayNameColour").formatNullable[String] and
-    (__ \ "displayImageURL").formatNullable[String]
+    (__ \ "displayName").format[String](displayNameValidation) and
+    (__ \ "displayNameColour").format[String](displayNameColourValidation) and
+    (__ \ "displayImageURL").format[String](displayImageUrlValidation)
   )(Settings.apply, unlift(Settings.unapply))
 }

@@ -16,7 +16,7 @@
 
 package config
 
-import com.cjwwdev.bootstrap.config.BaseConfiguration
+import com.cjwwdev.config.BaseConfiguration
 
 trait ApplicationConfiguration extends BaseConfiguration {
   val authMicroservice: String  = config.getString(s"$env.routes.auth-microservice")

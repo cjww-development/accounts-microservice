@@ -17,12 +17,11 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.logging.Logger
-import com.cjwwdev.reactivemongo.{MongoConnector, MongoCreateResponse, MongoRepository, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo.{MongoCreateResponse, MongoDatabase, MongoSuccessCreate}
 import config.{FailedToCreateException, MissingAccountException}
 import config._
 import models._
-import reactivemongo.api.DB
+import play.api.Logger
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
@@ -31,11 +30,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class OrgAccountRepository @Inject()() extends MongoConnector {
-  val store = new OrgAccountRepo(db)
-}
-
-class OrgAccountRepo(db: () => DB) extends MongoRepository("org-accounts", db) {
+class OrgAccountRepository @Inject()() extends MongoDatabase("org-accounts") {
 
   override def indexes: Seq[Index] = Seq(
     Index(
@@ -50,54 +45,70 @@ class OrgAccountRepo(db: () => DB) extends MongoRepository("org-accounts", db) {
   private def orgIdSelector(orgId: String): BSONDocument = BSONDocument("orgId" -> orgId)
 
   def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
-    collection.insert(orgUser) map { writeResult =>
-      if(writeResult.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
+    collection flatMap {
+      _.insert(orgUser) map { wr =>
+        if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
+      }
     }
   }
 
   def verifyUserName(username : String) : Future[UserNameUse] = {
-    collection.find(orgUserNameSelector(username)).one[OrgAccount] map {
-      case Some(_)  =>
-        Logger.info(s"[OrgAccountRepository] - [verifyUserName] : This user name is already in use on this system")
-        UserNameInUse
-      case None     => UserNameNotInUse
+    collection flatMap {
+      _.find(orgUserNameSelector(username)).one[OrgAccount] map {
+        case Some(_) =>
+          Logger.info(s"[OrgAccountRepository] - [verifyUserName] : This user name is already in use on this system")
+          UserNameInUse
+        case None =>
+          UserNameNotInUse
+      }
     }
   }
 
   def verifyEmail(email : String) : Future[EmailUse] = {
-    collection.find(BSONDocument("email" -> email)).one[OrgAccount] map {
-      case Some(_)  =>
-        Logger.info(s"[OrgAccountRepository] - [verifyEmail] : This email address is already in use on this system")
-        EmailInUse
-      case None     => EmailNotInUse
+    collection flatMap {
+      _.find(BSONDocument("orgEmail" -> email)).one[OrgAccount] map {
+        case Some(_) =>
+          Logger.info(s"[OrgAccountRepository] - [verifyEmail] : This email address is already in use on this system")
+          EmailInUse
+        case None =>
+          EmailNotInUse
+      }
     }
   }
 
   def findSchool(orgName: String): Future[OrgAccount] = {
-    collection.find(orgUserNameSelector(orgName)).one[OrgAccount] map {
-      case Some(acc)  => acc
-      case None       => throw new MissingAccountException(s"No org account found for org name $orgName")
+    collection flatMap {
+      _.find(orgUserNameSelector(orgName)).one[OrgAccount] map {
+        case Some(acc) => acc
+        case None => throw new MissingAccountException(s"No org account found for org name $orgName")
+      }
     }
   }
 
   def getSchoolDetails(orgName: String): Future[OrgDetails] = {
-    collection.find(orgUserNameSelector(orgName)).one[OrgDetails] map {
-      case Some(details)  => details
-      case None           => throw new MissingAccountException(s"No org account for org name $orgName")
+    collection flatMap {
+      _.find(orgUserNameSelector(orgName)).one[OrgDetails] map {
+        case Some(details) => details
+        case None => throw new MissingAccountException(s"No org account found for org name $orgName")
+      }
     }
   }
 
   def getOrgDetails(orgId: String): Future[OrgDetails] = {
-    collection.find(orgIdSelector(orgId)).one[OrgDetails] map {
-      case Some(details)  => details
-      case None           => throw new MissingAccountException(s"No org account for org id $orgId")
+    collection flatMap {
+      _.find(orgIdSelector(orgId)).one[OrgDetails] map {
+        case Some(details) => details
+        case None => throw new MissingAccountException(s"No org account for org id $orgId")
+      }
     }
   }
 
   def getOrgAccount(orgId: String): Future[OrgAccount] = {
-    collection.find(orgIdSelector(orgId)).one[OrgAccount] map {
-      case Some(acc) => acc
-      case None => throw new MissingAccountException(s"No org account for org id $orgId")
+    collection flatMap {
+      _.find(orgIdSelector(orgId)).one[OrgAccount] map {
+        case Some(acc) => acc
+        case None => throw new MissingAccountException(s"No org account for org id $orgId")
+      }
     }
   }
 }
