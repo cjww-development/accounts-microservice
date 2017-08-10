@@ -21,6 +21,7 @@ import javax.inject.{Inject, Singleton}
 import com.cjwwdev.reactivemongo.MongoUpdatedResponse
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{DeversityEnrolment, OrgDetails, TeacherDetails}
+import play.api.libs.json.{JsValue, Json}
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
 import scala.concurrent.Future
@@ -76,5 +77,12 @@ class DeversityService @Inject()(userAccountRepository: UserAccountRepository, o
 
   def createOrUpdateEnrolments(userId: String): Future[String] = {
     userAccountRepository.updateDeversityEnrolment(userId) map(devId => DataSecurity.encryptString(devId))
+  }
+
+  def getPendingDeversityEnrolmentCount(orgId: String): Future[JsValue] = {
+    for {
+      orgAcc        <- orgAccountRepository.getOrgAccount(orgId)
+      pendingCount  <- userAccountRepository.getPendingDeversityEnrolmentCount(orgAcc.orgUserName)
+    } yield Json.parse(s"""{"pendingCount" : $pendingCount}""")
   }
 }

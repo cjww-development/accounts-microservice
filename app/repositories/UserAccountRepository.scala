@@ -36,14 +36,12 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   override def indexes: Seq[Index] = Seq(
     Index(
-      key = Seq("userId" -> IndexType.Ascending),
-      name = Some("UserId"),
-      unique = true,
-      sparse = false
+      key     = Seq("userId" -> IndexType.Ascending),
+      name    = Some("UserId"),
+      unique  = true,
+      sparse  = false
     )
   )
-
-  private val ALL = -1
 
   private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
   private def deversitySchoolSelector(orgName: String): BSONDocument = BSONDocument(
@@ -63,10 +61,10 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   def verifyUserName(username : String) : Future[UserNameUse] = {
     collection flatMap {
       _.find(BSONDocument("userName" -> username)).one[UserAccount] map {
-        case Some(_) =>
+        case Some(_)  =>
           Logger.info(s"[UserAccountRepo] - [verifyUserName] : This user name is already in use on this system")
           UserNameInUse
-        case None => UserNameNotInUse
+        case None     => UserNameNotInUse
       }
     }
   }
@@ -74,10 +72,10 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   def verifyEmail(email : String) : Future[EmailUse] = {
     collection flatMap {
       _.find(BSONDocument("email" -> email)).one[UserAccount] map {
-        case Some(_) =>
+        case Some(_)  =>
           Logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
           EmailInUse
-        case None => EmailNotInUse
+        case None     => EmailNotInUse
       }
     }
   }
@@ -85,8 +83,8 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   def getAccount(userId : String) : Future[UserAccount] = {
     collection flatMap {
       _.find(userIdSelector(userId)).one[UserAccount] map {
-        case Some(acc) => acc
-        case None => throw new MissingAccountException(s"No user account found for user id $userId")
+        case Some(acc)  => acc
+        case None       => throw new MissingAccountException(s"No user account found for user id $userId")
       }
     }
   }
@@ -108,7 +106,7 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
     collection flatMap {
       _.find(BSONDocument("userId" -> userId, "password" -> oldPassword)).one[UserAccount] map {
         case Some(_) => true
-        case None => throw new MissingAccountException(s"No matching user account for user id $userId")
+        case None    => throw new MissingAccountException(s"No matching user account for user id $userId")
       }
     }
   }
@@ -165,14 +163,21 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
     collection flatMap {
       _.find(query).one[UserAccount] map {
         case Some(acc) => acc
-        case None => throw new MissingAccountException(s"No user account found matching teacher name $teacherName and school name $schoolName")
+        case None      => throw new MissingAccountException(s"No user account found matching teacher name $teacherName and school name $schoolName")
       }
     }
   }
 
   def getAllTeacherForOrg(orgName: String): Future[List[UserAccount]] = {
     collection flatMap {
-      _.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List](ALL, Cursor.FailOnError[List[UserAccount]]())
+      _.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List]()
+    }
+  }
+
+  def getPendingDeversityEnrolmentCount(orgName: String): Future[Int] = {
+    val query = BSONDocument("deversityDetails.schoolName" -> orgName, "deversityDetails.role" -> "teacher", "deversityDetails.statusConfirmed" -> "pending")
+    collection flatMap {
+      _.find(query).cursor[UserAccount]().collect[List]() map(_.size)
     }
   }
 }

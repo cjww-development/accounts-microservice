@@ -40,17 +40,13 @@ class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, us
     for {
       orgAcc    <- orgAccountRepository.getOrgAccount(orgId)
       teachers  <- userAccountRepository.getAllTeacherForOrg(orgAcc.orgUserName)
-    } yield {
-      for {
-        teacher <- teachers
-      } yield {
-        TeacherDetails(
-          teacher.deversityDetails.get.title.get,
-          teacher.lastName,
-          teacher.deversityDetails.get.room.get,
-          teacher.deversityDetails.get.statusConfirmed
-        )
-      }
+    } yield teachers map { user =>
+      TeacherDetails(
+        user.deversityDetails.get.title.get,
+        user.lastName,
+        user.deversityDetails.get.room.get,
+        user.deversityDetails.get.statusConfirmed
+      )
     }
   }
 }
