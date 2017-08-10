@@ -30,3 +30,4 @@ GET         /teacher/:userName/school/:schoolName/details                   cont
 GET         /account/:userId/deversity-info                                 controllers.DeversityController.getDeversityInformation(userId)
 PATCH       /account/:userId/deversity-info                                 controllers.DeversityController.updateDeversityInformation(userId)
 PATCH       /account/:userId/deversity-id                                   controllers.DeversityController.updatedDeversityId(userId)
+GET         /account/:orgId/pending-deversity-enrolments                    controllers.DeversityController.getPendingEnrolmentsCount(orgId)

@@ -121,4 +121,18 @@ class DeversityController @Inject()(deversityService: DeversityService,
         }
       }
   }
+
+  def getPendingEnrolmentsCount(orgId: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      validateAs(ORG_USER, orgId) {
+        authorised(orgId) {
+          deversityService.getPendingDeversityEnrolmentCount(orgId) map { count =>
+            Ok(DataSecurity.encryptType(count))
+          } recover {
+            case _ => InternalServerError
+          }
+        }
+      }
+  }
+
 }
