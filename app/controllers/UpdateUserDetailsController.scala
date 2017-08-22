@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.request.RequestParsers
@@ -32,17 +33,16 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class UpdateUserDetailsController @Inject()(accountService: AccountService,
-                                            authConnect: AuthConnector) extends Controller
-  with RequestParsers with Authorisation with IdentifierValidation {
-
-  val authConnector: AuthConnector = authConnect
+                                            val config: ConfigurationLoader,
+                                            val authConnector: AuthConnector)
+  extends Controller with RequestParsers with Authorisation with IdentifierValidation {
 
   def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          decryptRequest[UserProfile](UserProfile.standardFormat) { profile =>
-            accountService.updateProfileInformation(userId, profile) map {
+        authorised(userId) { context =>
+          withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
+            accountService.updateProfileInformation(context.user.userId, profile) map {
               case MongoSuccessUpdate => Ok
               case MongoFailedUpdate  => InternalServerError
             }
@@ -54,9 +54,9 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService,
   def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          decryptRequest[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
-            accountService.updatePassword(userId, passwordSet) map {
+        authorised(userId) { context =>
+          withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
+            accountService.updatePassword(context.user.userId, passwordSet) map {
               case PasswordUpdated      => Ok
               case InvalidOldPassword   => Conflict
               case PasswordUpdateFailed => InternalServerError
@@ -69,11 +69,11 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService,
   def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          decryptRequest[Settings](Settings.standardFormat) { settings =>
-            accountService.updateSettings(userId, settings) map {
+        authorised(userId) { context =>
+          withJsonBody[Settings](Settings.standardFormat) { settings =>
+            accountService.updateSettings(context.user.userId, settings) map {
               case UpdatedSettingsSuccess => Ok
-              case UpdatedSettingsFailed => InternalServerError
+              case UpdatedSettingsFailed  => InternalServerError
             }
           }
         }

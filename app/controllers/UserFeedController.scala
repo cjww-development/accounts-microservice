@@ -17,8 +17,9 @@ package controllers
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.auth.actions.{Authorisation, Authorised, NotAuthorised}
+import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
@@ -31,14 +32,13 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class UserFeedController @Inject()(userFeedService: UserFeedService,
-                                   authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
-
-  val authConnector: AuthConnector = authConnect
+                                   val config: ConfigurationLoader,
+                                   val authConnector: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
 
   def createEvent() : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        decryptRequest[FeedItem](FeedItem.newFeedItemReads) { fi =>
+        withJsonBody[FeedItem](FeedItem.newFeedItemReads) { fi =>
           userFeedService.createFeedItem(fi) map(created => if(created) Ok else InternalServerError)
         }
       }
@@ -46,10 +46,10 @@ class UserFeedController @Inject()(userFeedService: UserFeedService,
 
   def retrieveFeed(userId: String) : Action[AnyContent] = Action.async { implicit request =>
     validateAs(USER, userId) {
-      authorised(userId) {
-        userFeedService.getFeedList(userId) map {
+      authorised(userId) { context =>
+        userFeedService.getFeedList(context.user.userId) map {
           case Some(json) => Ok(DataSecurity.encryptType[JsObject](json))
-          case None => NotFound
+          case None       => NotFound
         }
       }
     }

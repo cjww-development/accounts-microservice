@@ -16,11 +16,11 @@
 package controllers
 
 import com.cjwwdev.auth.actions.BaseAuth
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import com.cjwwdev.request.RequestParsers
 import com.google.inject.{Inject, Singleton}
 import models.{OrgAccount, UserAccount}
-import play.api.Logger
 import play.api.mvc.{Action, Controller}
 import services.{RegistrationService, ValidationService}
 
@@ -29,12 +29,13 @@ import scala.concurrent.Future
 
 @Singleton
 class RegistrationController @Inject()(registrationService : RegistrationService,
-                                       validationService: ValidationService) extends Controller with RequestParsers with BaseAuth {
+                                       validationService: ValidationService,
+                                       val config: ConfigurationLoader) extends Controller with RequestParsers with BaseAuth {
 
   def createNewUser : Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        decryptRequest[UserAccount](UserAccount.newUserReads) { user =>
+        withJsonBody[UserAccount](UserAccount.newUserReads) { user =>
           for {
             userNameInUse <- validationService.isUserNameInUse(user.userName)
             emailInUse    <- validationService.isEmailInUse(user.email)
@@ -54,7 +55,7 @@ class RegistrationController @Inject()(registrationService : RegistrationService
   def createNewOrgUser: Action[String] = Action.async(parse.text) {
     implicit request =>
       openActionVerification {
-        decryptRequest[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
+        withJsonBody[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
           for {
             userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
             emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)

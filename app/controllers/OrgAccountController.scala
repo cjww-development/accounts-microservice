@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.security.encryption.DataSecurity
 import models.TeacherDetails
@@ -29,16 +30,15 @@ import services.OrgAccountService
 import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
-class OrgAccountController @Inject()(orgAccountService: OrgAccountService, authConnect: AuthConnector)
-  extends Controller with Authorisation with IdentifierValidation {
-
-  val authConnector = authConnect
+class OrgAccountController @Inject()(orgAccountService: OrgAccountService,
+                                     val authConnector: AuthConnector,
+                                     val config: ConfigurationLoader) extends Controller with Authorisation with IdentifierValidation {
 
   def getOrganisationsTeachers(orgId: String): Action[AnyContent] = Action.async {
     implicit request =>
       validateAs(ORG_USER, orgId) {
-        authorised(orgId) {
-          orgAccountService.getOrganisationsTeachers(orgId) map { list =>
+        authorised(orgId) { context =>
+          orgAccountService.getOrganisationsTeachers(context.user.userId) map { list =>
             Ok(DataSecurity.encryptType[List[TeacherDetails]](list))
           } recover {
             case _: Throwable => InternalServerError

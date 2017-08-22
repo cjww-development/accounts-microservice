@@ -54,7 +54,7 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec {
   )
 
   class Setup {
-    val testController = new UpdateUserDetailsController(mockAccountService, mockAuthConnector)
+    val testController = new UpdateUserDetailsController(mockAccountService, mockConfig, mockAuthConnector)
   }
 
   "updateProfileInformation" should {

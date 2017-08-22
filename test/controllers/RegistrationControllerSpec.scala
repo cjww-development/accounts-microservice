@@ -34,7 +34,7 @@ class RegistrationControllerSpec extends CJWWSpec {
   val uuid = UUID.randomUUID
 
   class Setup {
-    val testController = new RegistrationController(mockRegService, mockValidationService)
+    val testController = new RegistrationController(mockRegService, mockValidationService, mockConfig)
   }
 
   val password = SHA512.encrypt("testPassword")

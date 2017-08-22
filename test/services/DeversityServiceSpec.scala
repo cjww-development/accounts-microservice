@@ -30,7 +30,6 @@ class DeversityServiceSpec extends CJWWSpec {
 
   class Setup {
     val testService = new DeversityService(mockUserAccountRepo, mockOrgAccountRepo)
-
   }
 
   "findSchool" should {

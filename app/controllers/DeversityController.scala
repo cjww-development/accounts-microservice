@@ -20,12 +20,12 @@ import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{DeversityEnrolment, OrgDetails, TeacherDetails}
-import play.api.Logger
 import play.api.mvc.{Action, AnyContent, Controller}
 import services.DeversityService
 
@@ -33,15 +33,14 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 @Singleton
 class DeversityController @Inject()(deversityService: DeversityService,
-                                    authConnect: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
-
-  val authConnector: AuthConnector = authConnect
+                                    val config: ConfigurationLoader,
+                                    val authConnector: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
 
   def getDeversityInformation(userId: String): Action[AnyContent] = Action.async {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          deversityService.getDeversityUserInformation(userId) map {
+        authorised(userId) { context =>
+          deversityService.getDeversityUserInformation(context.user.userId) map {
             case Some(deversityDetails)   => Ok(DataSecurity.encryptType[DeversityEnrolment](deversityDetails))
             case None                     => NotFound
           }
@@ -52,9 +51,9 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def updateDeversityInformation(userId: String): Action[String] = Action.async(parse.text) {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          withJsonBody[DeversityEnrolment] { details =>
-            deversityService.updateDeversityUserInformation(userId, details) map {
+        authorised(userId) { context =>
+          withJsonBody[DeversityEnrolment](DeversityEnrolment.standardFormat) { details =>
+            deversityService.updateDeversityUserInformation(context.user.userId, details) map {
               case MongoSuccessUpdate => Ok
               case MongoFailedUpdate  => InternalServerError
             }
@@ -66,8 +65,8 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def updatedDeversityId(userId: String): Action[AnyContent] = Action.async {
     implicit request =>
       validateAs(USER, userId) {
-        authorised(userId) {
-          deversityService.createOrUpdateEnrolments(userId) map {
+        authorised(userId) { context =>
+          deversityService.createOrUpdateEnrolments(context.user.userId) map {
             devId => Ok(devId)
           } recover {
             case _ => InternalServerError
@@ -79,7 +78,7 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def findSchool(orgName: String): Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        decryptUrl(orgName) { name =>
+        withEncryptedUrl(orgName) { name =>
           deversityService.findSchool(name) map (found => if(found) Ok else NotFound)
         }
       }
@@ -88,7 +87,7 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def getSchoolDetails(orgName: String): Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        decryptUrl(orgName) { name =>
+        withEncryptedUrl(orgName) { name =>
           deversityService.getSchoolDetails(name) map {
             case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details))
             case None          => NotFound
@@ -100,8 +99,8 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def findTeacher(userName: String, schoolName: String): Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        decryptUrl(userName) { uName =>
-          decryptUrl(schoolName) { sName =>
+        withEncryptedUrl(userName) { uName =>
+          withEncryptedUrl(schoolName) { sName =>
             deversityService.findTeacher(uName, sName) map(found => if(found) Ok else NotFound)
           }
         }
@@ -111,8 +110,8 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def getTeacherDetails(orgName: String, schoolName: String): Action[AnyContent] = Action.async {
     implicit request =>
       openActionVerification {
-        decryptUrl(orgName) { oName =>
-          decryptUrl(schoolName) { sName =>
+        withEncryptedUrl(orgName) { oName =>
+          withEncryptedUrl(schoolName) { sName =>
             deversityService.getTeacherDetails(oName, sName) map {
               case Some(details) => Ok(DataSecurity.encryptType[TeacherDetails](details))
               case None          => NotFound
@@ -125,8 +124,8 @@ class DeversityController @Inject()(deversityService: DeversityService,
   def getPendingEnrolmentsCount(orgId: String): Action[AnyContent] = Action.async {
     implicit request =>
       validateAs(ORG_USER, orgId) {
-        authorised(orgId) {
-          deversityService.getPendingDeversityEnrolmentCount(orgId) map { count =>
+        authorised(orgId) { context =>
+          deversityService.getPendingDeversityEnrolmentCount(context.user.userId) map { count =>
             Ok(DataSecurity.encryptType(count))
           } recover {
             case _ => InternalServerError

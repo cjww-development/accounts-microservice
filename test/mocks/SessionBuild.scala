@@ -16,14 +16,13 @@
 
 package mocks
 
-import config.ApplicationConfiguration
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 
-trait SessionBuild extends ApplicationConfiguration {
-  def buildRequest: FakeRequest[_] = {
+trait SessionBuild {
+  def buildRequest(appId: String): FakeRequest[_] = {
     FakeRequest().withHeaders(
-      "appId" -> AUTH_SERVICE_ID,
+      "appId" -> appId,
       CONTENT_TYPE -> TEXT
     )
   }

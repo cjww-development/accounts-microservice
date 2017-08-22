@@ -33,7 +33,7 @@ import scala.concurrent.Future
 class UserFeedControllerSpec extends CJWWSpec {
 
   class Setup {
-    val testController = new UserFeedController(mockUserFeedService, mockAuthConnector)
+    val testController = new UserFeedController(mockUserFeedService, mockConfig, mockAuthConnector)
   }
 
   val uuid = UUID.randomUUID
@@ -83,7 +83,7 @@ class UserFeedControllerSpec extends CJWWSpec {
   }
 
   "retrieveFeed" should {
-    val request = buildRequest
+    val request = buildRequest(AUTH_SERVICE_ID)
 
     "return an Ok" when {
       "a users feed has been found" in new Setup {

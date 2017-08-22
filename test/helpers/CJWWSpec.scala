@@ -19,10 +19,10 @@ package helpers
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
-import config.ApplicationConfiguration
+import com.cjwwdev.config.ConfigurationLoader
 import mocks.SessionBuild
 import org.mockito.Mockito.reset
-import org.scalatest.{BeforeAndAfterEach, TestSuite}
+import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.ws.ahc.AhcWSClient
@@ -35,9 +35,7 @@ import scala.concurrent.{Await, Awaitable}
 trait CJWWSpec
   extends PlaySpec
     with MockitoSugar
-    with ApplicationConfiguration
     with BeforeAndAfterEach
-    with TestSuite
     with SessionBuild {
 
   implicit val system = ActorSystem()
@@ -59,14 +57,18 @@ trait CJWWSpec
   val mockRegService          = mock[RegistrationService]
   val mockValidationService   = mock[ValidationService]
 
-  override def beforeEach(): Unit = {
-    reset(mockUserAccountRepo)
-    reset(mockOrgAccountRepo)
-    reset(mockUserFeedRepo)
-    reset(mockAuthConnector)
-    reset(mockGetDetailsService)
-    reset(mockOrgAccountService)
-    reset(mockUserFeedService)
-    reset(mockRegService)
-  }
+  val mockConfig              = mock[ConfigurationLoader]
+
+  val AUTH_SERVICE_ID         = mockConfig.getApplicationId("auth-service")
+
+//  override def beforeEach(): Unit = {
+//    reset(mockUserAccountRepo)
+//    reset(mockOrgAccountRepo)
+//    reset(mockUserFeedRepo)
+//    reset(mockAuthConnector)
+//    reset(mockGetDetailsService)
+//    reset(mockOrgAccountService)
+//    reset(mockUserFeedService)
+//    reset(mockRegService)
+//  }
 }

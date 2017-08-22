@@ -59,10 +59,10 @@ class UserDetailsControllerSpec extends CJWWSpec {
     location = "testLocation"
   )
 
-  lazy val request = buildRequest
+  lazy val request = buildRequest(AUTH_SERVICE_ID)
 
   class Setup {
-    val testController = new UserDetailsController(mockGetDetailsService, mockOrgAccountService, mockAuthConnector)
+    val testController = new UserDetailsController(mockGetDetailsService, mockOrgAccountService, mockConfig, mockAuthConnector)
   }
 
   "getBasicDetails" should {

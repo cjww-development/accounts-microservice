@@ -36,11 +36,7 @@ class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
   }
 
   def flipList(list : List[FeedItem]) : Option[List[FeedItem]] = {
-    if(list.nonEmpty) {
-      Some(list.reverse)
-    } else {
-      None
-    }
+    if(list.nonEmpty) Some(list.reverse) else None
   }
 
   def getFeedList(userId : String) : Future[Option[JsObject]] = {
@@ -48,6 +44,6 @@ class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
   }
 
   private def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {
-    for(fi <- list) yield Json.obj("feed-array" -> fi)
+    list map(fi => Json.obj("feed-array" -> fi))
   }
 }

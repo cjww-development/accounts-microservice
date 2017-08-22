@@ -31,7 +31,7 @@ class ValidationControllerSpec extends CJWWSpec {
   val testEncEmail    = DataSecurity.encryptString("test@email.com")
 
   class Setup {
-    val testController = new ValidationController(mockValidationService, mockAuthConnector)
+    val testController = new ValidationController(mockValidationService, mockConfig, mockAuthConnector)
   }
 
   "validateUserName" should {
