@@ -24,6 +24,7 @@ import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.security.encryption.DataSecurity
 import models.{BasicDetails, Enrolments, OrgDetails, Settings}
+import play.api.Logger
 import play.api.mvc.{Action, AnyContent, Controller}
 import services.{GetDetailsService, OrgAccountService}
 
@@ -39,7 +40,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
     implicit request =>
       validateAs(USER, userId) {
         authorised(userId) { context =>
-          detailsService.getBasicDetails(context.user.userId) map { details =>
+          detailsService.getBasicDetails(context.user.id) map { details =>
             Ok(DataSecurity.encryptType[BasicDetails](details))
           } recover {
             case _: Throwable => NotFound
@@ -52,7 +53,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
     implicit request =>
       validateAs(USER, userId) {
         authorised(userId) { context =>
-          detailsService.getEnrolments(context.user.userId) map {
+          detailsService.getEnrolments(context.user.id) map {
             case Some(enrolments) => Ok(DataSecurity.encryptType[Enrolments](enrolments))
             case None             => NotFound
           }
@@ -64,7 +65,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
     implicit request =>
       validateAs(USER, userId) {
         authorised(userId) { context =>
-          detailsService.getSettings(context.user.userId) map {
+          detailsService.getSettings(context.user.id) map {
             case Some(settings) => Ok(DataSecurity.encryptType[Settings](settings))
             case None           => NotFound
           }
@@ -76,7 +77,7 @@ class UserDetailsController @Inject()(detailsService: GetDetailsService,
     implicit request =>
       validateAs(ORG_USER, orgId) {
         authorised(orgId) { context =>
-          orgDetailsService.getOrganisationBasicDetails(context.user.userId) map {
+          orgDetailsService.getOrganisationBasicDetails(context.user.id) map {
             case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details))
             case None          => NotFound
           }

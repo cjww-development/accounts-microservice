@@ -21,13 +21,4 @@ POST        /create-feed-item                                               cont
 
 HEAD        /validate/user-name/:username                                   controllers.ValidationController.validateUserName(username : String)
 HEAD        /validate/email/:email                                          controllers.ValidationController.validateEmail(email : String)
-GET         /validate/school/:orgUserName                                   controllers.DeversityController.findSchool(orgUserName)
-GET         /validate/teacher/:userName/school/:schoolName                  controllers.DeversityController.findTeacher(userName, schoolName)
 
-GET         /school/:orgUserName/details                                    controllers.DeversityController.getSchoolDetails(orgUserName)
-GET         /teacher/:userName/school/:schoolName/details                   controllers.DeversityController.getTeacherDetails(userName, schoolName)
-
-GET         /account/:userId/deversity-info                                 controllers.DeversityController.getDeversityInformation(userId)
-PATCH       /account/:userId/deversity-info                                 controllers.DeversityController.updateDeversityInformation(userId)
-PATCH       /account/:userId/deversity-id                                   controllers.DeversityController.updatedDeversityId(userId)
-GET         /account/:orgId/pending-deversity-enrolments                    controllers.DeversityController.getPendingEnrolmentsCount(orgId)

@@ -32,6 +32,8 @@ import reactivemongo.play.json._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
+import play.core.server.NettyServer
+
 @Singleton
 class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   override def indexes: Seq[Index] = Seq(
@@ -133,51 +135,9 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
     }
   }
 
-  def updateDeversityEnrolment(userId: String): Future[String] = {
-    val generatedDevId = generateDeversityId
-    val enrolment = BSONDocument("$set" -> BSONDocument("enrolments" -> BSONDocument(
-      "deversityId" -> generatedDevId
-    )))
-
-    collection flatMap {
-      _.update(userIdSelector(userId), enrolment) map { wr =>
-        if(wr.ok) generatedDevId else throw new FailedToUpdateException(s"Failed to update dev id for user $userId")
-      }
-    }
-  }
-
-  def updateDeversityDataBlock(userId: String, deversityEnrolmentDetails: DeversityEnrolment): Future[MongoUpdatedResponse] = {
-    val update = BSONDocument("$set" -> BSONDocument(
-      "deversityDetails" -> Json.toJson(deversityEnrolmentDetails).as[JsObject]
-    ))
-
-    collection flatMap {
-      _.update(userIdSelector(userId), update) map { wr =>
-        if(wr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"There was a problem updating the deversity enrolment block for $userId")
-      }
-    }
-  }
-
-  def findTeacher(teacherName: String, schoolName: String): Future[UserAccount] = {
-    val query = BSONDocument("userName" -> teacherName, "deversityDetails.schoolName" -> schoolName)
-    collection flatMap {
-      _.find(query).one[UserAccount] map {
-        case Some(acc) => acc
-        case None      => throw new MissingAccountException(s"No user account found matching teacher name $teacherName and school name $schoolName")
-      }
-    }
-  }
-
   def getAllTeacherForOrg(orgName: String): Future[List[UserAccount]] = {
     collection flatMap {
       _.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List]()
-    }
-  }
-
-  def getPendingDeversityEnrolmentCount(orgName: String): Future[Int] = {
-    val query = BSONDocument("deversityDetails.schoolName" -> orgName, "deversityDetails.role" -> "teacher", "deversityDetails.statusConfirmed" -> "pending")
-    collection flatMap {
-      _.find(query).cursor[UserAccount]().collect[List]() map(_.size)
     }
   }
 }

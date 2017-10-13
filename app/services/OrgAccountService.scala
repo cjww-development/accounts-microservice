@@ -42,6 +42,7 @@ class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, us
       teachers  <- userAccountRepository.getAllTeacherForOrg(orgAcc.orgUserName)
     } yield teachers map { user =>
       TeacherDetails(
+        user.userId,
         user.deversityDetails.get.title.get,
         user.lastName,
         user.deversityDetails.get.room.get,

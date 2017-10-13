@@ -42,7 +42,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService,
       validateAs(USER, userId) {
         authorised(userId) { context =>
           withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
-            accountService.updateProfileInformation(context.user.userId, profile) map {
+            accountService.updateProfileInformation(context.user.id, profile) map {
               case MongoSuccessUpdate => Ok
               case MongoFailedUpdate  => InternalServerError
             }
@@ -56,7 +56,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService,
       validateAs(USER, userId) {
         authorised(userId) { context =>
           withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
-            accountService.updatePassword(context.user.userId, passwordSet) map {
+            accountService.updatePassword(context.user.id, passwordSet) map {
               case PasswordUpdated      => Ok
               case InvalidOldPassword   => Conflict
               case PasswordUpdateFailed => InternalServerError
@@ -71,7 +71,7 @@ class UpdateUserDetailsController @Inject()(accountService: AccountService,
       validateAs(USER, userId) {
         authorised(userId) { context =>
           withJsonBody[Settings](Settings.standardFormat) { settings =>
-            accountService.updateSettings(context.user.userId, settings) map {
+            accountService.updateSettings(context.user.id, settings) map {
               case UpdatedSettingsSuccess => Ok
               case UpdatedSettingsFailed  => InternalServerError
             }

@@ -38,7 +38,7 @@ class OrgAccountController @Inject()(orgAccountService: OrgAccountService,
     implicit request =>
       validateAs(ORG_USER, orgId) {
         authorised(orgId) { context =>
-          orgAccountService.getOrganisationsTeachers(context.user.userId) map { list =>
+          orgAccountService.getOrganisationsTeachers(context.user.id) map { list =>
             Ok(DataSecurity.encryptType[List[TeacherDetails]](list))
           } recover {
             case _: Throwable => InternalServerError

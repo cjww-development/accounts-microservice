@@ -76,24 +76,6 @@ class OrgAccountRepository @Inject()() extends MongoDatabase("org-accounts") {
     }
   }
 
-  def findSchool(orgName: String): Future[OrgAccount] = {
-    collection flatMap {
-      _.find(orgUserNameSelector(orgName)).one[OrgAccount] map {
-        case Some(acc) => acc
-        case None => throw new MissingAccountException(s"No org account found for org name $orgName")
-      }
-    }
-  }
-
-  def getSchoolDetails(orgName: String): Future[OrgDetails] = {
-    collection flatMap {
-      _.find(orgUserNameSelector(orgName)).one[OrgDetails] map {
-        case Some(details) => details
-        case None => throw new MissingAccountException(s"No org account found for org name $orgName")
-      }
-    }
-  }
-
   def getOrgDetails(orgId: String): Future[OrgDetails] = {
     collection flatMap {
       _.find(orgIdSelector(orgId)).one[OrgDetails] map {

@@ -47,7 +47,7 @@ class UserFeedController @Inject()(userFeedService: UserFeedService,
   def retrieveFeed(userId: String) : Action[AnyContent] = Action.async { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { context =>
-        userFeedService.getFeedList(context.user.userId) map {
+        userFeedService.getFeedList(context.user.id) map {
           case Some(json) => Ok(DataSecurity.encryptType[JsObject](json))
           case None       => NotFound
         }

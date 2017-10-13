@@ -16,6 +16,8 @@
 
 package services
 
+import java.util.UUID
+
 import config.MissingAccountException
 import helpers.CJWWSpec
 import models._
@@ -28,6 +30,8 @@ import scala.concurrent.Future
 class OrgAccountServiceSpec extends CJWWSpec {
 
   final val now = new DateTime(DateTimeZone.UTC)
+
+  val uuid = UUID.randomUUID()
 
   val testOrgAccount = OrgAccount(
     orgId           = "org-test-org-id",
@@ -91,6 +95,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
   val testAccountList = List(testAccount1, testAccount2)
 
   val testTeacherDetails1 = TeacherDetails(
+    userId    = "testUserId",
     title     = "Prof",
     lastName  = "testLastName",
     room      = "testRoom",
@@ -98,6 +103,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
   )
 
   val testTeacherDetails2 = TeacherDetails(
+    userId    = "testUserId2",
     title     = "Prof",
     lastName  = "testLastName2",
     room      = "testRoom2",
