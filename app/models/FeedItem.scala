@@ -66,7 +66,7 @@ object FeedItem extends JsonFormats[FeedItem] with IdService {
     }
   )
 
-  val newFeedItemReads: Reads[FeedItem] = (
+  def newFeedItemReads: Reads[FeedItem] = (
     (__ \ "feedId").read(generateFeedId) and
     (__ \ "userId").read[String](userIdValidation) and
     (__ \ "sourceDetail").read[SourceDetail] and
