@@ -118,7 +118,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
 
   "getOrganisationsTeachers" should {
     "return a list of teacher details" in new Setup {
-      when(mockOrgAccountRepo.getOrgAccount(ArgumentMatchers.any()))
+      when(mockOrgAccountRepo.getOrgAccount[OrgAccount](ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(Future.successful(testOrgAccount))
 
       when(mockUserAccountRepo.getAllTeacherForOrg(ArgumentMatchers.any()))
@@ -132,7 +132,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
   "getOrganisationBasicDetails" should {
     "return org details" when {
       "given a valid org id" in new Setup {
-        when(mockOrgAccountRepo.getOrgDetails(ArgumentMatchers.any()))
+        when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testOrgDetails))
 
         val result = await(testService.getOrganisationBasicDetails("org-test-org-id"))
@@ -141,7 +141,7 @@ class OrgAccountServiceSpec extends CJWWSpec {
     }
 
     "throw a MissingAccountException" in new Setup {
-      when(mockOrgAccountRepo.getOrgDetails(ArgumentMatchers.any()))
+      when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any()))
         .thenReturn(Future.failed(new MissingAccountException("")))
 
       val result = await(testService.getOrganisationBasicDetails("org-test-org-id"))

@@ -92,7 +92,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getBasicDetails" should {
     "return a basic details" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getBasicDetails("testId"))
@@ -104,7 +104,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getEnrolments" should {
     "return an enrolments model" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getEnrolments("testId"))
@@ -116,7 +116,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getSettings" should {
     "return a settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testAccount))
 
         val result = await(testService.getSettings("testId"))
@@ -126,7 +126,7 @@ class GetDetailsServiceSpec extends CJWWSpec {
 
     "return no settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getAccount(ArgumentMatchers.anyString()))
+        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
           .thenReturn(Future.successful(testAccount2))
 
         val result = await(testService.getSettings("testId"))
