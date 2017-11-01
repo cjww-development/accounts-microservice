@@ -17,11 +17,13 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.reactivemongo.{MongoCreateResponse, MongoDatabase, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo._
 import config.{FailedToCreateException, MissingAccountException}
 import config._
 import models._
+import selectors.OrgAccountSelectors._
 import play.api.Logger
+import play.api.libs.json.OFormat
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
@@ -41,14 +43,23 @@ class OrgAccountRepository @Inject()() extends MongoDatabase("org-accounts") {
     )
   )
 
-  private def orgUserNameSelector(orgUserName: String): BSONDocument = BSONDocument("orgUserName" -> orgUserName)
-  private def orgIdSelector(orgId: String): BSONDocument = BSONDocument("orgId" -> orgId)
+  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head._1, selector.elements.head._2.toString)
 
   def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
     collection flatMap {
       _.insert(orgUser) map { wr =>
         if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
       }
+    }
+  }
+
+  def getOrgAccount[T : OFormat](selector: BSONDocument): Future[T] = collection flatMap {
+    val elements = getSelectorHead(selector)
+    _.find(selector).one[T] map {
+      case Some(acc) => acc
+      case _         =>
+        Logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on ${elements._1} with value ${elements._2}")
+        throw new MissingAccountException(s"No user account found based on ${elements._1} with value ${elements._2}")
     }
   }
 
@@ -76,20 +87,10 @@ class OrgAccountRepository @Inject()() extends MongoDatabase("org-accounts") {
     }
   }
 
-  def getOrgDetails(orgId: String): Future[OrgDetails] = {
+  def deleteOrgAccount(userId: String): Future[MongoDeleteResponse] = {
     collection flatMap {
-      _.find(orgIdSelector(orgId)).one[OrgDetails] map {
-        case Some(details) => details
-        case None => throw new MissingAccountException(s"No org account for org id $orgId")
-      }
-    }
-  }
-
-  def getOrgAccount(orgId: String): Future[OrgAccount] = {
-    collection flatMap {
-      _.find(orgIdSelector(orgId)).one[OrgAccount] map {
-        case Some(acc) => acc
-        case None => throw new MissingAccountException(s"No org account for org id $orgId")
+      _.remove(orgIdSelector(userId)) map { wr =>
+        if(wr.ok) MongoSuccessDelete else MongoFailedDelete
       }
     }
   }

@@ -19,7 +19,8 @@ package services
 import javax.inject.{Inject, Singleton}
 
 import config.MissingAccountException
-import models.{OrgDetails, TeacherDetails}
+import models.{OrgAccount, OrgDetails, TeacherDetails}
+import selectors.OrgAccountSelectors._
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
 import scala.concurrent.Future
@@ -29,7 +30,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, userAccountRepository: UserAccountRepository) {
 
   def getOrganisationBasicDetails(orgId: String): Future[Option[OrgDetails]] = {
-    orgAccountRepository.getOrgDetails(orgId) map {
+    orgAccountRepository.getOrgAccount[OrgDetails](orgIdSelector(orgId)) map {
       details => Some(details)
     } recover {
       case _: MissingAccountException => None
@@ -38,7 +39,7 @@ class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, us
 
   def getOrganisationsTeachers(orgId: String): Future[List[TeacherDetails]] = {
     for {
-      orgAcc    <- orgAccountRepository.getOrgAccount(orgId)
+      orgAcc    <- orgAccountRepository.getOrgAccount[OrgAccount](orgIdSelector(orgId))
       teachers  <- userAccountRepository.getAllTeacherForOrg(orgAcc.orgUserName)
     } yield teachers map { user =>
       TeacherDetails(

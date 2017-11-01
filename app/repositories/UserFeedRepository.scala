@@ -18,11 +18,12 @@ package repositories
 
 import javax.inject.{Inject, Singleton}
 
-import com.cjwwdev.reactivemongo.{MongoCreateResponse, MongoDatabase, MongoSuccessCreate}
+import com.cjwwdev.reactivemongo._
 import config.FailedToCreateException
 import models.FeedItem
 import play.api.libs.json.OFormat
 import reactivemongo.api.Cursor
+import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
@@ -63,6 +64,14 @@ class UserFeedRepository @Inject()() extends MongoDatabase("user-feed") {
   def getFeedItems(userId : String) : Future[List[FeedItem]] = {
     collection flatMap {
       _.find(userIdSelector(userId)).cursor[FeedItem]().collect[List](MAX, Cursor.FailOnError[List[FeedItem]]())
+    }
+  }
+
+  def deleteFeedItems(userId: String): Future[MongoDeleteResponse] = {
+    collection.flatMap {
+      _.remove(userIdSelector(userId)) map { wr =>
+        if(wr.ok) MongoSuccessDelete else MongoFailedDelete
+      }
     }
   }
 }

@@ -22,17 +22,15 @@ import com.cjwwdev.reactivemongo._
 import config.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
 import config._
 import models._
+import selectors.UserAccountSelectors._
 import play.api.Logger
-import play.api.libs.json.{JsObject, Json, OFormat}
-import reactivemongo.api.Cursor
+import play.api.libs.json.OFormat
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
-
-import play.core.server.NettyServer
 
 @Singleton
 class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
@@ -45,17 +43,26 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
     )
   )
 
-  private def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
-  private def deversitySchoolSelector(orgName: String): BSONDocument = BSONDocument(
-    "deversityDetails.schoolName" -> orgName,
-    "deversityDetails.role" -> "teacher"
-  )
   private def generateDeversityId: String = s"deversity-${UUID.randomUUID()}"
+
+  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head._1, selector.elements.head._2.toString)
 
   def insertNewUser(user : UserAccount) : Future[MongoCreateResponse] = {
     collection flatMap {
       _.insert(user) map { wr =>
         if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException(s"Failed to create new UserAccount")
+      }
+    }
+  }
+
+  def getUserBySelector(selector: BSONDocument): Future[UserAccount] = {
+    val elements = getSelectorHead(selector)
+    collection flatMap {
+      _.find(selector).one[UserAccount] map {
+        case Some(acc) => acc
+        case _         =>
+          Logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on ${elements._1} with value ${elements._2}")
+          throw new MissingAccountException(s"No user account found based on ${elements._1} with value ${elements._2}")
       }
     }
   }
@@ -78,15 +85,6 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
           Logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
           EmailInUse
         case None     => EmailNotInUse
-      }
-    }
-  }
-
-  def getAccount(userId : String) : Future[UserAccount] = {
-    collection flatMap {
-      _.find(userIdSelector(userId)).one[UserAccount] map {
-        case Some(acc)  => acc
-        case None       => throw new MissingAccountException(s"No user account found for user id $userId")
       }
     }
   }
@@ -138,6 +136,14 @@ class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
   def getAllTeacherForOrg(orgName: String): Future[List[UserAccount]] = {
     collection flatMap {
       _.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List]()
+    }
+  }
+
+  def deleteUserAccount(userId: String): Future[MongoDeleteResponse] = {
+    collection flatMap {
+      _.remove(userIdSelector(userId)) map { wr =>
+        if(wr.ok) MongoSuccessDelete else MongoFailedDelete
+      }
     }
   }
 }

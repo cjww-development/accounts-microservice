@@ -20,6 +20,7 @@ import javax.inject.{Inject, Singleton}
 
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
 import repositories.UserAccountRepository
+import selectors.UserAccountSelectors._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,15 +29,15 @@ import scala.concurrent.Future
 class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) {
 
   def getBasicDetails(userId : String) : Future[BasicDetails] = {
-    userAccountRepository.getAccount(userId) map(acc => extractBasicDetails(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractBasicDetails(acc))
   }
 
   def getEnrolments(userId : String) : Future[Option[Enrolments]] = {
-    userAccountRepository.getAccount(userId) map(acc => extractEnrolments(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractEnrolments(acc))
   }
 
   def getSettings(userId : String) : Future[Option[Settings]] = {
-    userAccountRepository.getAccount(userId) map(acc => extractSettings(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractSettings(acc))
   }
 
   private def extractBasicDetails(user : UserAccount) : BasicDetails = {
