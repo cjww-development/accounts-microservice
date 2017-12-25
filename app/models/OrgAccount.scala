@@ -25,6 +25,7 @@ import play.api.libs.json._
 import services.IdService
 
 case class OrgAccount(orgId: String,
+                      deversityId: String,
                       orgName: String,
                       initials: String,
                       orgUserName: String,
@@ -45,6 +46,7 @@ object OrgAccount extends JsonFormats[OrgAccount] with IdService with RegexPack 
 
   def newOrgAccountReads: Reads[OrgAccount] = (
     (__ \ "orgId").read(generateOrgId) and
+    (__ \ "deversityId").read(generateDevId) and
     (__ \ "orgName").read[String](orgNameValidation) and
     (__ \ "initials").read[String](initialsValidation) and
     (__ \ "orgUserName").read[String](orgUserNameValidation) and
@@ -58,6 +60,7 @@ object OrgAccount extends JsonFormats[OrgAccount] with IdService with RegexPack 
 
   implicit val standardFormat: OFormat[OrgAccount] = (
     (__ \ "orgId").format[String] and
+    (__ \ "deversityId").format[String] and
     (__ \ "orgName").format[String] and
     (__ \ "initials").format[String] and
     (__ \ "orgUserName").format[String] and

@@ -16,28 +16,34 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate, MongoUpdatedResponse}
-import config._
+import common._
 import models.{Settings, UpdatedPassword, UserProfile}
 import repositories.UserAccountRepository
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class AccountService @Inject()(userAccountRepository: UserAccountRepository) {
+class AccountServiceImpl @Inject()(val userAccountRepository: UserAccountRepository) extends AccountService
+
+trait AccountService {
+  val userAccountRepository: UserAccountRepository
+
   def updateProfileInformation(userId: String, userProfile: UserProfile) : Future[MongoUpdatedResponse] = {
     userAccountRepository.updateAccountData(userId, userProfile)
   }
 
   def updatePassword(userId: String, passwordSet : UpdatedPassword) : Future[UpdatedPasswordResponse] = {
-    userAccountRepository.findPassword(userId, passwordSet.previousPassword) flatMap {
-      case false  => Future.successful(InvalidOldPassword)
-      case true   => userAccountRepository.updatePassword(userId, passwordSet.newPassword) map {
-        case MongoSuccessUpdate => PasswordUpdated
-        case MongoFailedUpdate  => PasswordUpdateFailed
+    userAccountRepository.findPassword(userId, passwordSet.previousPassword) flatMap { found =>
+      if(!found) {
+        Future.successful(InvalidOldPassword)
+      } else {
+        userAccountRepository.updatePassword(userId, passwordSet.newPassword) map {
+          case MongoSuccessUpdate => PasswordUpdated
+          case MongoFailedUpdate  => PasswordUpdateFailed
+        }
       }
     }
   }

@@ -15,60 +15,61 @@
 // limitations under the License.
 package controllers
 
-import com.cjwwdev.auth.actions.BaseAuth
-import com.cjwwdev.config.ConfigurationLoader
+import javax.inject.Inject
+
+import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
-import com.cjwwdev.request.RequestParsers
-import com.google.inject.{Inject, Singleton}
+import common.BackendController
 import models.{OrgAccount, UserAccount}
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.Action
 import services.{RegistrationService, ValidationService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class RegistrationController @Inject()(registrationService : RegistrationService,
-                                       validationService: ValidationService,
-                                       val config: ConfigurationLoader) extends Controller with RequestParsers with BaseAuth {
+class RegistrationControllerImpl @Inject()(val registrationService : RegistrationService,
+                                           val validationService: ValidationService,
+                                           val authConnector: AuthConnector) extends RegistrationController
 
-  def createNewUser : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      openActionVerification {
-        withJsonBody[UserAccount](UserAccount.newUserReads) { user =>
-          for {
-            userNameInUse <- validationService.isUserNameInUse(user.userName)
-            emailInUse    <- validationService.isEmailInUse(user.email)
-            registered    <- if(!userNameInUse & !emailInUse) {
-              registrationService.createNewUser(user) map {
-                case MongoSuccessCreate   => Created
-                case MongoFailedCreate    => InternalServerError
-              }
-            } else {
-              Future.successful(Conflict)
+trait RegistrationController extends BackendController {
+  val registrationService: RegistrationService
+  val validationService: ValidationService
+
+  def createNewUser : Action[String] = Action.async(parse.text) { implicit request =>
+    openActionVerification {
+      withJsonBody[UserAccount](UserAccount.newUserReads) { user =>
+        for {
+          userNameInUse <- validationService.isUserNameInUse(user.userName)
+          emailInUse    <- validationService.isEmailInUse(user.email)
+          registered    <- if(!userNameInUse & !emailInUse) {
+            registrationService.createNewUser(user) map {
+              case MongoSuccessCreate   => Created
+              case MongoFailedCreate    => InternalServerError
             }
-          } yield registered
-        }
+          } else {
+            Future.successful(Conflict)
+          }
+        } yield registered
       }
+    }
   }
 
-  def createNewOrgUser: Action[String] = Action.async(parse.text) {
-    implicit request =>
-      openActionVerification {
-        withJsonBody[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
-          for {
-            userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
-            emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)
-            registered    <- if(!userNameInUse & !emailInUse) {
-              registrationService.createNewOrgUser(orgUser) map {
-                case MongoSuccessCreate   => Created
-                case MongoFailedCreate    => InternalServerError
-              }
-            } else {
-              Future.successful(Conflict)
+  def createNewOrgUser: Action[String] = Action.async(parse.text) { implicit request =>
+    openActionVerification {
+      withJsonBody[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
+        for {
+          userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
+          emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)
+          registered    <- if(!userNameInUse & !emailInUse) {
+            registrationService.createNewOrgUser(orgUser) map {
+              case MongoSuccessCreate   => Created
+              case MongoFailedCreate    => InternalServerError
             }
-          } yield registered
-        }
+          } else {
+            Future.successful(Conflict)
+          }
+        } yield registered
       }
+    }
   }
 }

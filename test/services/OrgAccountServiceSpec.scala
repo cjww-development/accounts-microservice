@@ -18,7 +18,7 @@ package services
 
 import java.util.UUID
 
-import config.MissingAccountException
+import common.MissingAccountException
 import helpers.CJWWSpec
 import models._
 import org.joda.time.{DateTime, DateTimeZone}
@@ -29,12 +29,9 @@ import scala.concurrent.Future
 
 class OrgAccountServiceSpec extends CJWWSpec {
 
-  final val now = new DateTime(DateTimeZone.UTC)
-
-  val uuid = UUID.randomUUID()
-
   val testOrgAccount = OrgAccount(
     orgId           = "org-test-org-id",
+    deversityId     = "org-test-dev-id",
     orgName         = "testOrgName",
     initials        = "TI",
     orgUserName     = "testOrgUserName",
@@ -113,7 +110,10 @@ class OrgAccountServiceSpec extends CJWWSpec {
   val testTeacherDetailsList = List(testTeacherDetails1, testTeacherDetails2)
 
   class Setup {
-    val testService = new OrgAccountService(mockOrgAccountRepo, mockUserAccountRepo)
+    val testService = new OrgAccountService {
+      override val orgAccountRepository  = mockOrgAccountRepo
+      override val userAccountRepository = mockUserAccountRepo
+    }
   }
 
   "getOrganisationsTeachers" should {

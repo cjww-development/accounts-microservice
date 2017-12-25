@@ -16,18 +16,22 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import config.MissingAccountException
+import common.MissingAccountException
 import models.{OrgAccount, OrgDetails, TeacherDetails}
-import selectors.OrgAccountSelectors._
 import repositories.{OrgAccountRepository, UserAccountRepository}
+import selectors.OrgAccountSelectors._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-@Singleton
-class OrgAccountService @Inject()(orgAccountRepository: OrgAccountRepository, userAccountRepository: UserAccountRepository) {
+class OrgAccountServiceImpl @Inject()(val orgAccountRepository: OrgAccountRepository,
+                                      val userAccountRepository: UserAccountRepository) extends OrgAccountService
+
+trait OrgAccountService {
+  val orgAccountRepository: OrgAccountRepository
+  val userAccountRepository: UserAccountRepository
 
   def getOrganisationBasicDetails(orgId: String): Future[Option[OrgDetails]] = {
     orgAccountRepository.getOrgAccount[OrgDetails](orgIdSelector(orgId)) map {

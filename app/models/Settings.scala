@@ -29,11 +29,11 @@ case class Settings(displayName : String,
 object Settings extends JsonFormats[Settings] with RegexPack {
   private val displayNameValidation = {
     val options = List("full", "short", "user")
-    Reads.StringReads.filter(ValidationError("Invalid display name option"))(option => options.contains(option))
+    Reads.StringReads.filter(ValidationError("Invalid display name option"))(options.contains(_))
   }
 
   private val displayNameColourValidation = Reads.StringReads.filter(ValidationError("Invalid hex colour"))(_.matches(hexadecimalColourRegex.regex))
-  private val displayImageUrlValidation = Reads.StringReads.filter(ValidationError("Invalid url"))(url => url.matches(urlRegex.regex) || url.equals(defaultUrl))
+  private val displayImageUrlValidation   = Reads.StringReads.filter(ValidationError("Invalid url"))(url => url.matches(urlRegex.regex) || url.equals(defaultUrl))
 
   implicit val standardFormat: OFormat[Settings] = (
     (__ \ "displayName").format[String](displayNameValidation) and

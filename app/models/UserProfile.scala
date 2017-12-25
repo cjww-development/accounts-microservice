@@ -30,9 +30,9 @@ case class UserProfile(firstName : String,
 
 object UserProfile extends JsonFormats[UserProfile] with RegexPack {
   private val firstNameValidation = Reads.StringReads.filter(ValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))
-  private val lastNameValidation = Reads.StringReads.filter(ValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
-  private val userNameValidation = Reads.StringReads.filter(ValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
-  private val emailValidation = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+  private val lastNameValidation  = Reads.StringReads.filter(ValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
+  private val userNameValidation  = Reads.StringReads.filter(ValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
+  private val emailValidation     = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
 
 
   implicit val standardFormat: OFormat[UserProfile] = (

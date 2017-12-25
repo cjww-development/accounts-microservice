@@ -16,67 +16,60 @@
 
 package controllers
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.config.ConfigurationLoader
-import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
-import com.cjwwdev.request.RequestParsers
-import config._
+import common._
 import models.{Settings, UpdatedPassword, UserProfile}
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.Action
 import services._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class UpdateUserDetailsController @Inject()(accountService: AccountService,
-                                            val config: ConfigurationLoader,
-                                            val authConnector: AuthConnector)
-  extends Controller with RequestParsers with Authorisation with IdentifierValidation {
+class UpdateUserDetailsControllerImpl @Inject()(val accountService: AccountService,
+                                                val authConnector: AuthConnector) extends UpdateUserDetailsController
 
-  def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      validateAs(USER, userId) {
-        authorised(userId) { context =>
-          withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
-            accountService.updateProfileInformation(context.user.id, profile) map {
-              case MongoSuccessUpdate => Ok
-              case MongoFailedUpdate  => InternalServerError
-            }
+trait UpdateUserDetailsController extends BackendController {
+  val accountService: AccountService
+
+  def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
+    validateAs(USER, userId) {
+      authorised(userId) { context =>
+        withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
+          accountService.updateProfileInformation(context.user.id, profile) map {
+            case MongoSuccessUpdate => Ok
+            case MongoFailedUpdate  => InternalServerError
           }
         }
       }
+    }
   }
 
-  def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      validateAs(USER, userId) {
-        authorised(userId) { context =>
-          withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
-            accountService.updatePassword(context.user.id, passwordSet) map {
-              case PasswordUpdated      => Ok
-              case InvalidOldPassword   => Conflict
-              case PasswordUpdateFailed => InternalServerError
-            }
+  def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
+    validateAs(USER, userId) {
+      authorised(userId) { context =>
+        withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
+          accountService.updatePassword(context.user.id, passwordSet) map {
+            case PasswordUpdated      => Ok
+            case InvalidOldPassword   => Conflict
+            case PasswordUpdateFailed => InternalServerError
           }
         }
       }
+    }
   }
 
-  def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      validateAs(USER, userId) {
-        authorised(userId) { context =>
-          withJsonBody[Settings](Settings.standardFormat) { settings =>
-            accountService.updateSettings(context.user.id, settings) map {
-              case UpdatedSettingsSuccess => Ok
-              case UpdatedSettingsFailed  => InternalServerError
-            }
+  def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
+    validateAs(USER, userId) {
+      authorised(userId) { context =>
+        withJsonBody[Settings](Settings.standardFormat) { settings =>
+          accountService.updateSettings(context.user.id, settings) map {
+            case UpdatedSettingsSuccess => Ok
+            case UpdatedSettingsFailed  => InternalServerError
           }
         }
       }
+    }
   }
 }

@@ -25,8 +25,6 @@ import scala.concurrent.Future
 
 class GetDetailsServiceSpec extends CJWWSpec {
 
-  final val now = new DateTime(DateTimeZone.UTC)
-
   val testAccount = UserAccount(
     userId = "testId",
     firstName = "testFirst",
@@ -86,7 +84,9 @@ class GetDetailsServiceSpec extends CJWWSpec {
   )
 
   class Setup {
-    val testService = new GetDetailsService(mockUserAccountRepo)
+    val testService = new GetDetailsService {
+      override val userAccountRepository = mockUserAccountRepo
+    }
   }
 
   "getBasicDetails" should {

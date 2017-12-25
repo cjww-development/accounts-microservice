@@ -24,6 +24,7 @@ object AccountFixtures {
 
   val testOrgAccount = OrgAccount(
     orgId           = "org-test-org-id",
+    deversityId     = "org-test-dev-id",
     orgName         = "testOrgName",
     initials        = "TI",
     orgUserName     = "testOrgUserName",

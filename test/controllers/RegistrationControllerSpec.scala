@@ -31,10 +31,12 @@ import scala.concurrent.Future
 
 class RegistrationControllerSpec extends CJWWSpec {
 
-  val uuid = UUID.randomUUID
-
   class Setup {
-    val testController = new RegistrationController(mockRegService, mockValidationService, mockConfig)
+    val testController = new RegistrationController {
+      override val registrationService = mockRegService
+      override val validationService   = mockValidationService
+      override val authConnector       = mockAuthConnector
+    }
   }
 
   val password = SHA512.encrypt("testPassword")

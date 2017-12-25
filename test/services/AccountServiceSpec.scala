@@ -16,7 +16,7 @@
 package services
 
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
-import config._
+import common._
 import helpers.CJWWSpec
 import models.{Settings, UpdatedPassword, UserProfile}
 import org.mockito.Mockito.when
@@ -27,7 +27,9 @@ import scala.concurrent.Future
 class AccountServiceSpec extends CJWWSpec {
 
   class Setup {
-    val testService = new AccountService(mockUserAccountRepo)
+    val testService = new AccountService {
+      override val userAccountRepository = mockUserAccountRepo
+    }
   }
 
   "updateProfileInformation" should {

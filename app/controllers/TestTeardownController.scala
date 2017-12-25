@@ -13,22 +13,22 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package controllers.test
+package controllers
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.config.ConfigurationLoader
-import play.api.mvc.{Action, AnyContent, Controller}
+import common.BackendController
+import play.api.mvc.{Action, AnyContent}
 import services.TestEndpointService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class TeardownController @Inject()(testEndpointService: TestEndpointService,
-                                   val authConnector: AuthConnector,
-                                   val config: ConfigurationLoader) extends Controller with Authorisation {
+class TestTeardownControllerImpl @Inject()(val testEndpointService: TestEndpointService,
+                                           val authConnector: AuthConnector) extends TestTeardownController
+
+trait TestTeardownController extends BackendController {
+  val testEndpointService: TestEndpointService
 
   private val INDIVIDUAL    = "individual"
   private val ORGANISATION  = "organisation"

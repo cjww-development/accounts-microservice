@@ -15,7 +15,7 @@
 // limitations under the License.
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
 import models.FeedItem
@@ -25,8 +25,10 @@ import repositories.UserFeedRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class UserFeedService @Inject()(userFeedRepository : UserFeedRepository) {
+class UserFeedServiceImpl @Inject()(val userFeedRepository : UserFeedRepository) extends UserFeedService
+
+trait UserFeedService {
+  val userFeedRepository: UserFeedRepository
 
   def createFeedItem(feedItem: FeedItem) : Future[Boolean] = {
     userFeedRepository.createFeedItem(feedItem) map {

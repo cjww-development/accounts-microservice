@@ -18,18 +18,18 @@ package utils
 import org.scalatestplus.play.PlaySpec
 import org.scalatestplus.play.guice.GuiceOneServerPerSuite
 import play.api.libs.ws.{WSClient, WSRequest}
-import repositories.{OrgAccountRepository, UserAccountRepository}
-import reactivemongo.play.json._
 import reactivemongo.bson.BSONDocument
+import reactivemongo.play.json._
+import repositories.{OrgAccountRepositoryImpl, UserAccountRepositoryImpl}
 
-import scala.concurrent.{Await, Awaitable}
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Awaitable}
 
 trait CJWWIntegrationUtils extends PlaySpec with GuiceOneServerPerSuite {
 
-  val userAccountRepository = new UserAccountRepository
-  val orgAccountRepository = new OrgAccountRepository
+  val userAccountRepository = new UserAccountRepositoryImpl
+  val orgAccountRepository  = new OrgAccountRepositoryImpl
 
   val baseUrl = s"http://localhost:$port/accounts"
 

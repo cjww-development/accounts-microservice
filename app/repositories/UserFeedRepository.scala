@@ -16,24 +16,23 @@
 
 package repositories
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import com.cjwwdev.reactivemongo._
-import config.FailedToCreateException
+import common.FailedToCreateException
 import models.FeedItem
 import play.api.libs.json.OFormat
 import reactivemongo.api.Cursor
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-@Singleton
-class UserFeedRepository @Inject()() extends MongoDatabase("user-feed") {
+class UserFeedRepositoryImpl @Inject extends UserFeedRepository
 
+trait UserFeedRepository extends MongoDatabase {
   private val MAX = 10
 
   override def indexes: Seq[Index] = Seq(

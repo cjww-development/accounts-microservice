@@ -18,12 +18,12 @@ package selectors
 import reactivemongo.bson.BSONDocument
 
 object UserAccountSelectors {
-  def userIdSelector(userId: String): BSONDocument = BSONDocument("userId" -> userId)
+  val userIdSelector: String => BSONDocument = userId => BSONDocument("userId" -> userId)
 
-  def userNameSelector(userName: String): BSONDocument = BSONDocument("userName" -> userName)
+  val userNameSelector: String => BSONDocument = userName => BSONDocument("userName" -> userName)
 
-  def deversitySchoolSelector(orgName: String): BSONDocument = BSONDocument(
+  val deversitySchoolSelector: String => BSONDocument = orgName => BSONDocument(
     "deversityDetails.schoolName" -> orgName,
-    "deversityDetails.role" -> "teacher"
+    "deversityDetails.role"       -> "teacher"
   )
 }

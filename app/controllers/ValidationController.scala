@@ -13,44 +13,41 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
+
 package controllers
 
-import com.cjwwdev.auth.actions.BaseAuth
+import javax.inject.Inject
+
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.config.ConfigurationLoader
-import com.cjwwdev.request.RequestParsers
-import com.google.inject.{Inject, Singleton}
-import play.api.mvc.{Action, AnyContent, Controller}
+import common.BackendController
+import play.api.mvc.{Action, AnyContent}
 import services.ValidationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class ValidationController @Inject()(validationService : ValidationService,
-                                     val config: ConfigurationLoader,
-                                     val authConnector: AuthConnector) extends Controller with RequestParsers with BaseAuth {
+class ValidationControllerImpl @Inject()(val validationService : ValidationService,
+                                         val authConnector: AuthConnector) extends ValidationController
 
-  def validateUserName(username : String) : Action[AnyContent] = Action.async {
-    implicit request =>
-      openActionVerification {
-        withEncryptedUrl(username) { userName =>
-          validationService.isUserNameInUse(userName) map {
-            case false => Ok
-            case true  => Conflict
-          }
+trait ValidationController extends BackendController {
+  val validationService: ValidationService
+
+  def validateUserName(username : String) : Action[AnyContent] = Action.async { implicit request =>
+    openActionVerification {
+      withEncryptedUrl(username) { userName =>
+        validationService.isUserNameInUse(userName) map { inUse =>
+          if(!inUse) Ok else Conflict
         }
       }
+    }
   }
 
-  def validateEmail(email : String) : Action[AnyContent] = Action.async {
-    implicit request =>
-      openActionVerification {
-        withEncryptedUrl(email) { emailAddress =>
-          validationService.isEmailInUse(emailAddress) map {
-            case false => Ok
-            case true  => Conflict
-          }
+  def validateEmail(email : String) : Action[AnyContent] = Action.async { implicit request =>
+    openActionVerification {
+      withEncryptedUrl(email) { emailAddress =>
+        validationService.isEmailInUse(emailAddress) map { inUse =>
+          if(!inUse) Ok else Conflict
         }
       }
+    }
   }
 }

@@ -19,7 +19,7 @@ import java.util.UUID
 
 import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
 import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
-import config._
+import common._
 import helpers.CJWWSpec
 import mocks.AuthBuilder
 import models.{Settings, UpdatedPassword, UserProfile}
@@ -31,8 +31,6 @@ import play.api.test.FakeRequest
 import scala.concurrent.Future
 
 class UpdateUserDetailsControllerSpec extends CJWWSpec {
-
-  val uuid = UUID.randomUUID
 
   val testProfile = UserProfile(
     firstName = "testFirstName",
@@ -54,7 +52,10 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec {
   )
 
   class Setup {
-    val testController = new UpdateUserDetailsController(mockAccountService, mockConfig, mockAuthConnector)
+    val testController = new UpdateUserDetailsController {
+      override val accountService = mockAccountService
+      override val authConnector  = mockAuthConnector
+    }
   }
 
   "updateProfileInformation" should {

@@ -23,10 +23,10 @@ import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.auth.models.{AuthContext, User}
 import org.joda.time.{DateTime, DateTimeZone}
-import play.api.mvc.{Action, AnyContent, Result}
-import play.api.test.FakeRequest
-import org.mockito.Mockito.when
 import org.mockito.ArgumentMatchers
+import org.mockito.Mockito.when
+import play.api.mvc.{Action, Result}
+import play.api.test.FakeRequest
 
 import scala.concurrent.Future
 

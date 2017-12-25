@@ -19,8 +19,8 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import com.cjwwdev.reactivemongo._
-import config.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
-import config._
+import common.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
+import common._
 import models._
 import selectors.UserAccountSelectors._
 import play.api.Logger
@@ -32,8 +32,9 @@ import reactivemongo.play.json._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class UserAccountRepository @Inject()() extends MongoDatabase("user-accounts") {
+class UserAccountRepositoryImpl @Inject extends UserAccountRepository
+
+trait UserAccountRepository extends MongoDatabase {
   override def indexes: Seq[Index] = Seq(
     Index(
       key     = Seq("userId" -> IndexType.Ascending),

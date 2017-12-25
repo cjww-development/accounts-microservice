@@ -16,14 +16,18 @@
 package services
 
 import com.google.inject.{Inject, Singleton}
-import config.{EmailInUse, UserNameInUse}
+import common.{EmailInUse, UserNameInUse}
 import repositories._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class ValidationService @Inject()(userAccountRepository: UserAccountRepository, orgAccountRepository: OrgAccountRepository) {
+class ValidationServiceImpl @Inject()(val userAccountRepository: UserAccountRepository,
+                                      val orgAccountRepository: OrgAccountRepository) extends ValidationService
+
+trait ValidationService {
+  val userAccountRepository: UserAccountRepository
+  val orgAccountRepository: OrgAccountRepository
 
   def isUserNameInUse(username : String) : Future[Boolean] = {
     for {

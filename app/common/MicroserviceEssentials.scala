@@ -13,7 +13,35 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-package config
+
+package common
+
+import javax.inject.Inject
+
+import com.cjwwdev.auth.actions.{Authorisation, BaseAuth}
+import com.cjwwdev.filters.RequestLoggingFilter
+import com.cjwwdev.identifiers.IdentifierValidation
+import com.cjwwdev.request.RequestParsers
+import com.kenshoo.play.metrics.MetricsFilter
+import play.api.http.DefaultHttpFilters
+import play.api.mvc.Controller
+
+trait BackendController
+  extends Controller
+    with RequestParsers
+    with BaseAuth
+    with Authorisation
+    with IdentifierValidation
+
+class EnabledFilters @Inject()(loggingFilter: RequestLoggingFilter, metricsFilter: MetricsFilter)
+  extends DefaultHttpFilters(loggingFilter, metricsFilter)
+
+class MissingAccountException(msg: String) extends Exception
+class FailedToUpdateException(msg: String) extends Exception
+class FailedToCreateException(msg: String) extends Exception
+
+class OrganisationNotFoundException(msg: String) extends Exception
+class FeedListEmptyException(msg: String) extends Exception
 
 sealed trait UserNameUse
 case object UserNameInUse extends UserNameUse

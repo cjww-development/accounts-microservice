@@ -18,7 +18,7 @@ package selectors
 import reactivemongo.bson.BSONDocument
 
 object OrgAccountSelectors {
-  def orgUserNameSelector(orgUserName: String): BSONDocument = BSONDocument("orgUserName" -> orgUserName)
+  val orgUserNameSelector: String => BSONDocument = orgUserName => BSONDocument("orgUserName" -> orgUserName)
 
-  def orgIdSelector(orgId: String): BSONDocument = BSONDocument("orgId" -> orgId)
+  val orgIdSelector: String => BSONDocument = orgId => BSONDocument("orgId" -> orgId)
 }

@@ -15,7 +15,7 @@
 // limitations under the License.
 package services
 
-import config.{EmailInUse, EmailNotInUse, UserNameInUse, UserNameNotInUse}
+import common.{EmailInUse, EmailNotInUse, UserNameInUse, UserNameNotInUse}
 import helpers.CJWWSpec
 import org.mockito.ArgumentMatchers
 import org.mockito.Mockito._
@@ -25,7 +25,10 @@ import scala.concurrent.Future
 class ValidationServiceSpec extends CJWWSpec {
 
   class Setup {
-    val testService = new ValidationService(mockUserAccountRepo, mockOrgAccountRepo)
+    val testService = new ValidationService {
+      override val userAccountRepository = mockUserAccountRepo
+      override val orgAccountRepository  = mockOrgAccountRepo
+    }
   }
 
   "isUserNameInUse" should {

@@ -15,33 +15,30 @@
 // limitations under the License.
 package controllers
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.config.ConfigurationLoader
-import com.cjwwdev.identifiers.IdentifierValidation
-import com.cjwwdev.request.RequestParsers
 import com.cjwwdev.security.encryption.DataSecurity
+import common.BackendController
 import models.FeedItem
 import play.api.libs.json.JsObject
-import play.api.mvc.{Action, AnyContent, Controller}
+import play.api.mvc.{Action, AnyContent}
 import services.UserFeedService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class UserFeedController @Inject()(userFeedService: UserFeedService,
-                                   val config: ConfigurationLoader,
-                                   val authConnector: AuthConnector) extends Controller with RequestParsers with Authorisation with IdentifierValidation {
+class UserFeedControllerImpl @Inject()(val userFeedService: UserFeedService,
+                                       val authConnector: AuthConnector) extends UserFeedController
 
-  def createEvent() : Action[String] = Action.async(parse.text) {
-    implicit request =>
-      openActionVerification {
-        withJsonBody[FeedItem](FeedItem.newFeedItemReads) { fi =>
-          userFeedService.createFeedItem(fi) map(created => if(created) Ok else InternalServerError)
-        }
+trait UserFeedController extends BackendController {
+  val userFeedService: UserFeedService
+
+  def createEvent() : Action[String] = Action.async(parse.text) { implicit request =>
+    openActionVerification {
+      withJsonBody[FeedItem](FeedItem.newFeedItemReads) { fi =>
+        userFeedService.createFeedItem(fi) map(if(_) Ok else InternalServerError)
       }
+    }
   }
 
   def retrieveFeed(userId: String) : Action[AnyContent] = Action.async { implicit request =>

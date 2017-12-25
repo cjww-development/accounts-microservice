@@ -16,21 +16,25 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import com.cjwwdev.reactivemongo.MongoDeleteResponse
 import models.OrgAccount
 import repositories.{OrgAccountRepository, UserAccountRepository, UserFeedRepository}
-import selectors.UserAccountSelectors._
 import selectors.OrgAccountSelectors._
+import selectors.UserAccountSelectors._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-@Singleton
-class TestEndpointService @Inject()(userAccountRepository: UserAccountRepository,
-                                    orgAccountRepository: OrgAccountRepository,
-                                    userFeedRepository: UserFeedRepository) {
+class TestEndpointServiceImpl @Inject()(val userAccountRepository: UserAccountRepository,
+                                        val orgAccountRepository: OrgAccountRepository,
+                                        val userFeedRepository: UserFeedRepository) extends TestEndpointService
+
+trait TestEndpointService {
+  val userAccountRepository: UserAccountRepository
+  val orgAccountRepository: OrgAccountRepository
+  val userFeedRepository: UserFeedRepository
 
   def tearDownTestUser(userName: String): Future[MongoDeleteResponse] = {
     for {

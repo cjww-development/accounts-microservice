@@ -27,35 +27,33 @@ import scala.concurrent.Future
 
 class UserFeedServiceSpec extends CJWWSpec {
 
-  val testFeedItem =
-    FeedItem(
-      "testFeedItemId",
-      "testUserId",
-      SourceDetail(
-        "testService",
-        "testLocation"
-      ),
-      EventDetail(
-        "testTitle",
-        "testDescription"
-      ),
-      DateTime.now()
-    )
+  val testFeedItem = FeedItem(
+    "testFeedItemId",
+    "testUserId",
+    SourceDetail(
+      "testService",
+      "testLocation"
+    ),
+    EventDetail(
+      "testTitle",
+      "testDescription"
+    ),
+    DateTime.now()
+  )
 
-  val testFeedItem2 =
-    FeedItem(
-      "testFeedItemId",
-      "testUserId2",
-      SourceDetail(
-        "testService",
-        "testLocation"
-      ),
-      EventDetail(
-        "testTitle",
-        "testDescription"
-      ),
-      DateTime.now()
-    )
+  val testFeedItem2 = FeedItem(
+    "testFeedItemId",
+    "testUserId2",
+    SourceDetail(
+      "testService",
+      "testLocation"
+    ),
+    EventDetail(
+      "testTitle",
+      "testDescription"
+    ),
+    DateTime.now()
+  )
 
   val testJsonObj =
     Json.parse(
@@ -76,7 +74,9 @@ class UserFeedServiceSpec extends CJWWSpec {
   val testFeedList = List(testFeedItem, testFeedItem2)
 
   class Setup {
-    val testService = new UserFeedService(mockUserFeedRepo)
+    val testService = new UserFeedService {
+      override val userFeedRepository = mockUserFeedRepo
+    }
   }
 
   "createFeedItem" should {

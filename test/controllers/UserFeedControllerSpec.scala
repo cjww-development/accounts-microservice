@@ -33,10 +33,11 @@ import scala.concurrent.Future
 class UserFeedControllerSpec extends CJWWSpec {
 
   class Setup {
-    val testController = new UserFeedController(mockUserFeedService, mockConfig, mockAuthConnector)
+    val testController = new UserFeedController {
+      override val userFeedService = mockUserFeedService
+      override val authConnector   = mockAuthConnector
+    }
   }
-
-  val uuid = UUID.randomUUID
 
   val testFeedItem = FeedItem(
     s"feed-item-$uuid",

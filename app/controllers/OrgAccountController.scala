@@ -16,23 +16,22 @@
 
 package controllers
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
-import com.cjwwdev.auth.actions.Authorisation
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.config.ConfigurationLoader
-import com.cjwwdev.identifiers.IdentifierValidation
 import com.cjwwdev.security.encryption.DataSecurity
+import common.BackendController
 import models.TeacherDetails
-import play.api.mvc.{Action, AnyContent, Controller}
+import play.api.mvc.{Action, AnyContent}
 import services.OrgAccountService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-@Singleton
-class OrgAccountController @Inject()(orgAccountService: OrgAccountService,
-                                     val authConnector: AuthConnector,
-                                     val config: ConfigurationLoader) extends Controller with Authorisation with IdentifierValidation {
+class OrgAccountControllerImpl @Inject()(val orgAccountService: OrgAccountService,
+                                         val authConnector: AuthConnector) extends OrgAccountController
+
+trait OrgAccountController extends BackendController {
+  val orgAccountService: OrgAccountService
 
   def getOrganisationsTeachers(orgId: String): Action[AnyContent] = Action.async {
     implicit request =>

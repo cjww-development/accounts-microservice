@@ -16,7 +16,7 @@
 
 package services
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import models.{BasicDetails, Enrolments, Settings, UserAccount}
 import repositories.UserAccountRepository
@@ -25,36 +25,31 @@ import selectors.UserAccountSelectors._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-@Singleton
-class GetDetailsService @Inject()(userAccountRepository: UserAccountRepository) {
+class GetDetailsServiceImpl @Inject()(val userAccountRepository: UserAccountRepository) extends GetDetailsService
+
+trait GetDetailsService {
+  val userAccountRepository: UserAccountRepository
 
   def getBasicDetails(userId : String) : Future[BasicDetails] = {
-    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractBasicDetails(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractBasicDetails
   }
 
   def getEnrolments(userId : String) : Future[Option[Enrolments]] = {
-    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractEnrolments(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractEnrolments
   }
 
   def getSettings(userId : String) : Future[Option[Settings]] = {
-    userAccountRepository.getUserBySelector(userIdSelector(userId)) map(acc => extractSettings(acc))
+    userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractSettings
   }
 
-  private def extractBasicDetails(user : UserAccount) : BasicDetails = {
-    BasicDetails(
-      firstName = user.firstName,
-      lastName = user.lastName,
-      userName = user.userName,
-      email = user.email,
-      createdAt = user.createdAt
-    )
-  }
+  private def extractBasicDetails(user : UserAccount) : BasicDetails = BasicDetails(
+    firstName = user.firstName,
+    lastName  = user.lastName,
+    userName  = user.userName,
+    email     = user.email,
+    createdAt = user.createdAt
+  )
 
-  private def extractEnrolments(user : UserAccount) : Option[Enrolments] = {
-    user.enrolments
-  }
-
-  private def extractSettings(user : UserAccount) : Option[Settings] = {
-    user.settings
-  }
+  private def extractEnrolments(user : UserAccount) : Option[Enrolments] = user.enrolments
+  private def extractSettings(user : UserAccount) : Option[Settings]     = user.settings
 }

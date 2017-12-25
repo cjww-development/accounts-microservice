@@ -15,31 +15,36 @@
 // limitations under the License.
 package repositories
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.Inject
 
 import com.cjwwdev.reactivemongo._
-import config.{FailedToCreateException, MissingAccountException}
-import config._
+import common.{FailedToCreateException, MissingAccountException, _}
 import models._
-import selectors.OrgAccountSelectors._
 import play.api.Logger
 import play.api.libs.json.OFormat
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
+import selectors.OrgAccountSelectors._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-@Singleton
-class OrgAccountRepository @Inject()() extends MongoDatabase("org-accounts") {
+class OrgAccountRepositoryImpl @Inject extends OrgAccountRepository
 
+trait OrgAccountRepository extends MongoDatabase {
   override def indexes: Seq[Index] = Seq(
     Index(
-      key = Seq("orgId" -> IndexType.Ascending),
-      name = Some("OrgId"),
-      unique = true,
-      sparse = false
+      key     = Seq("orgId" -> IndexType.Ascending),
+      name    = Some("OrgId"),
+      unique  = true,
+      sparse  = false
+    ),
+    Index(
+      key     = Seq("deversityId" -> IndexType.Ascending),
+      name    = Some("DeversityId"),
+      unique  = true,
+      sparse  = false
     )
   )
 

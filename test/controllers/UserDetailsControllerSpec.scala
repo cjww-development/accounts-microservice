@@ -29,10 +29,6 @@ import scala.concurrent.Future
 
 class UserDetailsControllerSpec extends CJWWSpec {
 
-  final val now = new DateTime(DateTimeZone.UTC)
-
-  final val uuid = UUID.randomUUID
-
   val testBasicDetails = BasicDetails(
     "testFirstName",
     "testLastName",
@@ -62,7 +58,11 @@ class UserDetailsControllerSpec extends CJWWSpec {
   lazy val request = buildRequest(AUTH_SERVICE_ID)
 
   class Setup {
-    val testController = new UserDetailsController(mockGetDetailsService, mockOrgAccountService, mockConfig, mockAuthConnector)
+    val testController = new UserDetailsController {
+      override val detailsService    = mockGetDetailsService
+      override val orgDetailsService = mockOrgAccountService
+      override val authConnector     = mockAuthConnector
+    }
   }
 
   "getBasicDetails" should {

@@ -1,1 +1,1 @@
-DELETE        /test-user/:userName/credential-type/:credentialType/tear-down                 controllers.test.TeardownController.tearDownUser(userName, credentialType)
+DELETE        /test-user/:userName/credential-type/:credentialType/tear-down                 controllers.TestTeardownController.tearDownUser(userName, credentialType)

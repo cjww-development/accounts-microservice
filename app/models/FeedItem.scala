@@ -29,8 +29,8 @@ import scala.util.{Failure, Success, Try}
 case class SourceDetail(service : String, location : String)
 
 object SourceDetail extends JsonFormats[SourceDetail] {
-  private val frontendServices = List("auth-service", "deversity-frontend", "diagnostics-frontend")
-  private val serviceValidation = Reads.StringReads.filter(ValidationError("Invalid service"))(service => frontendServices.contains(service))
+  private val frontendServices  = List("auth-service", "deversity-frontend", "diagnostics-frontend")
+  private val serviceValidation = Reads.StringReads.filter(ValidationError("Invalid service"))(frontendServices.contains(_))
 
   implicit val standardFormat: OFormat[SourceDetail] = (
     (__ \ "service").format[String](serviceValidation) and

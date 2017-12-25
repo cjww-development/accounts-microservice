@@ -26,8 +26,6 @@ import scala.concurrent.Future
 
 class RegistrationServiceSpec extends CJWWSpec {
 
-  final val now = new DateTime(DateTimeZone.UTC)
-
   val user = UserAccount(
     "new-user-id-1",
     "testFirstName",
@@ -43,6 +41,7 @@ class RegistrationServiceSpec extends CJWWSpec {
 
   val orgUser = OrgAccount(
     "new-org-id-1",
+    "org-test-dev-id",
     "testOrgName",
     "TI",
     "testOrgUserName",
@@ -55,7 +54,10 @@ class RegistrationServiceSpec extends CJWWSpec {
   )
 
   class Setup {
-    val testService = new RegistrationService(mockUserAccountRepo, mockOrgAccountRepo)
+    val testService = new RegistrationService {
+      override val userAccountRepository = mockUserAccountRepo
+      override val orgAccountRepository  = mockOrgAccountRepo
+    }
   }
 
   "createNewUser" should {
