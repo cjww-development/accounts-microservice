@@ -18,6 +18,7 @@ package repositories
 
 import javax.inject.Inject
 
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.reactivemongo._
 import common.FailedToCreateException
 import models.FeedItem
@@ -30,7 +31,7 @@ import reactivemongo.play.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UserFeedRepositoryImpl @Inject extends UserFeedRepository
+class UserFeedRepositoryImpl @Inject()(val configurationLoader: ConfigurationLoader) extends UserFeedRepository
 
 trait UserFeedRepository extends MongoDatabase {
   private val MAX = 10

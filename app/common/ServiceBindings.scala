@@ -16,6 +16,7 @@
 
 package common
 
+import com.cjwwdev.config.{ConfigurationLoader, ConfigurationLoaderImpl}
 import com.google.inject.AbstractModule
 import repositories._
 import services._
@@ -23,6 +24,7 @@ import controllers._
 
 class ServiceBindings extends AbstractModule {
   override def configure(): Unit = {
+    bindOther()
     bindRepositories()
     bindServices()
     bindControllers()
@@ -52,5 +54,9 @@ class ServiceBindings extends AbstractModule {
     bind(classOf[OrgAccountRepository]).to(classOf[OrgAccountRepositoryImpl]).asEagerSingleton()
     bind(classOf[UserAccountRepository]).to(classOf[UserAccountRepositoryImpl]).asEagerSingleton()
     bind(classOf[UserFeedRepository]).to(classOf[UserFeedRepositoryImpl]).asEagerSingleton()
+  }
+
+  private def bindOther(): Unit = {
+    bind(classOf[ConfigurationLoader]).to(classOf[ConfigurationLoaderImpl]).asEagerSingleton()
   }
 }

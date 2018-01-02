@@ -21,6 +21,7 @@ import akka.stream.ActorMaterializer
 import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.test.data.TestDataGenerator
+import com.typesafe.config.ConfigFactory
 import mocks.SessionBuild
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
@@ -37,7 +38,6 @@ trait CJWWSpec
     with MockitoSugar
     with BeforeAndAfterEach
     with SessionBuild
-    with ConfigurationLoader
     with TestDataGenerator {
 
   implicit val system = ActorSystem()
@@ -64,5 +64,5 @@ trait CJWWSpec
   val mockValidationService   = mock[ValidationService]
   val mockTestEndpointService = mock[TestEndpointService]
 
-  val AUTH_SERVICE_ID         = getApplicationId("auth-service")
+  val AUTH_SERVICE_ID         = ConfigFactory.load.getString("microservice.external-services.auth-service.application-id")
 }

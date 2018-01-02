@@ -18,6 +18,7 @@ package repositories
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.reactivemongo._
 import common.{FailedToCreateException, FailedToUpdateException, MissingAccountException}
 import common._
@@ -32,7 +33,7 @@ import reactivemongo.play.json._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UserAccountRepositoryImpl @Inject extends UserAccountRepository
+class UserAccountRepositoryImpl @Inject()(val configurationLoader: ConfigurationLoader) extends UserAccountRepository
 
 trait UserAccountRepository extends MongoDatabase {
   override def indexes: Seq[Index] = Seq(
@@ -46,7 +47,7 @@ trait UserAccountRepository extends MongoDatabase {
 
   private def generateDeversityId: String = s"deversity-${UUID.randomUUID()}"
 
-  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head._1, selector.elements.head._2.toString)
+  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head.name, selector.elements.head.value.toString)
 
   def insertNewUser(user : UserAccount) : Future[MongoCreateResponse] = {
     collection flatMap {
@@ -57,35 +58,39 @@ trait UserAccountRepository extends MongoDatabase {
   }
 
   def getUserBySelector(selector: BSONDocument): Future[UserAccount] = {
-    val elements = getSelectorHead(selector)
+    val (name, value) = getSelectorHead(selector)
     collection flatMap {
       _.find(selector).one[UserAccount] map {
-        case Some(acc) => acc
-        case _         =>
-          Logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on ${elements._1} with value ${elements._2}")
-          throw new MissingAccountException(s"No user account found based on ${elements._1} with value ${elements._2}")
+        _.getOrElse({
+          logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on $name with value $value")
+          throw new MissingAccountException(s"No user account found based on $name with value $value")
+        })
       }
     }
   }
 
   def verifyUserName(username : String) : Future[UserNameUse] = {
     collection flatMap {
-      _.find(BSONDocument("userName" -> username)).one[UserAccount] map {
-        case Some(_)  =>
-          Logger.info(s"[UserAccountRepo] - [verifyUserName] : This user name is already in use on this system")
+      _.find(BSONDocument("userName" -> username)).one[UserAccount] map { acc =>
+        if(acc.isDefined) {
+          logger.info(s"[UserAccountRepo] - [verifyUserName] : This user name is already in use on this system")
           UserNameInUse
-        case None     => UserNameNotInUse
+        } else {
+          UserNameNotInUse
+        }
       }
     }
   }
 
   def verifyEmail(email : String) : Future[EmailUse] = {
     collection flatMap {
-      _.find(BSONDocument("email" -> email)).one[UserAccount] map {
-        case Some(_)  =>
-          Logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
+      _.find(BSONDocument("email" -> email)).one[UserAccount] map { acc =>
+        if(acc.isDefined) {
+          logger.info(s"[UserAccountRepo] - [verifyEmail] : This email address is already in use on this system")
           EmailInUse
-        case None     => EmailNotInUse
+        } else {
+          EmailNotInUse
+        }
       }
     }
   }

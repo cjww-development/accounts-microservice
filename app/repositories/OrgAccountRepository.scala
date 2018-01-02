@@ -17,10 +17,10 @@ package repositories
 
 import javax.inject.Inject
 
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.reactivemongo._
 import common.{FailedToCreateException, MissingAccountException, _}
 import models._
-import play.api.Logger
 import play.api.libs.json.OFormat
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
@@ -30,7 +30,7 @@ import selectors.OrgAccountSelectors._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OrgAccountRepositoryImpl @Inject extends OrgAccountRepository
+class OrgAccountRepositoryImpl @Inject()(val configurationLoader: ConfigurationLoader) extends OrgAccountRepository
 
 trait OrgAccountRepository extends MongoDatabase {
   override def indexes: Seq[Index] = Seq(
@@ -48,7 +48,7 @@ trait OrgAccountRepository extends MongoDatabase {
     )
   )
 
-  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head._1, selector.elements.head._2.toString)
+  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head.name, selector.elements.head.value.toString)
 
   def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
     collection flatMap {
@@ -59,12 +59,12 @@ trait OrgAccountRepository extends MongoDatabase {
   }
 
   def getOrgAccount[T : OFormat](selector: BSONDocument): Future[T] = collection flatMap {
-    val elements = getSelectorHead(selector)
+    val (name, value) = getSelectorHead(selector)
     _.find(selector).one[T] map {
       case Some(acc) => acc
       case _         =>
-        Logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on ${elements._1} with value ${elements._2}")
-        throw new MissingAccountException(s"No user account found based on ${elements._1} with value ${elements._2}")
+        logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on $name with value $value")
+        throw new MissingAccountException(s"No user account found based on $name with value $value")
     }
   }
 
@@ -72,7 +72,7 @@ trait OrgAccountRepository extends MongoDatabase {
     collection flatMap {
       _.find(orgUserNameSelector(username)).one[OrgAccount] map {
         case Some(_) =>
-          Logger.info(s"[OrgAccountRepository] - [verifyUserName] : This user name is already in use on this system")
+          logger.info(s"[OrgAccountRepository] - [verifyUserName] : This user name is already in use on this system")
           UserNameInUse
         case None =>
           UserNameNotInUse
@@ -84,7 +84,7 @@ trait OrgAccountRepository extends MongoDatabase {
     collection flatMap {
       _.find(BSONDocument("orgEmail" -> email)).one[OrgAccount] map {
         case Some(_) =>
-          Logger.info(s"[OrgAccountRepository] - [verifyEmail] : This email address is already in use on this system")
+          logger.info(s"[OrgAccountRepository] - [verifyEmail] : This email address is already in use on this system")
           EmailInUse
         case None =>
           EmailNotInUse

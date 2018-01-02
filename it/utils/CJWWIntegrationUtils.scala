@@ -28,8 +28,8 @@ import scala.concurrent.{Await, Awaitable}
 
 trait CJWWIntegrationUtils extends PlaySpec with GuiceOneServerPerSuite {
 
-  val userAccountRepository = new UserAccountRepositoryImpl
-  val orgAccountRepository  = new OrgAccountRepositoryImpl
+  val userAccountRepository = app.injector.instanceOf(classOf[UserAccountRepositoryImpl])
+  val orgAccountRepository  = app.injector.instanceOf(classOf[OrgAccountRepositoryImpl])
 
   val baseUrl = s"http://localhost:$port/accounts"
 
