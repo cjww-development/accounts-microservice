@@ -1,24 +1,23 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package controllers
 
 import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.reactivemongo.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.mongo.responses.{MongoFailedCreate, MongoSuccessCreate}
 import common.BackendController
 import models.{OrgAccount, UserAccount}
 import play.api.mvc.Action
@@ -36,7 +35,7 @@ trait RegistrationController extends BackendController {
   val validationService: ValidationService
 
   def createNewUser : Action[String] = Action.async(parse.text) { implicit request =>
-    openActionVerification {
+    applicationVerification {
       withJsonBody[UserAccount](UserAccount.newUserReads) { user =>
         for {
           userNameInUse <- validationService.isUserNameInUse(user.userName)
@@ -55,7 +54,7 @@ trait RegistrationController extends BackendController {
   }
 
   def createNewOrgUser: Action[String] = Action.async(parse.text) { implicit request =>
-    openActionVerification {
+    applicationVerification {
       withJsonBody[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
         for {
           userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)

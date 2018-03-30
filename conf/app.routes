@@ -12,12 +12,12 @@ PATCH       /account/:userId/update-settings                                cont
 GET         /account/:userId/basic-details                                  controllers.UserDetailsController.getBasicDetails(userId)
 GET         /account/:userId/enrolments                                     controllers.UserDetailsController.getEnrolments(userId)
 GET         /account/:userId/settings                                       controllers.UserDetailsController.getSettings(userId)
-GET         /account/:userId/get-user-feed                                  controllers.UserFeedController.retrieveFeed(userId)
 
 GET         /account/:orgId/org-basic-details                               controllers.UserDetailsController.getOrgBasicDetails(orgId)
 GET         /account/:orgId/teachers                                        controllers.OrgAccountController.getOrganisationsTeachers(orgId)
 
 POST        /create-feed-item                                               controllers.UserFeedController.createEvent()
+GET         /account/:userId/get-user-feed                                  controllers.UserFeedController.retrieveFeed(userId)
 
 HEAD        /validate/user-name/:username                                   controllers.ValidationController.validateUserName(username : String)
 HEAD        /validate/email/:email                                          controllers.ValidationController.validateEmail(email : String)

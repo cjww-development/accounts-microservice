@@ -1,55 +1,25 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package controllers
 
-import java.util.UUID
-
-import com.cjwwdev.reactivemongo.{MongoFailedUpdate, MongoSuccessUpdate}
-import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
 import common._
-import helpers.CJWWSpec
-import mocks.AuthBuilder
-import models.{Settings, UpdatedPassword, UserProfile}
-import play.api.test.Helpers._
-import org.mockito.Mockito.when
-import org.mockito.ArgumentMatchers
+import helpers.controllers.ControllerSpec
 import play.api.test.FakeRequest
 
-import scala.concurrent.Future
-
-class UpdateUserDetailsControllerSpec extends CJWWSpec {
-
-  val testProfile = UserProfile(
-    firstName = "testFirstName",
-    lastName = "testLastName",
-    userName = "tUserName",
-    email = "test@email.com",
-    settings = None
-  )
-
-  val testPasswordUpdate = UpdatedPassword(
-    previousPassword = s"${SHA512.encrypt("testOldPassword")}",
-    newPassword = s"${SHA512.encrypt("testNewPassword")}"
-  )
-
-  val testSettings = Settings(
-    displayName = "full",
-    displayNameColour = "#FFFFFF",
-    displayImageURL = "http://sample-image.com/image.jpg"
-  )
+class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UpdateUserDetailsController {
@@ -61,34 +31,24 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec {
   "updateProfileInformation" should {
     "return an Ok" when {
       "the users profile information has been updated" in new Setup {
-        val request: FakeRequest[String] = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody[String](
-          DataSecurity.encryptType[UserProfile](testProfile)
-        )
+        val request: FakeRequest[String] = standardRequest.withBody[String](testUserProfile.encryptType)
 
-        when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoSuccessUpdate))
+        mockUpdateProfileInformation(updated = true)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateProfileInformation(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe OK
+        runActionWithAuth(testController.updateProfileInformation(testUserId), request, "individual") {
+          status(_) mustBe OK
         }
       }
     }
 
     "return an internal server error" when {
       "there was a problem updating the users profile information" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[UserProfile](testProfile))
+        val request = standardRequest.withBody(testUserProfile.encryptType)
 
-        when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(MongoFailedUpdate))
+        mockUpdateProfileInformation(updated = false)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateProfileInformation(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        runActionWithAuth(testController.updateProfileInformation(testUserId), request, "individual") {
+          status(_) mustBe INTERNAL_SERVER_ERROR
         }
       }
     }
@@ -97,48 +57,39 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec {
   "updateUserPassword" should {
     "return an Ok" when {
       "the users password has been successfully updated" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate))
+        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
 
-        when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdated))
+        println(testUpdatedPassword.previousPassword.length)
+        println(testUpdatedPassword.newPassword.length)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateUserPassword(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe OK
+        mockUpdatePassword(updatedResponse = PasswordUpdated)
+
+        runActionWithAuth(testController.updateUserPassword(testUserId), request, "individual") {
+          status(_) mustBe OK
         }
       }
     }
 
     "return a conflict" when {
       "the users old password doesn't match what is on record" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate))
+        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
 
-        when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(InvalidOldPassword))
+        mockUpdatePassword(updatedResponse = InvalidOldPassword)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateUserPassword(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe CONFLICT
+        runActionWithAuth(testController.updateUserPassword(testUserId), request, "individual") {
+          status(_) mustBe CONFLICT
         }
       }
     }
 
     "return an Internal server error" when {
       "there was a problem updating the users password" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[UpdatedPassword](testPasswordUpdate))
+        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
 
-        when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(PasswordUpdateFailed))
+        mockUpdatePassword(updatedResponse = PasswordUpdateFailed)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateUserPassword(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        runActionWithAuth(testController.updateUserPassword(testUserId), request, "individual") {
+          status(_) mustBe INTERNAL_SERVER_ERROR
         }
       }
     }
@@ -147,32 +98,24 @@ class UpdateUserDetailsControllerSpec extends CJWWSpec {
   "updateUserSettings" should {
     "return an Ok" when {
       "a users settings have been updated" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[Settings](testSettings))
+        val request = standardRequest.withBody(testSettings.encryptType)
 
-        when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(UpdatedSettingsSuccess))
+        mockUpdateSettings(updated = true)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateUserSettings(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe OK
+        runActionWithAuth(testController.updateUserSettings(testUserId), request, "individual") {
+          status(_) mustBe OK
         }
       }
     }
 
     "return an internal server error" when {
       "there a problem updating the users settings" in new Setup {
-        val request = FakeRequest().withHeaders(
-          "appId" -> AUTH_SERVICE_ID,
-          CONTENT_TYPE -> TEXT
-        ).withBody(DataSecurity.encryptType[Settings](testSettings))
+        val request = standardRequest.withBody(testSettings.encryptType)
 
-        when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
-          .thenReturn(Future.successful(UpdatedSettingsFailed))
+        mockUpdateSettings(updated = false)
 
-        AuthBuilder.postWithAuthorisedUser(testController.updateUserSettings(s"user-$uuid"), request, mockAuthConnector, uuid, "user") {
-          result => status(result) mustBe INTERNAL_SERVER_ERROR
+        runActionWithAuth(testController.updateUserSettings(testUserId), request, "individual") {
+          status(_) mustBe INTERNAL_SERVER_ERROR
         }
       }
     }

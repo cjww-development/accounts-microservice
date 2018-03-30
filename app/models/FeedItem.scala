@@ -1,23 +1,23 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package models
 
 import java.util.UUID
 
-import com.cjwwdev.json.JsonFormats
+import com.cjwwdev.json.TimeFormat
 import org.joda.time.DateTime
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
@@ -28,7 +28,7 @@ import scala.util.{Failure, Success, Try}
 
 case class SourceDetail(service : String, location : String)
 
-object SourceDetail extends JsonFormats[SourceDetail] {
+object SourceDetail {
   private val frontendServices  = List("auth-service", "deversity-frontend", "diagnostics-frontend")
   private val serviceValidation = Reads.StringReads.filter(ValidationError("Invalid service"))(frontendServices.contains(_))
 
@@ -40,7 +40,7 @@ object SourceDetail extends JsonFormats[SourceDetail] {
 
 case class EventDetail(title : String, description : String)
 
-object EventDetail extends JsonFormats[EventDetail] {
+object EventDetail {
   implicit val standardFormat: OFormat[EventDetail] = (
     (__ \ "title").format[String] and
     (__ \ "description").format[String]
@@ -53,7 +53,7 @@ case class FeedItem(feedId : String,
                     eventDetail: EventDetail,
                     generated : DateTime)
 
-object FeedItem extends JsonFormats[FeedItem] with IdService {
+object FeedItem extends IdService with TimeFormat {
 
   private val userIdValidation = Reads.StringReads.filter(ValidationError("Invalid user id"))(userId =>
     if(userId.contains("user")) {
