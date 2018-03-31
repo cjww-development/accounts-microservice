@@ -1,0 +1,73 @@
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package utils
+
+import models.{FeedItem, OrgAccount, UserAccount}
+
+trait IntegrationStubbing {
+  self: IntegrationSpec =>
+
+  class PreconditionBuilder {
+    implicit val builder: PreconditionBuilder = this
+
+    def user: UserStub = UserStub()
+  }
+
+  def given: PreconditionBuilder = new PreconditionBuilder
+
+  case class UserStub()(implicit builder: PreconditionBuilder) {
+    def individualUser: IndividualUser = IndividualUser()
+    def orgUser: OrgUser = OrgUser()
+  }
+
+  case class IndividualUser()(implicit builder: PreconditionBuilder) {
+    def isSetup: PreconditionBuilder = {
+      await(userAccountRepository.collection flatMap(_.insert[UserAccount](testUserAccount)))
+      builder
+    }
+
+    def isAuthorised: PreconditionBuilder = {
+      stubbedGet(s"/session-store/session/$testCookieId/context", OK, testContextId.encrypt)
+      stubbedGet(s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}", OK, testCurrentUser.encryptType)
+      builder
+    }
+
+    def hasFeedItems: PreconditionBuilder = {
+      await(userFeedRepository.collection.fliatMap(_.insert[FeedItem](testFeedItem)))
+      await(userFeedRepository.collection.flatMap(_.insert[FeedItem](testFeedItem2)))
+      builder
+    }
+  }
+
+  case class OrgUser()(implicit builder: PreconditionBuilder) {
+    def isSetup: PreconditionBuilder = {
+      await(orgAccountRepository.collection flatMap(_.insert[OrgAccount](testOrgAccount)))
+      builder
+    }
+
+    def hasTeachers: PreconditionBuilder = {
+      await(userAccountRepository.insertNewUser(testUserAccount(AccountEnums.teacher)))
+      builder
+    }
+
+    def isAuthorised: PreconditionBuilder = {
+      stubbedGet(s"/session-store/session/$testCookieId/context", OK, testContextId.encrypt)
+      stubbedGet(s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}", OK, testOrgCurrentUser.encryptType)
+      builder
+    }
+  }
+}

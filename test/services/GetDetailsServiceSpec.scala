@@ -1,87 +1,24 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package services
 
-import helpers.CJWWSpec
-import models.{BasicDetails, Enrolments, Settings, UserAccount}
-import org.joda.time.{DateTime, DateTimeZone}
-import org.mockito.Mockito.when
-import org.mockito.ArgumentMatchers
+import helpers.other.AccountEnums
+import helpers.services.ServiceSpec
 
-import scala.concurrent.Future
-
-class GetDetailsServiceSpec extends CJWWSpec {
-
-  val testAccount = UserAccount(
-    userId = "testId",
-    firstName = "testFirst",
-    lastName = "testLast",
-    userName = "testUser",
-    email = "test@email.com",
-    password = "testPassword",
-    deversityDetails = None,
-    createdAt = now,
-    enrolments = Some(Enrolments(
-      Some("testOtherId"),
-      Some("testOtherId"),
-      Some("testOtherId")
-    )),
-    settings = Some(Settings(
-      displayName = "full",
-      displayNameColour = "#FFFFFF",
-      displayImageURL  = "/test/uri"
-    ))
-  )
-
-  val testAccount2 = UserAccount(
-    "testId",
-    "testFirst",
-    "testLast",
-    "testUser",
-    "test@email.com",
-    "testPassword",
-    None,
-    now,
-    Some(Enrolments(
-      Some("testOtherId"),
-      Some("testOtherId"),
-      Some("testOtherId")
-    )),
-    None
-  )
-
-  val testBasicDetails = BasicDetails(
-    firstName = "testFirst",
-    lastName = "testLast",
-    userName = "testUser",
-    email = "test@email.com",
-    createdAt = now
-  )
-
-  val testEnrolments = Enrolments(
-    Some("testOtherId"),
-    Some("testOtherId"),
-    Some("testOtherId")
-  )
-
-  val testSettings = Settings(
-    displayName = "full",
-    displayNameColour = "#FFFFFF",
-    displayImageURL  = "/test/uri"
-  )
+class GetDetailsServiceSpec extends ServiceSpec {
 
   class Setup {
     val testService = new GetDetailsService {
@@ -92,11 +29,11 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getBasicDetails" should {
     "return a basic details" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(testAccount))
+        mockGetUserBySelector(returned = testUserAccount(AccountEnums.teacher))
 
-        val result = await(testService.getBasicDetails("testId"))
-        result mustBe testBasicDetails
+        awaitAndAssert(testService.getBasicDetails(generateTestSystemId(USER))) {
+          _ mustBe testBasicDetails
+        }
       }
     }
   }
@@ -104,11 +41,11 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getEnrolments" should {
     "return an enrolments model" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(testAccount))
+        mockGetUserBySelector(returned = testUserAccount(AccountEnums.teacher))
 
-        val result = await(testService.getEnrolments("testId"))
-        result mustBe Some(testEnrolments)
+        awaitAndAssert(testService.getEnrolments(generateTestSystemId(USER))) {
+          _ mustBe Some(testEnrolments)
+        }
       }
     }
   }
@@ -116,21 +53,21 @@ class GetDetailsServiceSpec extends CJWWSpec {
   "getSettings" should {
     "return a settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(testAccount))
+        mockGetUserBySelector(returned = testUserAccount(AccountEnums.teacher).copy(settings = Some(testSettings)))
 
-        val result = await(testService.getSettings("testId"))
-        result mustBe Some(testSettings)
+        awaitAndAssert(testService.getSettings(generateTestSystemId(USER))) {
+          _ mustBe Some(testSettings)
+        }
       }
     }
 
     "return no settings map" when {
       "given a userId" in new Setup {
-        when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any()))
-          .thenReturn(Future.successful(testAccount2))
+        mockGetUserBySelector(returned = testUserAccount(AccountEnums.teacher))
 
-        val result = await(testService.getSettings("testId"))
-        result mustBe None
+        awaitAndAssert(testService.getSettings(generateTestSystemId(USER))) {
+          _ mustBe None
+        }
       }
     }
   }

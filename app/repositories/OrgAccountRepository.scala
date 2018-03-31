@@ -1,38 +1,39 @@
-// Copyright (C) 2016-2017 the original author or authors.
-// See the LICENCE.txt file distributed with this work for additional
-// information regarding copyright ownership.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+/*
+ * Copyright 2018 CJWW Development
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package repositories
 
 import javax.inject.Inject
-
-import com.cjwwdev.config.ConfigurationLoader
-import com.cjwwdev.reactivemongo._
+import com.cjwwdev.logging.Logging
+import com.cjwwdev.mongo.DatabaseRepository
+import com.cjwwdev.mongo.connection.ConnectionSettings
+import com.cjwwdev.mongo.responses._
 import common.{FailedToCreateException, MissingAccountException, _}
 import models._
+import play.api.Configuration
 import play.api.libs.json.OFormat
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
-import selectors.OrgAccountSelectors._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OrgAccountRepositoryImpl @Inject()(val configurationLoader: ConfigurationLoader) extends OrgAccountRepository
+class OrgAccountRepositoryImpl @Inject()(val config: Configuration) extends OrgAccountRepository with ConnectionSettings
 
-trait OrgAccountRepository extends MongoDatabase {
+trait OrgAccountRepository extends DatabaseRepository with Logging {
   override def indexes: Seq[Index] = Seq(
     Index(
       key     = Seq("orgId" -> IndexType.Ascending),
@@ -48,55 +49,52 @@ trait OrgAccountRepository extends MongoDatabase {
     )
   )
 
-  private def getSelectorHead(selector: BSONDocument): (String, String) = (selector.elements.head.name, selector.elements.head.value.toString)
-
   def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
-    collection flatMap {
-      _.insert(orgUser) map { wr =>
-        if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
-      }
+    for {
+      col <- collection
+      wr  <- col.insert[OrgAccount](orgUser)
+    } yield if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
+  }
+
+  def getOrgAccount[T : OFormat](selector: BSONDocument): Future[T] = {
+    for {
+      col           <- collection
+      (name, value) =  getSelectorHead(selector)
+      acc           <- col.find(selector).one[T]
+    } yield acc.getOrElse({
+      logger.error(s"[getOrgAccount] - Could not find user account based on $name with value $value")
+      throw new MissingAccountException(s"No user account found based on $name with value $value")
+    })
+  }
+
+  def verifyUserName(username : String): Future[UserNameUse] = {
+    for {
+      col <- collection
+      acc <- col.find(orgUserNameSelector(username)).one[OrgAccount]
+    } yield if(acc.isDefined) {
+      logger.info(s"[verifyUserName] : This user name is already in use on this system")
+      UserNameInUse
+    } else {
+      UserNameNotInUse
     }
   }
 
-  def getOrgAccount[T : OFormat](selector: BSONDocument): Future[T] = collection flatMap {
-    val (name, value) = getSelectorHead(selector)
-    _.find(selector).one[T] map {
-      case Some(acc) => acc
-      case _         =>
-        logger.error(s"[UserAccountRepository] - [getUserBySelector] - Could not find user account based on $name with value $value")
-        throw new MissingAccountException(s"No user account found based on $name with value $value")
-    }
-  }
-
-  def verifyUserName(username : String) : Future[UserNameUse] = {
-    collection flatMap {
-      _.find(orgUserNameSelector(username)).one[OrgAccount] map {
-        case Some(_) =>
-          logger.info(s"[OrgAccountRepository] - [verifyUserName] : This user name is already in use on this system")
-          UserNameInUse
-        case None =>
-          UserNameNotInUse
-      }
-    }
-  }
-
-  def verifyEmail(email : String) : Future[EmailUse] = {
-    collection flatMap {
-      _.find(BSONDocument("orgEmail" -> email)).one[OrgAccount] map {
-        case Some(_) =>
-          logger.info(s"[OrgAccountRepository] - [verifyEmail] : This email address is already in use on this system")
-          EmailInUse
-        case None =>
-          EmailNotInUse
-      }
+  def verifyEmail(email : String): Future[EmailUse] = {
+    for {
+      col <- collection
+      acc <- col.find(orgEmailSelector(email)).one[OrgAccount]
+    } yield if(acc.isDefined) {
+      logger.info(s"[verifyUserName] : This user name is already in use on this system")
+      EmailInUse
+    } else {
+      EmailNotInUse
     }
   }
 
   def deleteOrgAccount(userId: String): Future[MongoDeleteResponse] = {
-    collection flatMap {
-      _.remove(orgIdSelector(userId)) map { wr =>
-        if(wr.ok) MongoSuccessDelete else MongoFailedDelete
-      }
-    }
+    for {
+      col <- collection
+      wr  <- col.remove(orgIdSelector(userId))
+    } yield if(wr.ok) MongoSuccessDelete else MongoFailedDelete
   }
 }
