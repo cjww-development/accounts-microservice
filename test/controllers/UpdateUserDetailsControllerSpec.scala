@@ -59,9 +59,6 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
       "the users password has been successfully updated" in new Setup {
         val request = standardRequest.withBody(testUpdatedPassword.encryptType)
 
-        println(testUpdatedPassword.previousPassword.length)
-        println(testUpdatedPassword.newPassword.length)
-
         mockUpdatePassword(updatedResponse = PasswordUpdated)
 
         runActionWithAuth(testController.updateUserPassword(testUserId), request, "individual") {
