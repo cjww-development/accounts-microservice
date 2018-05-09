@@ -16,7 +16,7 @@
 
 package services
 
-import com.cjwwdev.mongo.responses.{MongoFailedUpdate, MongoSuccessUpdate, MongoUpdatedResponse}
+import com.cjwwdev.mongo.responses.MongoUpdatedResponse
 import common._
 import javax.inject.Inject
 import models.{Settings, UpdatedPassword, UserProfile}

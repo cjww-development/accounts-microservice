@@ -15,6 +15,7 @@
  */
 package controllers
 
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import helpers.controllers.ControllerSpec
 
 class ValidationControllerSpec extends ControllerSpec {

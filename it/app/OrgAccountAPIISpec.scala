@@ -16,7 +16,8 @@
 
 package app
 
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.implicits.ImplicitJsValues._
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import models.TeacherDetails
 import utils.{IntegrationSpec, IntegrationStubbing}
 
@@ -25,13 +26,13 @@ class OrgAccountAPIISpec extends IntegrationSpec with IntegrationStubbing {
     "return an Ok" when {
       "a list of teacher details have been found for the org id" in {
         given
-            .user.orgUser.isSetup
-            .user.orgUser.hasTeachers
-            .user.orgUser.isAuthorised
+          .user.orgUser.isSetup
+          .user.orgUser.hasTeachers
+          .user.orgUser.isAuthorised
 
         awaitAndAssert(client(s"$testAppUrl/account/${testOrgAccount.orgId}/teachers").get()) { res =>
-          res.status mustBe OK
-          DataSecurity.decryptIntoType[List[TeacherDetails]](res.body).get.size mustBe 1
+          res.status                                                              mustBe OK
+          res.json.get[String]("body").decryptIntoType[List[TeacherDetails]].size mustBe 1
         }
       }
     }

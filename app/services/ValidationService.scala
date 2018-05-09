@@ -15,12 +15,12 @@
  */
 package services
 
-import com.google.inject.{Inject, Singleton}
+import com.google.inject.Inject
 import common.{EmailInUse, UserNameInUse}
 import repositories._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class ValidationServiceImpl @Inject()(val userAccountRepository: UserAccountRepository,
                                       val orgAccountRepository: OrgAccountRepository) extends ValidationService

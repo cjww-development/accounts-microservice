@@ -16,10 +16,10 @@
 
 package controllers
 
-import javax.inject.Inject
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.mongo.responses.{MongoFailedUpdate, MongoSuccessUpdate}
+import com.cjwwdev.mongo.responses.MongoSuccessUpdate
 import common._
+import javax.inject.Inject
 import models.{Settings, UpdatedPassword, UserProfile}
 import play.api.mvc.Action
 import services._
@@ -36,9 +36,19 @@ trait UpdateUserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
-          accountService.updateProfileInformation(user.id, profile) map {
-            case MongoSuccessUpdate => Ok
-            case MongoFailedUpdate  => InternalServerError
+          accountService.updateProfileInformation(user.id, profile) map { resp =>
+            val (status, body) = if(resp.equals(MongoSuccessUpdate)) {
+              (OK, s"Profile for user has been updated")
+            } else {
+              (INTERNAL_SERVER_ERROR, s"There was a problem updating the profile for user")
+            }
+
+            withJsonResponseBody(status, body) { json =>
+              status match {
+                case OK                    => Ok(json)
+                case INTERNAL_SERVER_ERROR => InternalServerError(json)
+              }
+            }
           }
         }
       }
@@ -49,10 +59,20 @@ trait UpdateUserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
-          accountService.updatePassword(user.id, passwordSet) map {
-            case PasswordUpdated      => Ok
-            case InvalidOldPassword   => Conflict
-            case PasswordUpdateFailed => InternalServerError
+          accountService.updatePassword(user.id, passwordSet) map { resp =>
+            val (status, body) = resp match {
+              case PasswordUpdated      => (OK, s"Password for user has been updated")
+              case InvalidOldPassword   => (CONFLICT, s"Password for user didn't match")
+              case PasswordUpdateFailed => (INTERNAL_SERVER_ERROR, "There was a problem updating the users password")
+            }
+
+            withJsonResponseBody(status, body) { json =>
+              status match {
+                case OK                    => Ok(json)
+                case CONFLICT              => Conflict(json)
+                case INTERNAL_SERVER_ERROR => InternalServerError(json)
+              }
+            }
           }
         }
       }
@@ -63,9 +83,19 @@ trait UpdateUserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         withJsonBody[Settings](Settings.standardFormat) { settings =>
-          accountService.updateSettings(user.id, settings) map {
-            case UpdatedSettingsSuccess => Ok
-            case UpdatedSettingsFailed  => InternalServerError
+          accountService.updateSettings(user.id, settings) map { resp =>
+            val (status, body) = if(resp.equals(UpdatedSettingsSuccess)) {
+              (OK, "Settings for user have been updated")
+            } else {
+              (INTERNAL_SERVER_ERROR, "There was a problem updating the settings for the user")
+            }
+
+            withJsonResponseBody(status, body) { json =>
+              status match {
+                case OK                    => Ok(json)
+                case INTERNAL_SERVER_ERROR => InternalServerError(json)
+              }
+            }
           }
         }
       }

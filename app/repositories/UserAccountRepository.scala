@@ -15,8 +15,6 @@
  */
 package repositories
 
-import java.util.UUID
-
 import com.cjwwdev.logging.Logging
 import com.cjwwdev.mongo.DatabaseRepository
 import com.cjwwdev.mongo.connection.ConnectionSettings

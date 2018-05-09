@@ -16,6 +16,8 @@
 
 package app
 
+import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.implicits.ImplicitJsValues._
 import play.api.libs.json.JsObject
 import utils.{IntegrationSpec, IntegrationStubbing}
 
@@ -38,8 +40,8 @@ class FeedAPIISpec extends IntegrationSpec with IntegrationStubbing {
           .user.individualUser.isAuthorised
 
         awaitAndAssert(client(s"$testAppUrl/account/$testUserId/get-user-feed").get()) { res =>
-          res.status                     mustBe OK
-          res.body.decryptType[JsObject] mustBe testFeedArray
+          res.status                                             mustBe OK
+          res.json.get[String]("body").decryptIntoType[JsObject] mustBe testFeedArray
         }
       }
     }

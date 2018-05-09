@@ -16,12 +16,10 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
-import models.TeacherDetails
+import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
 import services.OrgAccountService
 
@@ -37,9 +35,13 @@ trait OrgAccountController extends BackendController {
     validateAs(ORG_USER, orgId) {
       authorised(orgId) { user =>
         orgAccountService.getOrganisationsTeachers(user.id) map { list =>
-          Ok(DataSecurity.encryptType[List[TeacherDetails]](list))
+          withJsonResponseBody(OK, list.encryptType) { json =>
+            Ok(json)
+          }
         } recover {
-          case _: Throwable => InternalServerError
+          case _: Throwable => withJsonResponseBody(INTERNAL_SERVER_ERROR, "There was a problem getting the organisations teachers") { json =>
+            InternalServerError(json)
+          }
         }
       }
     }

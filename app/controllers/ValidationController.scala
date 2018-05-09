@@ -16,10 +16,9 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
 import common.BackendController
+import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
 import services.ValidationService
 
@@ -35,7 +34,13 @@ trait ValidationController extends BackendController {
     applicationVerification {
       withEncryptedUrl(username) { userName =>
         validationService.isUserNameInUse(userName) map { inUse =>
-          if(!inUse) Ok else Conflict
+          val (status, body) = if(!inUse) (OK, "User name is available") else (CONFLICT, "User name is not available")
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK       => Ok(json)
+              case CONFLICT => Conflict(json)
+            }
+          }
         }
       }
     }
@@ -45,7 +50,13 @@ trait ValidationController extends BackendController {
     applicationVerification {
       withEncryptedUrl(email) { emailAddress =>
         validationService.isEmailInUse(emailAddress) map { inUse =>
-          if(!inUse) Ok else Conflict
+          val (status, body) = if(!inUse) (OK, "Email is not in use") else (CONFLICT, "Email is already in use")
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK       => Ok(json)
+              case CONFLICT => Conflict(json)
+            }
+          }
         }
       }
     }
