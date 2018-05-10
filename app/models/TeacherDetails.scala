@@ -19,14 +19,13 @@ package models
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
-case class TeacherDetails(userId: String, title: String, lastName: String, room: String, status: String)
+case class TeacherDetails(userId: String, title: String, lastName: String, room: String)
 
 object TeacherDetails {
   implicit val standardFormat: OFormat[TeacherDetails] = (
     (__ \ "userId").format[String] and
     (__ \ "title").format[String] and
     (__ \ "lastName").format[String] and
-    (__ \ "room").format[String] and
-    (__ \ "status").format[String]
+    (__ \ "room").format[String]
   )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
 }

@@ -41,7 +41,9 @@ trait UserDetailsController extends BackendController {
             Ok(json)
           }
         } recover {
-          case _: Throwable => withJsonResponseBody(NOT_FOUND, "No basic details found") { json =>
+          case e: Throwable =>
+            e.printStackTrace()
+            withJsonResponseBody(NOT_FOUND, "No basic details found") { json =>
             NotFound(json)
           }
         }

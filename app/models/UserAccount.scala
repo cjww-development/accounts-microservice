@@ -23,18 +23,13 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
 
-case class DeversityEnrolment(statusConfirmed: String,
-                              schoolName: String,
+case class DeversityEnrolment(schoolDevId: String,
                               role: String,
                               title: Option[String],
                               room: Option[String],
                               teacher: Option[String])
 
 object DeversityEnrolment extends RegexPack {
-  val statusConfirmedRead = Reads.StringReads.filter(ValidationError("Invalid status"))(status => status.equals("pending") || status.equals("confirmed"))
-  val statusConfirmedWrite: Writes[String] = new Writes[String] {
-    override def writes(o: String) = Json.obj("statusConfirmed" -> o)
-  }
 
   val roleRead = Reads.StringReads.filter(ValidationError("Invalid role"))(role => role.equals("teacher") || role.equals("student"))
   val roleWrite: Writes[String] = new OWrites[String] {
@@ -42,8 +37,7 @@ object DeversityEnrolment extends RegexPack {
   }
 
   implicit val standardFormat: OFormat[DeversityEnrolment] = (
-    (__ \ "statusConfirmed").format[String](statusConfirmedRead) and
-    (__ \ "schoolName").format[String] and
+    (__ \ "schoolDevId").format[String] and
     (__ \ "role").format[String](roleRead) and
     (__ \ "title").formatNullable[String] and
     (__ \ "room").formatNullable[String] and

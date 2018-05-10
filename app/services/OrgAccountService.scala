@@ -51,8 +51,7 @@ trait OrgAccountService {
         user.userId,
         user.deversityDetails.get.title.get,
         user.lastName,
-        user.deversityDetails.get.room.get,
-        user.deversityDetails.get.statusConfirmed
+        user.deversityDetails.get.room.get
       )
     }
   }
