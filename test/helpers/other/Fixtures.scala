@@ -52,8 +52,7 @@ trait Fixtures extends TestDataGenerator {
 
   def testTeacherEnrolment: DeversityEnrolment = {
     DeversityEnrolment(
-      statusConfirmed = "pending",
-      schoolName      = testOrgDevId,
+      schoolDevId     = testOrgDevId,
       role            = "teacher",
       title           = Some("testTitle"),
       room            = Some("testRoom"),
@@ -63,8 +62,7 @@ trait Fixtures extends TestDataGenerator {
 
   def testStudentEnrolment: DeversityEnrolment = {
     DeversityEnrolment(
-      statusConfirmed = "pending",
-      schoolName      = testOrgDevId,
+      schoolDevId     = testOrgDevId,
       role            = "student",
       title           = None,
       room            = None,
@@ -145,8 +143,7 @@ trait Fixtures extends TestDataGenerator {
     userId   = generateTestSystemId(USER),
     title    = "testTitle",
     lastName = "testLastName",
-    room     = "testRoom",
-    status   = "pending"
+    room     = "testRoom"
   )
 
   val testFeedItem = FeedItem(
