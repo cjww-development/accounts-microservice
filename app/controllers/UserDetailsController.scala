@@ -16,12 +16,10 @@
 
 package controllers
 
-import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
-import models.{BasicDetails, Enrolments, OrgDetails, Settings}
+import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent}
 import services.{GetDetailsService, OrgAccountService}
 
@@ -39,9 +37,15 @@ trait UserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         detailsService.getBasicDetails(user.id) map { details =>
-          Ok(DataSecurity.encryptType[BasicDetails](details))
+          withJsonResponseBody(OK, details.encryptType) { json =>
+            Ok(json)
+          }
         } recover {
-          case _: Throwable => NotFound
+          case e: Throwable =>
+            e.printStackTrace()
+            withJsonResponseBody(NOT_FOUND, "No basic details found") { json =>
+            NotFound(json)
+          }
         }
       }
     }
@@ -50,9 +54,14 @@ trait UserDetailsController extends BackendController {
   def getEnrolments(userId: String) : Action[AnyContent] = Action.async { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        detailsService.getEnrolments(user.id) map {
-          case Some(enrolments) => Ok(DataSecurity.encryptType[Enrolments](enrolments))
-          case None             => NotFound
+        detailsService.getEnrolments(user.id) map { enrolments =>
+          val (status, body) = enrolments.fold((NOT_FOUND, "No enrolments found"))(enr => (OK, enr.encryptType))
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK        => Ok(json)
+              case NOT_FOUND => NotFound(json)
+            }
+          }
         }
       }
     }
@@ -61,9 +70,14 @@ trait UserDetailsController extends BackendController {
   def getSettings(userId : String) : Action[AnyContent] = Action.async { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        detailsService.getSettings(user.id) map {
-          case Some(settings) => Ok(DataSecurity.encryptType[Settings](settings))
-          case None           => NotFound
+        detailsService.getSettings(user.id) map { settings =>
+          val (status, body) = settings.fold((NOT_FOUND, "No settings found"))(s => (OK, s.encryptType))
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK        => Ok(json)
+              case NOT_FOUND => NotFound(json)
+            }
+          }
         }
       }
     }
@@ -72,9 +86,14 @@ trait UserDetailsController extends BackendController {
   def getOrgBasicDetails(orgId: String): Action[AnyContent] = Action.async { implicit request =>
     validateAs(ORG_USER, orgId) {
       authorised(orgId) { user =>
-        orgDetailsService.getOrganisationBasicDetails(user.id) map {
-          case Some(details) => Ok(DataSecurity.encryptType[OrgDetails](details))
-          case None          => NotFound
+        orgDetailsService.getOrganisationBasicDetails(user.id) map { details =>
+          val (status, body) = details.fold((NOT_FOUND, "No basic details found"))(deets => (OK, deets.encryptType))
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK        => Ok(json)
+              case NOT_FOUND => NotFound(json)
+            }
+          }
         }
       }
     }

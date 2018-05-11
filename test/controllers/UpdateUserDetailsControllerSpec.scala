@@ -15,6 +15,7 @@
  */
 package controllers
 
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common._
 import helpers.controllers.ControllerSpec
 import play.api.test.FakeRequest

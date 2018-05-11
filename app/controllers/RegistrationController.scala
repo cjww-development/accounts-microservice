@@ -15,10 +15,10 @@
  */
 package controllers
 
-import javax.inject.Inject
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.mongo.responses.{MongoFailedCreate, MongoSuccessCreate}
+import com.cjwwdev.mongo.responses.MongoSuccessCreate
 import common.BackendController
+import javax.inject.Inject
 import models.{OrgAccount, UserAccount}
 import play.api.mvc.Action
 import services.{RegistrationService, ValidationService}
@@ -41,12 +41,24 @@ trait RegistrationController extends BackendController {
           userNameInUse <- validationService.isUserNameInUse(user.userName)
           emailInUse    <- validationService.isEmailInUse(user.email)
           registered    <- if(!userNameInUse & !emailInUse) {
-            registrationService.createNewUser(user) map {
-              case MongoSuccessCreate   => Created
-              case MongoFailedCreate    => InternalServerError
+            registrationService.createNewUser(user) map { resp =>
+              val (status, body) = if(resp.equals(MongoSuccessCreate)) {
+                (CREATED, "User created")
+              } else {
+                (INTERNAL_SERVER_ERROR, "There was a problem creating a new user")
+              }
+
+              withJsonResponseBody(status, body) { json =>
+                status match {
+                  case CREATED               => Created(json)
+                  case INTERNAL_SERVER_ERROR => InternalServerError(json)
+                }
+              }
             }
           } else {
-            Future.successful(Conflict)
+            withFutureJsonResponseBody(CONFLICT, "Could not create a new user; either the user name or email address is already in use") { json =>
+              Future(Conflict(json))
+            }
           }
         } yield registered
       }
@@ -60,12 +72,24 @@ trait RegistrationController extends BackendController {
           userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
           emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)
           registered    <- if(!userNameInUse & !emailInUse) {
-            registrationService.createNewOrgUser(orgUser) map {
-              case MongoSuccessCreate   => Created
-              case MongoFailedCreate    => InternalServerError
+            registrationService.createNewOrgUser(orgUser) map { resp =>
+              val (status, body) = if(resp.equals(MongoSuccessCreate)) {
+                (CREATED, "User created")
+              } else {
+                (INTERNAL_SERVER_ERROR, "There was a problem creating a new user")
+              }
+
+              withJsonResponseBody(status, body) { json =>
+                status match {
+                  case CREATED               => Created(json)
+                  case INTERNAL_SERVER_ERROR => InternalServerError(json)
+                }
+              }
             }
           } else {
-            Future.successful(Conflict)
+            withFutureJsonResponseBody(CONFLICT, "Could not create a new user; either the user name or email address is already in use") { json =>
+              Future(Conflict(json))
+            }
           }
         } yield registered
       }

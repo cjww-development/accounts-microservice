@@ -14,18 +14,12 @@
  * limitations under the License.
  */
 
-package models
+package common
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import com.cjwwdev.filters.RequestLoggingFilter
+import com.kenshoo.play.metrics.MetricsFilter
+import javax.inject.Inject
+import play.api.http.DefaultHttpFilters
 
-case class TeacherDetails(userId: String, title: String, lastName: String, room: String)
-
-object TeacherDetails {
-  implicit val standardFormat: OFormat[TeacherDetails] = (
-    (__ \ "userId").format[String] and
-    (__ \ "title").format[String] and
-    (__ \ "lastName").format[String] and
-    (__ \ "room").format[String]
-  )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
-}
+class AccountsFilters @Inject()(loggingFilter: RequestLoggingFilter, metricsFilter: MetricsFilter)
+  extends DefaultHttpFilters(loggingFilter, metricsFilter)

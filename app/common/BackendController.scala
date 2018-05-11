@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-package models
+package common
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import com.cjwwdev.auth.backend.{Authorisation, BaseAuth}
+import com.cjwwdev.identifiers.IdentifierValidation
+import com.cjwwdev.request.RequestParsers
+import com.cjwwdev.responses.ApiResponse
+import play.api.mvc.Controller
 
-case class TeacherDetails(userId: String, title: String, lastName: String, room: String)
-
-object TeacherDetails {
-  implicit val standardFormat: OFormat[TeacherDetails] = (
-    (__ \ "userId").format[String] and
-    (__ \ "title").format[String] and
-    (__ \ "lastName").format[String] and
-    (__ \ "room").format[String]
-  )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
-}
+trait BackendController
+  extends Controller
+    with RequestParsers
+    with BaseAuth
+    with Authorisation
+    with IdentifierValidation
+    with ApiResponse

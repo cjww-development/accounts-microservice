@@ -15,11 +15,10 @@
  */
 package controllers
 
-import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
 import common.BackendController
-import play.api.mvc.{Action, AnyContent}
+import javax.inject.Inject
+import play.api.mvc.{Action, AnyContent, Request, Result}
 import services.TestEndpointService
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -33,10 +32,21 @@ trait TestTeardownController extends BackendController {
   private val INDIVIDUAL    = "individual"
   private val ORGANISATION  = "organisation"
 
+  private def jsonResponse(credentialType: String)(implicit request: Request[_]): Result = {
+    val msg = credentialType match {
+      case INDIVIDUAL   => "Test individual user has been torn down"
+      case ORGANISATION => "Test organisation user has been torn down"
+    }
+
+    withJsonResponseBody(OK, msg) { json =>
+      Ok(json)
+    }
+  }
+
   def tearDownUser(userName: String, credentialType: String): Action[AnyContent] = Action.async { implicit request =>
     credentialType match {
-      case INDIVIDUAL   => testEndpointService.tearDownTestUser(userName) map(_ => Ok)
-      case ORGANISATION => testEndpointService.tearDownTestOrgUser(userName) map(_ => Ok)
+      case INDIVIDUAL   => testEndpointService.tearDownTestUser(userName) map(_ => jsonResponse(INDIVIDUAL))
+      case ORGANISATION => testEndpointService.tearDownTestOrgUser(userName) map(_ => jsonResponse(ORGANISATION))
     }
   }
 }

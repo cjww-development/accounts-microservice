@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-package models
+package common
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+class MissingAccountException(msg: String) extends Exception
+class FailedToUpdateException(msg: String) extends Exception
+class FailedToCreateException(msg: String) extends Exception
 
-case class TeacherDetails(userId: String, title: String, lastName: String, room: String)
-
-object TeacherDetails {
-  implicit val standardFormat: OFormat[TeacherDetails] = (
-    (__ \ "userId").format[String] and
-    (__ \ "title").format[String] and
-    (__ \ "lastName").format[String] and
-    (__ \ "room").format[String]
-  )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
-}
+class OrganisationNotFoundException(msg: String) extends Exception
+class FeedListEmptyException(msg: String) extends Exception

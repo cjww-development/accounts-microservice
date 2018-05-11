@@ -16,13 +16,12 @@
 package helpers.other
 
 import com.cjwwdev.auth.models.CurrentUser
-import com.cjwwdev.implicits.ImplicitHandlers
 import com.cjwwdev.security.encryption.SHA512
 import models._
 import org.joda.time.DateTime
 import play.api.libs.json.{JsObject, Json}
 
-trait Fixtures extends TestDataGenerator with ImplicitHandlers {
+trait Fixtures extends TestDataGenerator {
   val testOrgDevId = generateTestSystemId(DEVERSITY)
 
   val testOrgCurrentUser = CurrentUser(

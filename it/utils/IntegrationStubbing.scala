@@ -16,7 +16,12 @@
 
 package utils
 
+import com.cjwwdev.auth.models.CurrentUser
+import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.encryption.DataSecurity
+import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo}
 import models.{FeedItem, OrgAccount, UserAccount}
+import play.api.libs.json.Json
 
 trait IntegrationStubbing {
   self: IntegrationSpec =>
@@ -41,13 +46,33 @@ trait IntegrationStubbing {
     }
 
     def isAuthorised: PreconditionBuilder = {
-      stubbedGet(s"/session-store/session/$testCookieId/context", OK, testContextId.encrypt)
-      stubbedGet(s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}", OK, testCurrentUser.encryptType)
+      stubFor(get(urlEqualTo(s"/session-store/session/$testCookieId/data?key=contextId"))
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withBody(Json.prettyPrint(testApiResponse(
+              s"/session-store/session/$testCookieId/data?key=contextId",
+              "GET",
+              OK,
+              testContextId.encrypt
+            )))
+        )
+      )
+      stubbedGet(
+        s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
+        OK,
+        Json.prettyPrint(testApiResponse(
+          s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
+          "GET",
+          OK,
+          DataSecurity.encryptType[CurrentUser](testCurrentUser)
+        ))
+      )
       builder
     }
 
     def hasFeedItems: PreconditionBuilder = {
-      await(userFeedRepository.collection.fliatMap(_.insert[FeedItem](testFeedItem)))
+      await(userFeedRepository.collection.flatMap(_.insert[FeedItem](testFeedItem)))
       await(userFeedRepository.collection.flatMap(_.insert[FeedItem](testFeedItem2)))
       builder
     }
@@ -65,8 +90,28 @@ trait IntegrationStubbing {
     }
 
     def isAuthorised: PreconditionBuilder = {
-      stubbedGet(s"/session-store/session/$testCookieId/context", OK, testContextId.encrypt)
-      stubbedGet(s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}", OK, testOrgCurrentUser.encryptType)
+      stubFor(get(urlEqualTo(s"/session-store/session/$testCookieId/data?key=contextId"))
+        .willReturn(
+          aResponse()
+            .withStatus(OK)
+            .withBody(Json.prettyPrint(testApiResponse(
+              s"/session-store/session/$testCookieId/data?key=contextId",
+              "GET",
+              OK,
+              testContextId.encrypt
+            )))
+        )
+      )
+      stubbedGet(
+        s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
+        OK,
+        Json.prettyPrint(testApiResponse(
+          s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
+          "GET",
+          OK,
+          DataSecurity.encryptType[CurrentUser](testOrgCurrentUser)
+        ))
+      )
       builder
     }
   }

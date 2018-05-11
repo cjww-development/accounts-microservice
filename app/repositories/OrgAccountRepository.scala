@@ -15,12 +15,12 @@
  */
 package repositories
 
-import javax.inject.Inject
 import com.cjwwdev.logging.Logging
 import com.cjwwdev.mongo.DatabaseRepository
 import com.cjwwdev.mongo.connection.ConnectionSettings
 import com.cjwwdev.mongo.responses._
 import common.{FailedToCreateException, MissingAccountException, _}
+import javax.inject.Inject
 import models._
 import play.api.Configuration
 import play.api.libs.json.OFormat

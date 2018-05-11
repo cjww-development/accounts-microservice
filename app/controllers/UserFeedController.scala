@@ -15,13 +15,11 @@
  */
 package controllers
 
-import javax.inject.Inject
-
 import com.cjwwdev.auth.connectors.AuthConnector
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
+import javax.inject.Inject
 import models.FeedItem
-import play.api.libs.json.JsObject
 import play.api.mvc.{Action, AnyContent}
 import services.UserFeedService
 
@@ -36,7 +34,15 @@ trait UserFeedController extends BackendController {
   def createEvent() : Action[String] = Action.async(parse.text) { implicit request =>
     applicationVerification {
       withJsonBody[FeedItem](FeedItem.newFeedItemReads) { fi =>
-        userFeedService.createFeedItem(fi) map(if(_) Ok else InternalServerError)
+        userFeedService.createFeedItem(fi) map { created =>
+          val (status, body) = if(created) (OK, "Event created") else (INTERNAL_SERVER_ERROR, "There was a problem creating the event")
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK                    => Ok(json)
+              case INTERNAL_SERVER_ERROR => InternalServerError(json)
+            }
+          }
+        }
       }
     }
   }
@@ -44,9 +50,14 @@ trait UserFeedController extends BackendController {
   def retrieveFeed(userId: String) : Action[AnyContent] = Action.async { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        userFeedService.getFeedList(user.id) map {
-          case Some(json) => Ok(DataSecurity.encryptType[JsObject](json))
-          case None       => NotFound
+        userFeedService.getFeedList(user.id) map { list =>
+          val (status, body) = list.fold((NOT_FOUND, "No feed items are available"))(json => (OK, json.encryptType))
+          withJsonResponseBody(status, body) { json =>
+            status match {
+              case OK        => Ok(json)
+              case NOT_FOUND => NotFound(json)
+            }
+          }
         }
       }
     }

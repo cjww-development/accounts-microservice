@@ -17,11 +17,14 @@
 package utils
 
 import akka.util.Timeout
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import com.cjwwdev.http.headers.HeaderPackage
 import com.cjwwdev.testing.integration.IntegrationTestSpec
 import com.cjwwdev.testing.integration.application.IntegrationApplication
 import com.cjwwdev.testing.integration.wiremock.WireMockSetup
 import models.UserAccount
+import org.joda.time.LocalDateTime
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.WSRequest
 import repositories._
 
@@ -35,7 +38,7 @@ trait IntegrationSpec
 
   override implicit def defaultAwaitTimeout: Timeout = 5.seconds
 
-  val testContextId   = s"""{"contextId" : "${generateTestSystemId(CONTEXT)}"}"""
+  val testContextId   = generateTestSystemId(CONTEXT)
   val testOrgId       = generateTestSystemId(ORG)
   val testUserId      = generateTestSystemId(USER)
   val testDeversityId = generateTestSystemId(DEVERSITY)
@@ -45,7 +48,9 @@ trait IntegrationSpec
   override val appConfig = Map(
     "play.http.router"                                        -> "testRouter.Routes",
     "microservice.external-services.auth-microservice.domain" -> s"$wiremockUrl/auth",
+    "microservice.external-services.auth-microservice.uri"    -> "/get-current-user/:sessionId",
     "microservice.external-services.session-store.domain"     -> s"$wiremockUrl/session-store",
+    "microservice.external-services.session-store.uri"        -> "/session/:contextId/data?key=contextId",
     "repositories.UserAccountRepositoryImpl.collection"       -> "it-user-accounts",
     "repositories.OrgAccountRepositoryImpl.collection"        -> "it-org-accounts",
     "repositories.UserFeedRepositoryImpl.collection"          -> "it-user-feed"
@@ -62,6 +67,16 @@ trait IntegrationSpec
   def client(url: String): WSRequest = ws.url(url).withHeaders(
     "cjww-headers" -> HeaderPackage("abda73f4-9d52-4bb8-b20d-b5fffd0cc130", testCookieId).encryptType,
     CONTENT_TYPE  -> TEXT
+  )
+
+  def testApiResponse(uri: String, method: String, status: Int, body: String): JsValue = Json.obj(
+    "uri"    -> s"$uri",
+    "method" -> s"$method",
+    "status" -> status,
+    "body"   -> s"$body",
+    "stats"  -> Json.obj(
+      "requestCompletedAt" -> s"${LocalDateTime.now}"
+    )
   )
 
   private def afterITest(): Unit = {

@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-package models
+package common
 
-import play.api.libs.functional.syntax._
-import play.api.libs.json._
+import com.cjwwdev.mongo.indexes.RepositoryIndexer
+import javax.inject.Inject
+import repositories.{OrgAccountRepository, UserAccountRepository, UserFeedRepository}
 
-case class TeacherDetails(userId: String, title: String, lastName: String, room: String)
-
-object TeacherDetails {
-  implicit val standardFormat: OFormat[TeacherDetails] = (
-    (__ \ "userId").format[String] and
-    (__ \ "title").format[String] and
-    (__ \ "lastName").format[String] and
-    (__ \ "room").format[String]
-  )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
+class AccountsIndexing @Inject()(orgAccountRepository: OrgAccountRepository,
+                                 userAccountRepository: UserAccountRepository,
+                                 userFeedRepository: UserFeedRepository) extends RepositoryIndexer {
+  override val repositories = Seq(
+    orgAccountRepository,
+    userAccountRepository,
+    userFeedRepository
+  )
+  runIndexing
 }
