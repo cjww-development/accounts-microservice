@@ -47,7 +47,8 @@ lazy val root = Project(appName, file("."))
     libraryDependencies                            +=  filters,
     resolvers                                      ++= Seq(
       "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
-      "cjww-dev"       at "http://dl.bintray.com/cjww-development/releases"
+      "cjww-dev"       at "http://dl.bintray.com/cjww-development/releases",
+      "breadfan"       at "https://dl.bintray.com/breadfan/maven"
     ),
     herokuAppName               in Compile         :=  "cjww-accounts-microservice",
     bintrayOrganization                            :=  Some("cjww-development"),
