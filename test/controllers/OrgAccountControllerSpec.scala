@@ -17,13 +17,15 @@
 package controllers
 
 import helpers.controllers.ControllerSpec
+import play.api.test.Helpers._
 
 class OrgAccountControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new OrgAccountController {
-      override val orgAccountService = mockOrgAccountService
-      override val authConnector     = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val orgAccountService              = mockOrgAccountService
+      override val authConnector                  = mockAuthConnector
     }
   }
 

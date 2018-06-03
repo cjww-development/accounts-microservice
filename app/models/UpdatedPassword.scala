@@ -23,7 +23,7 @@ import play.api.libs.json._
 case class UpdatedPassword(previousPassword : String, newPassword : String)
 
 object UpdatedPassword {
-  private val passwordValidation = Reads.StringReads.filter(ValidationError("Invalid password; too short"))(_.length == 128)
+  private val passwordValidation = Reads.StringReads.filter(JsonValidationError("Invalid password; too short"))(_.length == 128)
 
   implicit val standardFormat: OFormat[UpdatedPassword] = (
     (__ \ "previousPassword").format[String](passwordValidation) and

@@ -18,14 +18,16 @@ package controllers
 import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
 import helpers.controllers.ControllerSpec
 import play.api.libs.json.{JsValue, Json}
+import play.api.test.Helpers.stubControllerComponents
 
 class RegistrationControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new RegistrationController {
-      override val registrationService = mockRegistrationService
-      override val validationService   = mockValidationService
-      override val authConnector       = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val registrationService            = mockRegistrationService
+      override val validationService              = mockValidationService
+      override val authConnector                  = mockAuthConnector
     }
   }
 

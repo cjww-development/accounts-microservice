@@ -30,7 +30,7 @@ case class SourceDetail(service : String, location : String)
 
 object SourceDetail {
   private val frontendServices  = List("auth-service", "deversity-frontend", "diagnostics-frontend")
-  private val serviceValidation = Reads.StringReads.filter(ValidationError("Invalid service"))(frontendServices.contains(_))
+  private val serviceValidation = Reads.StringReads.filter(JsonValidationError("Invalid service"))(frontendServices.contains(_))
 
   implicit val standardFormat: OFormat[SourceDetail] = (
     (__ \ "service").format[String](serviceValidation) and
@@ -55,7 +55,7 @@ case class FeedItem(feedId : String,
 
 object FeedItem extends IdService with TimeFormat {
 
-  private val userIdValidation = Reads.StringReads.filter(ValidationError("Invalid user id"))(userId =>
+  private val userIdValidation = Reads.StringReads.filter(JsonValidationError("Invalid user id"))(userId =>
     if(userId.contains("user")) {
       Try(UUID.fromString(userId.replace(s"user-", ""))) match {
         case Success(_) => true

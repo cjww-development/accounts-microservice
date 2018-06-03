@@ -17,7 +17,6 @@
 package models
 
 import com.cjwwdev.regex.RegexPack
-import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -28,11 +27,11 @@ case class Settings(displayName : String,
 object Settings extends RegexPack {
   private val displayNameValidation = {
     val options = List("full", "short", "user")
-    Reads.StringReads.filter(ValidationError("Invalid display name option"))(options.contains(_))
+    Reads.StringReads.filter(JsonValidationError("Invalid display name option"))(options.contains(_))
   }
 
-  private val displayNameColourValidation = Reads.StringReads.filter(ValidationError("Invalid hex colour"))(_.matches(hexadecimalColourRegex.regex))
-  private val displayImageUrlValidation   = Reads.StringReads.filter(ValidationError("Invalid url"))(url => url.matches(urlRegex.regex) || url.equals(defaultUrl))
+  private val displayNameColourValidation = Reads.StringReads.filter(JsonValidationError("Invalid hex colour"))(_.matches(hexadecimalColourRegex.regex))
+  private val displayImageUrlValidation   = Reads.StringReads.filter(JsonValidationError("Invalid url"))(url => url.matches(urlRegex.regex) || url.equals(defaultUrl))
 
   implicit val standardFormat: OFormat[Settings] = (
     (__ \ "displayName").format[String](displayNameValidation) and

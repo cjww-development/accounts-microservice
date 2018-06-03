@@ -25,8 +25,8 @@ import repositories.{OrgAccountRepository, UserAccountRepository}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class OrgAccountServiceImpl @Inject()(val orgAccountRepository: OrgAccountRepository,
-                                      val userAccountRepository: UserAccountRepository) extends OrgAccountService
+class DefaultOrgAccountService @Inject()(val orgAccountRepository: OrgAccountRepository,
+                                         val userAccountRepository: UserAccountRepository) extends OrgAccountService
 
 trait OrgAccountService {
   val orgAccountRepository: OrgAccountRepository

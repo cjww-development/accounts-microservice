@@ -24,7 +24,7 @@ import repositories.UserFeedRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UserFeedServiceImpl @Inject()(val userFeedRepository : UserFeedRepository) extends UserFeedService
+class DefaultUserFeedService @Inject()(val userFeedRepository : UserFeedRepository) extends UserFeedService
 
 trait UserFeedService {
   val userFeedRepository: UserFeedRepository

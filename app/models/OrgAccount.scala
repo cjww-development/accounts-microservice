@@ -37,12 +37,12 @@ case class OrgAccount(orgId: String,
                       settings: Option[Settings])
 
 object OrgAccount extends IdService with RegexPack with TimeFormat {
-  private val orgNameValidation     = Reads.StringReads.filter(ValidationError("Invalid org name"))(_.matches(orgNameRegex.regex))
-  private val initialsValidation    = Reads.StringReads.filter(ValidationError("Invalid initials"))(_.matches(initialsRegex.regex))
-  private val orgUserNameValidation = Reads.StringReads.filter(ValidationError("Invalid org user name"))(_.matches(userNameRegex.regex))
-  private val locationValidation    = Reads.StringReads.filter(ValidationError("Invalid location"))(_.matches(locationRegex.regex))
-  private val emailValidation       = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
-  private val passwordValidation    = Reads.StringReads.filter(ValidationError("Invalid password"))(_.length == 128)
+  private val orgNameValidation     = Reads.StringReads.filter(JsonValidationError("Invalid org name"))(_.matches(orgNameRegex.regex))
+  private val initialsValidation    = Reads.StringReads.filter(JsonValidationError("Invalid initials"))(_.matches(initialsRegex.regex))
+  private val orgUserNameValidation = Reads.StringReads.filter(JsonValidationError("Invalid org user name"))(_.matches(userNameRegex.regex))
+  private val locationValidation    = Reads.StringReads.filter(JsonValidationError("Invalid location"))(_.matches(locationRegex.regex))
+  private val emailValidation       = Reads.StringReads.filter(JsonValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+  private val passwordValidation    = Reads.StringReads.filter(JsonValidationError("Invalid password"))(_.length == 128)
 
   def newOrgAccountReads: Reads[OrgAccount] = (
     (__ \ "orgId").read(generateOrgId) and

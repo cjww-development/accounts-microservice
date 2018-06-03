@@ -17,13 +17,15 @@
 package controllers
 
 import helpers.controllers.ControllerSpec
+import play.api.test.Helpers.stubControllerComponents
 
 class TestTeardownControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new TestTeardownController {
-      override val testEndpointService = mockTestEndpointService
-      override val authConnector       = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val testEndpointService            = mockTestEndpointService
+      override val authConnector                  = mockAuthConnector
     }
   }
 

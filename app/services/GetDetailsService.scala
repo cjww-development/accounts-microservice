@@ -24,7 +24,7 @@ import repositories.UserAccountRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class GetDetailsServiceImpl @Inject()(val userAccountRepository: UserAccountRepository) extends GetDetailsService
+class DefaultGetDetailsService @Inject()(val userAccountRepository: UserAccountRepository) extends GetDetailsService
 
 trait GetDetailsService {
   val userAccountRepository: UserAccountRepository

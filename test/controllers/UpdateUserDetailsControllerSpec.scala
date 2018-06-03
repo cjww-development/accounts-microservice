@@ -19,13 +19,15 @@ import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common._
 import helpers.controllers.ControllerSpec
 import play.api.test.FakeRequest
+import play.api.test.Helpers.stubControllerComponents
 
 class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UpdateUserDetailsController {
-      override val accountService = mockAccountService
-      override val authConnector  = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val accountService                 = mockAccountService
+      override val authConnector                  = mockAuthConnector
     }
   }
 
