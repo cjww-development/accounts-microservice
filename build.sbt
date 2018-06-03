@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import com.heroku.sbt.HerokuPlugin.autoImport.herokuAppName
 import com.typesafe.config.ConfigFactory
 import scoverage.ScoverageKeys
 
@@ -50,7 +51,7 @@ lazy val root = Project(appName, file("."))
       "cjww-dev"       at "http://dl.bintray.com/cjww-development/releases",
       "breadfan"       at "https://dl.bintray.com/breadfan/maven"
     ),
-    //herokuAppName               in Compile         :=  "cjww-accounts-microservice",
+    herokuAppName               in Compile         :=  "cjww-accounts-microservice",
     bintrayOrganization                            :=  Some("cjww-development"),
     bintrayReleaseOnPublish     in ThisBuild       :=  true,
     bintrayRepository                              :=  "releases",
