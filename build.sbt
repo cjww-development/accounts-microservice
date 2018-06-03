@@ -41,7 +41,7 @@ lazy val root = Project(appName, file("."))
   .settings(inConfig(IntegrationTest)(Defaults.itSettings): _*)
   .settings(
     version                                        :=  btVersion,
-    scalaVersion                                   :=  "2.11.11",
+    scalaVersion                                   :=  "2.12.6",
     organization                                   :=  "com.cjww-dev.backends",
     libraryDependencies                            ++= AppDependencies(),
     libraryDependencies                            +=  filters,
@@ -50,7 +50,7 @@ lazy val root = Project(appName, file("."))
       "cjww-dev"       at "http://dl.bintray.com/cjww-development/releases",
       "breadfan"       at "https://dl.bintray.com/breadfan/maven"
     ),
-    herokuAppName               in Compile         :=  "cjww-accounts-microservice",
+    //herokuAppName               in Compile         :=  "cjww-accounts-microservice",
     bintrayOrganization                            :=  Some("cjww-development"),
     bintrayReleaseOnPublish     in ThisBuild       :=  true,
     bintrayRepository                              :=  "releases",

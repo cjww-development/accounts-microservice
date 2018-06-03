@@ -16,14 +16,16 @@
 package controllers
 
 import helpers.controllers.ControllerSpec
+import play.api.test.Helpers.stubControllerComponents
 
 class UserDetailsControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UserDetailsController {
-      override val detailsService    = mockGetDetailsService
-      override val orgDetailsService = mockOrgAccountService
-      override val authConnector     = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val detailsService                 = mockGetDetailsService
+      override val orgDetailsService              = mockOrgAccountService
+      override val authConnector                  = mockAuthConnector
     }
   }
 

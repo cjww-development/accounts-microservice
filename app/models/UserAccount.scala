@@ -31,7 +31,7 @@ case class DeversityEnrolment(schoolDevId: String,
 
 object DeversityEnrolment extends RegexPack {
 
-  val roleRead = Reads.StringReads.filter(ValidationError("Invalid role"))(role => role.equals("teacher") || role.equals("student"))
+  val roleRead = Reads.StringReads.filter(JsonValidationError("Invalid role"))(role => role.equals("teacher") || role.equals("student"))
   val roleWrite: Writes[String] = new OWrites[String] {
     override def writes(o: String) = Json.obj("role" -> o)
   }
@@ -69,11 +69,11 @@ case class UserAccount(userId : String,
                        settings : Option[Settings])
 
 object UserAccount extends IdService with RegexPack with TimeFormat {
-  private val firstNameValidation = Reads.StringReads.filter(ValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))
-  private val lastNameValidation  = Reads.StringReads.filter(ValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
-  private val userNameValidation  = Reads.StringReads.filter(ValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
-  private val emailValidation     = Reads.StringReads.filter(ValidationError("Invalid email address"))(_.matches(emailRegex.regex))
-  private val passwordValidation  = Reads.StringReads.filter(ValidationError("Invalid password"))(_.length == 128)
+  private val firstNameValidation = Reads.StringReads.filter(JsonValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))
+  private val lastNameValidation  = Reads.StringReads.filter(JsonValidationError("Invalid last name"))(_.matches(lastNameRegex.regex))
+  private val userNameValidation  = Reads.StringReads.filter(JsonValidationError("Invalid user name"))(_.matches(userNameRegex.regex))
+  private val emailValidation     = Reads.StringReads.filter(JsonValidationError("Invalid email address"))(_.matches(emailRegex.regex))
+  private val passwordValidation  = Reads.StringReads.filter(JsonValidationError("Invalid password"))(_.length == 128)
 
   def newUserReads: Reads[UserAccount] = (
     (__ \ "userId").read[String](generateUserId) and

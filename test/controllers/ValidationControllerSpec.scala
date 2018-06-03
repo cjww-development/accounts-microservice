@@ -17,6 +17,7 @@ package controllers
 
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import helpers.controllers.ControllerSpec
+import play.api.test.Helpers.stubControllerComponents
 
 class ValidationControllerSpec extends ControllerSpec {
 
@@ -25,8 +26,9 @@ class ValidationControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new ValidationController {
-      override val validationService = mockValidationService
-      override val authConnector     = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val validationService              = mockValidationService
+      override val authConnector                  = mockAuthConnector
     }
   }
 

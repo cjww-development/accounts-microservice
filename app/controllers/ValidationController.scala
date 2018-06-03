@@ -19,13 +19,14 @@ package controllers
 import com.cjwwdev.auth.connectors.AuthConnector
 import common.BackendController
 import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ValidationService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class ValidationControllerImpl @Inject()(val validationService : ValidationService,
-                                         val authConnector: AuthConnector) extends ValidationController
+class DefaultValidationController @Inject()(val validationService : ValidationService,
+                                            val controllerComponents: ControllerComponents,
+                                            val authConnector: AuthConnector) extends ValidationController
 
 trait ValidationController extends BackendController {
   val validationService: ValidationService

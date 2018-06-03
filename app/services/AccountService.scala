@@ -25,7 +25,7 @@ import repositories.UserAccountRepository
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class AccountServiceImpl @Inject()(val userAccountRepository: UserAccountRepository) extends AccountService
+class DefaultAccountService @Inject()(val userAccountRepository: UserAccountRepository) extends AccountService
 
 trait AccountService {
   val userAccountRepository: UserAccountRepository

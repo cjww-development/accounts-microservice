@@ -20,13 +20,14 @@ import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
 import javax.inject.Inject
 import models.FeedItem
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.UserFeedService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UserFeedControllerImpl @Inject()(val userFeedService: UserFeedService,
-                                       val authConnector: AuthConnector) extends UserFeedController
+class DefaultUserFeedController @Inject()(val userFeedService: UserFeedService,
+                                          val controllerComponents: ControllerComponents,
+                                          val authConnector: AuthConnector) extends UserFeedController
 
 trait UserFeedController extends BackendController {
   val userFeedService: UserFeedService

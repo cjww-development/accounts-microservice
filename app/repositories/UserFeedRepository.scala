@@ -31,7 +31,7 @@ import reactivemongo.play.json._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class UserFeedRepositoryImpl @Inject()(val config: Configuration) extends UserFeedRepository with ConnectionSettings
+class DefaultUserFeedRepository @Inject()(val config: Configuration) extends UserFeedRepository with ConnectionSettings
 
 trait UserFeedRepository extends DatabaseRepository {
   private val MAX = 10

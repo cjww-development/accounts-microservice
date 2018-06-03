@@ -22,8 +22,8 @@ import repositories.{OrgAccountRepository, UserAccountRepository}
 
 import scala.concurrent.Future
 
-class RegistrationServiceImpl @Inject()(val userAccountRepository: UserAccountRepository,
-                                        val orgAccountRepository: OrgAccountRepository) extends RegistrationService
+class DefaultRegistrationService @Inject()(val userAccountRepository: UserAccountRepository,
+                                           val orgAccountRepository: OrgAccountRepository) extends RegistrationService
 
 trait RegistrationService {
   val userAccountRepository: UserAccountRepository

@@ -20,13 +20,14 @@ import com.cjwwdev.auth.connectors.AuthConnector
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
 import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.OrgAccountService
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class OrgAccountControllerImpl @Inject()(val orgAccountService: OrgAccountService,
-                                         val authConnector: AuthConnector) extends OrgAccountController
+class DefaultOrgAccountController @Inject()(val orgAccountService: OrgAccountService,
+                                            val controllerComponents: ControllerComponents,
+                                            val authConnector: AuthConnector) extends OrgAccountController
 
 trait OrgAccountController extends BackendController {
   val orgAccountService: OrgAccountService

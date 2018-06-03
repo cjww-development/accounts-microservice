@@ -25,9 +25,9 @@ import repositories.{OrgAccountRepository, UserAccountRepository, UserFeedReposi
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TestEndpointServiceImpl @Inject()(val userAccountRepository: UserAccountRepository,
-                                        val orgAccountRepository: OrgAccountRepository,
-                                        val userFeedRepository: UserFeedRepository) extends TestEndpointService
+class DefaultTestEndpointService @Inject()(val userAccountRepository: UserAccountRepository,
+                                           val orgAccountRepository: OrgAccountRepository,
+                                           val userFeedRepository: UserFeedRepository) extends TestEndpointService
 
 trait TestEndpointService {
   val userAccountRepository: UserAccountRepository

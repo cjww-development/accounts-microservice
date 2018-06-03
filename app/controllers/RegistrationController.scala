@@ -20,15 +20,16 @@ import com.cjwwdev.mongo.responses.MongoSuccessCreate
 import common.BackendController
 import javax.inject.Inject
 import models.{OrgAccount, UserAccount}
-import play.api.mvc.Action
+import play.api.mvc.{Action, ControllerComponents}
 import services.{RegistrationService, ValidationService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class RegistrationControllerImpl @Inject()(val registrationService : RegistrationService,
-                                           val validationService: ValidationService,
-                                           val authConnector: AuthConnector) extends RegistrationController
+class DefaultRegistrationController @Inject()(val registrationService : RegistrationService,
+                                              val validationService: ValidationService,
+                                              val controllerComponents: ControllerComponents,
+                                              val authConnector: AuthConnector) extends RegistrationController
 
 trait RegistrationController extends BackendController {
   val registrationService: RegistrationService

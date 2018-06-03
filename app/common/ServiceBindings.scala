@@ -16,49 +16,49 @@
 
 package common
 
-import com.cjwwdev.config.{ConfigurationLoader, ConfigurationLoaderImpl}
+import com.cjwwdev.config.{ConfigurationLoader, DefaultConfigurationLoader}
+import com.cjwwdev.health.{DefaultHealthController, HealthController}
 import com.cjwwdev.mongo.indexes.RepositoryIndexer
-import com.google.inject.AbstractModule
 import controllers._
+import play.api.{Configuration, Environment}
+import play.api.inject.{Binding, Module}
 import repositories._
 import services._
 
-class ServiceBindings extends AbstractModule {
-  override def configure(): Unit = {
-    bindOther()
-    bindRepositories()
-    bindServices()
-    bindControllers()
-  }
+class ServiceBindings extends Module {
 
-  private def bindControllers(): Unit = {
-    bind(classOf[OrgAccountController]).to(classOf[OrgAccountControllerImpl]).asEagerSingleton()
-    bind(classOf[RegistrationController]).to(classOf[RegistrationControllerImpl]).asEagerSingleton()
-    bind(classOf[TestTeardownController]).to(classOf[TestTeardownControllerImpl]).asEagerSingleton()
-    bind(classOf[UpdateUserDetailsController]).to(classOf[UpdateUserDetailsControllerImpl]).asEagerSingleton()
-    bind(classOf[UserDetailsController]).to(classOf[UserDetailsControllerImpl]).asEagerSingleton()
-    bind(classOf[UserFeedController]).to(classOf[UserFeedControllerImpl]).asEagerSingleton()
-    bind(classOf[ValidationController]).to(classOf[ValidationControllerImpl]).asEagerSingleton()
-  }
+  override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] =
+    bindOther() ++ bindRepositories() ++ bindServices() ++ bindControllers()
 
-  private def bindServices(): Unit = {
-    bind(classOf[AccountService]).to(classOf[AccountServiceImpl]).asEagerSingleton()
-    bind(classOf[GetDetailsService]).to(classOf[GetDetailsServiceImpl]).asEagerSingleton()
-    bind(classOf[OrgAccountService]).to(classOf[OrgAccountServiceImpl]).asEagerSingleton()
-    bind(classOf[RegistrationService]).to(classOf[RegistrationServiceImpl]).asEagerSingleton()
-    bind(classOf[TestEndpointService]).to(classOf[TestEndpointServiceImpl]).asEagerSingleton()
-    bind(classOf[UserFeedService]).to(classOf[UserFeedServiceImpl]).asEagerSingleton()
-    bind(classOf[ValidationService]).to(classOf[ValidationServiceImpl]).asEagerSingleton()
-  }
+  private def bindControllers(): Seq[Binding[_]] = Seq(
+    bind(classOf[OrgAccountController]).to(classOf[DefaultOrgAccountController]).eagerly(),
+    bind(classOf[RegistrationController]).to(classOf[DefaultRegistrationController]).eagerly(),
+    bind(classOf[TestTeardownController]).to(classOf[DefaultTestTeardownController]).eagerly(),
+    bind(classOf[UpdateUserDetailsController]).to(classOf[DefaultUpdateUserDetailsController]).eagerly(),
+    bind(classOf[UserDetailsController]).to(classOf[DefaultUserDetailsController]).eagerly(),
+    bind(classOf[UserFeedController]).to(classOf[DefaultUserFeedController]).eagerly(),
+    bind(classOf[ValidationController]).to(classOf[DefaultValidationController]).eagerly(),
+    bind(classOf[HealthController]).to(classOf[DefaultHealthController]).eagerly()
+  )
 
-  private def bindRepositories(): Unit = {
-    bind(classOf[OrgAccountRepository]).to(classOf[OrgAccountRepositoryImpl]).asEagerSingleton()
-    bind(classOf[UserAccountRepository]).to(classOf[UserAccountRepositoryImpl]).asEagerSingleton()
-    bind(classOf[UserFeedRepository]).to(classOf[UserFeedRepositoryImpl]).asEagerSingleton()
-    bind(classOf[RepositoryIndexer]).to(classOf[AccountsIndexing]).asEagerSingleton()
-  }
+  private def bindServices(): Seq[Binding[_]] = Seq(
+    bind(classOf[AccountService]).to(classOf[DefaultAccountService]).eagerly(),
+    bind(classOf[GetDetailsService]).to(classOf[DefaultGetDetailsService]).eagerly(),
+    bind(classOf[OrgAccountService]).to(classOf[DefaultOrgAccountService]).eagerly(),
+    bind(classOf[RegistrationService]).to(classOf[DefaultRegistrationService]).eagerly(),
+    bind(classOf[TestEndpointService]).to(classOf[DefaultTestEndpointService]).eagerly(),
+    bind(classOf[UserFeedService]).to(classOf[DefaultUserFeedService]).eagerly(),
+    bind(classOf[ValidationService]).to(classOf[DefaultValidationService]).eagerly()
+  )
 
-  private def bindOther(): Unit = {
-    bind(classOf[ConfigurationLoader]).to(classOf[ConfigurationLoaderImpl]).asEagerSingleton()
-  }
+  private def bindRepositories(): Seq[Binding[_]] = Seq(
+    bind(classOf[OrgAccountRepository]).to(classOf[DefaultOrgAccountRepository]).eagerly(),
+    bind(classOf[UserAccountRepository]).to(classOf[DefaultUserAccountRepository]).eagerly(),
+    bind(classOf[UserFeedRepository]).to(classOf[DefaultUserFeedRepository]).eagerly(),
+    bind(classOf[RepositoryIndexer]).to(classOf[AccountsIndexing]).eagerly()
+  )
+
+  private def bindOther(): Seq[Binding[_]] = Seq(
+    bind(classOf[ConfigurationLoader]).to(classOf[DefaultConfigurationLoader]).eagerly()
+  )
 }

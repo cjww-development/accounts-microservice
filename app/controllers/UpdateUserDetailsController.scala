@@ -21,13 +21,14 @@ import com.cjwwdev.mongo.responses.MongoSuccessUpdate
 import common._
 import javax.inject.Inject
 import models.{Settings, UpdatedPassword, UserProfile}
-import play.api.mvc.Action
+import play.api.mvc.{Action, ControllerComponents}
 import services._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class UpdateUserDetailsControllerImpl @Inject()(val accountService: AccountService,
-                                                val authConnector: AuthConnector) extends UpdateUserDetailsController
+class DefaultUpdateUserDetailsController @Inject()(val accountService: AccountService,
+                                                   val controllerComponents: ControllerComponents,
+                                                   val authConnector: AuthConnector) extends UpdateUserDetailsController
 
 trait UpdateUserDetailsController extends BackendController {
   val accountService: AccountService

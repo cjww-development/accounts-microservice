@@ -17,13 +17,15 @@ package controllers
 
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import helpers.controllers.ControllerSpec
+import play.api.test.Helpers.stubControllerComponents
 
 class UserFeedControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UserFeedController {
-      override val userFeedService = mockUserFeedService
-      override val authConnector   = mockAuthConnector
+      override protected def controllerComponents = stubControllerComponents()
+      override val userFeedService                = mockUserFeedService
+      override val authConnector                  = mockAuthConnector
     }
   }
 
