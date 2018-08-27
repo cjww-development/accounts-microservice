@@ -43,7 +43,7 @@ lazy val root = Project(appName, file("."))
   .settings(
     version                                        :=  btVersion,
     scalaVersion                                   :=  "2.12.6",
-    organization                                   :=  "com.cjww-dev.backends",
+    organization                                   :=  "com.cjww-dev.apps",
     libraryDependencies                            ++= AppDependencies(),
     libraryDependencies                            +=  filters,
     resolvers                                      ++= Seq(
