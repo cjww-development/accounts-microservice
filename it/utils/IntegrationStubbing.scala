@@ -18,7 +18,7 @@ package utils
 
 import com.cjwwdev.auth.models.CurrentUser
 import com.cjwwdev.implicits.ImplicitDataSecurity._
-import com.cjwwdev.security.encryption.DataSecurity
+import com.cjwwdev.security.obfuscation.Obfuscation._
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, urlEqualTo}
 import models.{FeedItem, OrgAccount, UserAccount}
 import play.api.libs.json.Json
@@ -65,7 +65,7 @@ trait IntegrationStubbing {
           s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
           "GET",
           OK,
-          DataSecurity.encryptType[CurrentUser](testCurrentUser)
+          testCurrentUser.encrypt
         ))
       )
       builder
@@ -80,7 +80,7 @@ trait IntegrationStubbing {
 
   case class OrgUser()(implicit builder: PreconditionBuilder) {
     def isSetup: PreconditionBuilder = {
-      await(orgAccountRepository.collection flatMap(_.insert[OrgAccount](testOrgAccount)))
+      await(orgAccountRepository.collection.flatMap(_.insert[OrgAccount](testOrgAccount)))
       builder
     }
 
@@ -109,7 +109,7 @@ trait IntegrationStubbing {
           s"/auth/get-current-user/${generateTestSystemId(CONTEXT)}",
           "GET",
           OK,
-          DataSecurity.encryptType[CurrentUser](testOrgCurrentUser)
+          testOrgCurrentUser.encrypt
         ))
       )
       builder

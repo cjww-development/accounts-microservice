@@ -18,11 +18,14 @@ package models
 
 import com.cjwwdev.json.TimeFormat
 import com.cjwwdev.regex.RegexPack
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import org.joda.time.DateTime
-import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
+
+import scala.reflect.ClassTag
 
 case class OrgAccount(orgId: String,
                       deversityId: String,
@@ -71,6 +74,12 @@ object OrgAccount extends IdService with RegexPack with TimeFormat {
     (__ \ "createdAt").format[DateTime](dateTimeRead)(dateTimeWrite) and
     (__ \ "settings").formatNullable[Settings]
   )(OrgAccount.apply, unlift(OrgAccount.unapply))
+
+  implicit def newUserDeObfuscator(implicit tag: ClassTag[OrgAccount]): DeObfuscator[OrgAccount] = new DeObfuscator[OrgAccount] {
+    override def decrypt(value: String): Either[OrgAccount, DecryptionError] = {
+      DeObfuscation.deObfuscate[OrgAccount](value)(newOrgAccountReads, tag)
+    }
+  }
 }
 
 case class OrgDetails(orgName: String, initials: String, location: String)
@@ -81,4 +90,10 @@ object OrgDetails {
     (__ \ "initials").format[String] and
     (__ \ "location").format[String]
   )(OrgDetails.apply, unlift(OrgDetails.unapply))
+
+  implicit val obfuscator: Obfuscator[OrgDetails] = new Obfuscator[OrgDetails] {
+    override def encrypt(value: OrgDetails): String = {
+      Obfuscation.obfuscateJson(Json.toJson(value))
+    }
+  }
 }

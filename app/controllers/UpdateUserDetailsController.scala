@@ -17,6 +17,7 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.mongo.responses.MongoSuccessUpdate
 import common._
 import javax.inject.Inject
@@ -28,7 +29,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DefaultUpdateUserDetailsController @Inject()(val accountService: AccountService,
                                                    val controllerComponents: ControllerComponents,
-                                                   val authConnector: AuthConnector) extends UpdateUserDetailsController
+                                                   val config: ConfigurationLoader,
+                                                   val authConnector: AuthConnector) extends UpdateUserDetailsController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait UpdateUserDetailsController extends BackendController {
   val accountService: AccountService
@@ -36,7 +40,7 @@ trait UpdateUserDetailsController extends BackendController {
   def updateProfileInformation(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        withJsonBody[UserProfile](UserProfile.standardFormat) { profile =>
+        parsers.withJsonBody[UserProfile] { profile =>
           accountService.updateProfileInformation(user.id, profile) map { resp =>
             val (status, body) = if(resp.equals(MongoSuccessUpdate)) {
               (OK, s"Profile for user has been updated")
@@ -59,7 +63,7 @@ trait UpdateUserDetailsController extends BackendController {
   def updateUserPassword(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        withJsonBody[UpdatedPassword](UpdatedPassword.standardFormat) { passwordSet =>
+        parsers.withJsonBody[UpdatedPassword] { passwordSet =>
           accountService.updatePassword(user.id, passwordSet) map { resp =>
             val (status, body) = resp match {
               case PasswordUpdated      => (OK, s"Password for user has been updated")
@@ -83,7 +87,7 @@ trait UpdateUserDetailsController extends BackendController {
   def updateUserSettings(userId: String) : Action[String] = Action.async(parse.text) { implicit request =>
     validateAs(USER, userId) {
       authorised(userId) { user =>
-        withJsonBody[Settings](Settings.standardFormat) { settings =>
+        parsers.withJsonBody[Settings] { settings =>
           accountService.updateSettings(user.id, settings) map { resp =>
             val (status, body) = if(resp.equals(UpdatedSettingsSuccess)) {
               (OK, "Settings for user have been updated")

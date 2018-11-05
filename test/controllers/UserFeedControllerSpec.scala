@@ -16,7 +16,10 @@
 package controllers
 
 import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import helpers.controllers.ControllerSpec
+import models.FeedItem
+import play.api.libs.json.Json
 import play.api.test.Helpers.stubControllerComponents
 
 class UserFeedControllerSpec extends ControllerSpec {
@@ -26,11 +29,18 @@ class UserFeedControllerSpec extends ControllerSpec {
       override protected def controllerComponents = stubControllerComponents()
       override val userFeedService                = mockUserFeedService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppId"
     }
   }
 
   "createEvent" should {
-    val request = standardRequest.withBody(testFeedItem.encryptType)
+    implicit val obfuscator: Obfuscator[FeedItem] = new Obfuscator[FeedItem] {
+      override def encrypt(value: FeedItem): String = {
+        Obfuscation.obfuscateJson(Json.toJson(value))
+      }
+    }
+
+    val request = standardRequest.withBody(testFeedItem.encrypt)
 
     "return an ok" when {
       "a feed event has been created" in new Setup {

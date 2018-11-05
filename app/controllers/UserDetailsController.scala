@@ -17,6 +17,7 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
 import javax.inject.Inject
@@ -28,7 +29,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 class DefaultUserDetailsController @Inject()(val detailsService: GetDetailsService,
                                              val orgDetailsService: OrgAccountService,
                                              val controllerComponents: ControllerComponents,
-                                             val authConnector: AuthConnector) extends UserDetailsController
+                                             val config: ConfigurationLoader,
+                                             val authConnector: AuthConnector) extends UserDetailsController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait UserDetailsController extends BackendController {
   val detailsService: GetDetailsService
@@ -38,7 +42,7 @@ trait UserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         detailsService.getBasicDetails(user.id) map { details =>
-          withJsonResponseBody(OK, details.encryptType) { json =>
+          withJsonResponseBody(OK, details.encrypt) { json =>
             Ok(json)
           }
         } recover {
@@ -56,7 +60,7 @@ trait UserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         detailsService.getEnrolments(user.id) map { enrolments =>
-          val (status, body) = enrolments.fold((NOT_FOUND, "No enrolments found"))(enr => (OK, enr.encryptType))
+          val (status, body) = enrolments.fold((NOT_FOUND, "No enrolments found"))(enr => (OK, enr.encrypt))
           withJsonResponseBody(status, body) { json =>
             status match {
               case OK        => Ok(json)
@@ -72,7 +76,7 @@ trait UserDetailsController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         detailsService.getSettings(user.id) map { settings =>
-          val (status, body) = settings.fold((NOT_FOUND, "No settings found"))(s => (OK, s.encryptType))
+          val (status, body) = settings.fold((NOT_FOUND, "No settings found"))(s => (OK, s.encrypt))
           withJsonResponseBody(status, body) { json =>
             status match {
               case OK        => Ok(json)
@@ -88,7 +92,7 @@ trait UserDetailsController extends BackendController {
     validateAs(ORG_USER, orgId) {
       authorised(orgId) { user =>
         orgDetailsService.getOrganisationBasicDetails(user.id) map { details =>
-          val (status, body) = details.fold((NOT_FOUND, "No basic details found"))(deets => (OK, deets.encryptType))
+          val (status, body) = details.fold((NOT_FOUND, "No basic details found"))(deets => (OK, deets.encrypt))
           withJsonResponseBody(status, body) { json =>
             status match {
               case OK        => Ok(json)

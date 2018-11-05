@@ -16,6 +16,7 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.mongo.responses.MongoSuccessCreate
 import common.BackendController
 import javax.inject.Inject
@@ -29,7 +30,10 @@ import scala.concurrent.Future
 class DefaultRegistrationController @Inject()(val registrationService : RegistrationService,
                                               val validationService: ValidationService,
                                               val controllerComponents: ControllerComponents,
-                                              val authConnector: AuthConnector) extends RegistrationController
+                                              val config: ConfigurationLoader,
+                                              val authConnector: AuthConnector) extends RegistrationController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait RegistrationController extends BackendController {
   val registrationService: RegistrationService
@@ -37,7 +41,7 @@ trait RegistrationController extends BackendController {
 
   def createNewUser : Action[String] = Action.async(parse.text) { implicit request =>
     applicationVerification {
-      withJsonBody[UserAccount](UserAccount.newUserReads) { user =>
+      parsers.withJsonBody[UserAccount] { user =>
         for {
           userNameInUse <- validationService.isUserNameInUse(user.userName)
           emailInUse    <- validationService.isEmailInUse(user.email)
@@ -68,7 +72,7 @@ trait RegistrationController extends BackendController {
 
   def createNewOrgUser: Action[String] = Action.async(parse.text) { implicit request =>
     applicationVerification {
-      withJsonBody[OrgAccount](OrgAccount.newOrgAccountReads) { orgUser =>
+      parsers.withJsonBody[OrgAccount] { orgUser =>
         for {
           userNameInUse <- validationService.isUserNameInUse(orgUser.orgUserName)
           emailInUse    <- validationService.isEmailInUse(orgUser.orgEmail)

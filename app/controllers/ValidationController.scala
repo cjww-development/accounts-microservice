@@ -17,6 +17,8 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
+import com.cjwwdev.security.deobfuscation.DeObfuscation._
 import common.BackendController
 import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
@@ -26,14 +28,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DefaultValidationController @Inject()(val validationService : ValidationService,
                                             val controllerComponents: ControllerComponents,
-                                            val authConnector: AuthConnector) extends ValidationController
+                                            val config: ConfigurationLoader,
+                                            val authConnector: AuthConnector) extends ValidationController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait ValidationController extends BackendController {
   val validationService: ValidationService
 
   def validateUserName(username : String) : Action[AnyContent] = Action.async { implicit request =>
     applicationVerification {
-      withEncryptedUrl(username) { userName =>
+      withEncryptedUrl[String](username) { userName =>
         validationService.isUserNameInUse(userName) map { inUse =>
           val (status, body) = if(!inUse) (OK, "User name is available") else (CONFLICT, "User name is not available")
           withJsonResponseBody(status, body) { json =>
@@ -49,7 +54,7 @@ trait ValidationController extends BackendController {
 
   def validateEmail(email : String) : Action[AnyContent] = Action.async { implicit request =>
     applicationVerification {
-      withEncryptedUrl(email) { emailAddress =>
+      withEncryptedUrl[String](email) { emailAddress =>
         validationService.isEmailInUse(emailAddress) map { inUse =>
           val (status, body) = if(!inUse) (OK, "Email is not in use") else (CONFLICT, "Email is already in use")
           withJsonResponseBody(status, body) { json =>

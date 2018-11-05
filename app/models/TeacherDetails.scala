@@ -16,6 +16,7 @@
 
 package models
 
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -28,4 +29,8 @@ object TeacherDetails {
     (__ \ "lastName").format[String] and
     (__ \ "room").format[String]
   )(TeacherDetails.apply, unlift(TeacherDetails.unapply))
+
+  implicit val listObfuscator: Obfuscator[List[TeacherDetails]] = new Obfuscator[List[TeacherDetails]] {
+    override def encrypt(value: List[TeacherDetails]): String = Obfuscation.obfuscateJson(Json.toJson(value))
+  }
 }

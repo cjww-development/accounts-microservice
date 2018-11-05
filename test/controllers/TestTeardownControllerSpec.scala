@@ -26,6 +26,7 @@ class TestTeardownControllerSpec extends ControllerSpec {
       override protected def controllerComponents = stubControllerComponents()
       override val testEndpointService            = mockTestEndpointService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppId"
     }
   }
 

@@ -16,7 +16,8 @@
 package utils
 
 import com.cjwwdev.auth.models.CurrentUser
-import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
+import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.Obfuscation._
 import models._
 import org.joda.time.DateTime
 import play.api.libs.json.{JsObject, JsValue, Json}
@@ -181,27 +182,27 @@ trait Fixtures extends TestDataGenerator {
     DateTime.now()
   )
 
-  val testJsonObj =
-    Json.parse(
-      """{
-        |   "feedId" : "testFeedId",
-        |   "userId" : "testUserId",
-        |   "sourceDetail" : {
-        |     "service" : "testService",
-        |     "location" : "testLocation"
-        |   },
-        |   "eventDetail" : {
-        |     "title" : "testTitle",
-        |     "description" : "testDescription"
-        |   },
-        |   "generated" : "2017-10-10T12:00:00Z"
-        |}""".stripMargin).as[JsObject]
+  val testJsonObj = Json.parse(
+    """{
+      |   "feedId" : "testFeedId",
+      |   "userId" : "testUserId",
+      |   "sourceDetail" : {
+      |     "service" : "testService",
+      |     "location" : "testLocation"
+      |   },
+      |   "eventDetail" : {
+      |     "title" : "testTitle",
+      |     "description" : "testDescription"
+      |   },
+      |   "generated" : "2017-10-10T12:00:00Z"
+      |}""".stripMargin
+    ).as[JsObject]
 
   val testFeedList = List(testFeedItem2, testFeedItem)
 
   val testUpdatedPassword = UpdatedPassword(
-    previousPassword = SHA512.encrypt("testOldPassword"),
-    newPassword      = SHA512.encrypt("testNewPassword")
+    previousPassword = "testOldPassword".sha512,
+    newPassword      = "testNewPassword".sha512
   )
 
   val testUserProfile = UserProfile(
@@ -219,12 +220,12 @@ trait Fixtures extends TestDataGenerator {
        | "lastName" : "testLastName",
        | "userName" : "tUserName",
        | "email" : "test@email.com",
-       | "password" : "${SHA512.encrypt("testPass")}"
+       | "password" : "${"testPass".sha512}"
        |}
     """.stripMargin
   )
 
-  val encryptedUserJson = DataSecurity.encryptType[JsValue](testNewUserJson)
+  val encryptedUserJson = testNewUserJson.encrypt
 
   val testNewOrgUserJson = Json.parse(
     s"""
@@ -234,14 +235,14 @@ trait Fixtures extends TestDataGenerator {
        | "orgUserName" : "oUserName",
        | "location" : "testLocation",
        | "orgEmail" : "test@email.com",
-       | "password" : "${SHA512.encrypt("testPass")}"
+       | "password" : "${"testPass".sha512}"
        |}
     """.stripMargin
   )
 
-  val encryptedOrgUserJson = DataSecurity.encryptType[JsValue](testNewOrgUserJson)
+  val encryptedOrgUserJson = testNewOrgUserJson.encrypt
 
-  val testEncFeedItem = DataSecurity.encryptType[JsValue](Json.parse(
+  val testEncFeedItem = Json.parse(
     s"""{
        |   "userId" : "${generateTestSystemId(USER)}",
        |   "sourceDetail" : {
@@ -253,8 +254,8 @@ trait Fixtures extends TestDataGenerator {
        |     "description" : "testDescription"
        |   },
        |   "generated" : "2017-10-10T12:00:00Z"
-       |}
-       |""".stripMargin).as[JsValue])
+       |}""".stripMargin
+  ).encrypt
 
   val testFeedArray = Json.obj("feed-array" -> Json.toJson(testFeedList))
 }

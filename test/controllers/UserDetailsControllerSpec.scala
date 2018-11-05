@@ -26,6 +26,7 @@ class UserDetailsControllerSpec extends ControllerSpec {
       override val detailsService                 = mockGetDetailsService
       override val orgDetailsService              = mockOrgAccountService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppID"
     }
   }
 
