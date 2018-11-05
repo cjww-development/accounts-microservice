@@ -16,7 +16,9 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.Obfuscation._
 import common.BackendController
 import javax.inject.Inject
 import models.FeedItem
@@ -27,14 +29,17 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DefaultUserFeedController @Inject()(val userFeedService: UserFeedService,
                                           val controllerComponents: ControllerComponents,
-                                          val authConnector: AuthConnector) extends UserFeedController
+                                          val config: ConfigurationLoader,
+                                          val authConnector: AuthConnector) extends UserFeedController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait UserFeedController extends BackendController {
   val userFeedService: UserFeedService
 
   def createEvent() : Action[String] = Action.async(parse.text) { implicit request =>
     applicationVerification {
-      withJsonBody[FeedItem](FeedItem.newFeedItemReads) { fi =>
+      parsers.withJsonBody[FeedItem] { fi =>
         userFeedService.createFeedItem(fi) map { created =>
           val (status, body) = if(created) (OK, "Event created") else (INTERNAL_SERVER_ERROR, "There was a problem creating the event")
           withJsonResponseBody(status, body) { json =>
@@ -52,7 +57,7 @@ trait UserFeedController extends BackendController {
     validateAs(USER, userId) {
       authorised(userId) { user =>
         userFeedService.getFeedList(user.id) map { list =>
-          val (status, body) = list.fold((NOT_FOUND, "No feed items are available"))(json => (OK, json.encryptType))
+          val (status, body) = list.fold((NOT_FOUND, "No feed items are available"))(json => (OK, json.encrypt))
           withJsonResponseBody(status, body) { json =>
             status match {
               case OK        => Ok(json)

@@ -17,6 +17,7 @@
 package app
 
 import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.Obfuscation._
 import utils.{IntegrationSpec, IntegrationStubbing}
 
 class ValidationAPIISpec extends IntegrationSpec with IntegrationStubbing {

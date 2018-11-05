@@ -16,7 +16,7 @@
 
 package models
 
-import play.api.data.validation.ValidationError
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -29,4 +29,10 @@ object UpdatedPassword {
     (__ \ "previousPassword").format[String](passwordValidation) and
     (__ \ "newPassword").format[String](passwordValidation)
   )(UpdatedPassword.apply, unlift(UpdatedPassword.unapply))
+
+  implicit val deObfuscator: DeObfuscator[UpdatedPassword] = new DeObfuscator[UpdatedPassword] {
+    override def decrypt(value: String): Either[UpdatedPassword, DecryptionError] = {
+      DeObfuscation.deObfuscate[UpdatedPassword](value)
+    }
+  }
 }

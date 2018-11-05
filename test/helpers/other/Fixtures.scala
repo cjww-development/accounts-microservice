@@ -16,7 +16,7 @@
 package helpers.other
 
 import com.cjwwdev.auth.models.CurrentUser
-import com.cjwwdev.security.encryption.SHA512
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import models._
 import org.joda.time.DateTime
 import play.api.libs.json.{JsObject, Json}
@@ -193,8 +193,8 @@ trait Fixtures extends TestDataGenerator {
   val testFeedList = List(testFeedItem, testFeedItem2)
 
   val testUpdatedPassword = UpdatedPassword(
-    previousPassword = SHA512.encrypt("testOldPassword"),
-    newPassword      = SHA512.encrypt("testNewPassword")
+    previousPassword = "testOldPassword".sha512,
+    newPassword      = "testNewPassword".sha512
   )
 
   val testUserProfile = UserProfile(

@@ -18,12 +18,14 @@ package models
 import java.util.UUID
 
 import com.cjwwdev.json.TimeFormat
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
 import org.joda.time.DateTime
 import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
 
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 case class SourceDetail(service : String, location : String)
@@ -81,4 +83,10 @@ object FeedItem extends IdService with TimeFormat {
     (__ \ "eventDetail").format[EventDetail](EventDetail.standardFormat) and
     (__ \ "generated").format[DateTime](dateTimeRead)(dateTimeWrite)
   )(FeedItem.apply, unlift(FeedItem.unapply))
+
+  implicit def newFeedItemDeObfuscator(implicit tag: ClassTag[FeedItem]): DeObfuscator[FeedItem] = new DeObfuscator[FeedItem] {
+    override def decrypt(value: String): Either[FeedItem, DecryptionError] = {
+      DeObfuscation.deObfuscate[FeedItem](value)(newFeedItemReads, tag)
+    }
+  }
 }

@@ -17,6 +17,7 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import common.BackendController
 import javax.inject.Inject
@@ -27,7 +28,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DefaultOrgAccountController @Inject()(val orgAccountService: OrgAccountService,
                                             val controllerComponents: ControllerComponents,
-                                            val authConnector: AuthConnector) extends OrgAccountController
+                                            val config: ConfigurationLoader,
+                                            val authConnector: AuthConnector) extends OrgAccountController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait OrgAccountController extends BackendController {
   val orgAccountService: OrgAccountService
@@ -36,7 +40,7 @@ trait OrgAccountController extends BackendController {
     validateAs(ORG_USER, orgId) {
       authorised(orgId) { user =>
         orgAccountService.getOrganisationsTeachers(user.id) map { list =>
-          withJsonResponseBody(OK, list.encryptType) { json =>
+          withJsonResponseBody(OK, list.encrypt) { json =>
             Ok(json)
           }
         } recover {

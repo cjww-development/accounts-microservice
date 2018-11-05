@@ -17,11 +17,14 @@ package models
 
 import com.cjwwdev.json.TimeFormat
 import com.cjwwdev.regex.RegexPack
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import org.joda.time.DateTime
-import play.api.data.validation.ValidationError
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 import services.IdService
+
+import scala.reflect.ClassTag
 
 case class DeversityEnrolment(schoolDevId: String,
                               role: String,
@@ -55,6 +58,10 @@ object Enrolments {
     (__ \ "diagId").formatNullable[String] and
     (__ \ "deversityId").formatNullable[String]
   )(Enrolments.apply, unlift(Enrolments.unapply))
+
+  implicit val obfuscator: Obfuscator[Enrolments] = new Obfuscator[Enrolments] {
+    override def encrypt(value: Enrolments): String = Obfuscation.obfuscateJson(Json.toJson(value))
+  }
 }
 
 case class UserAccount(userId : String,
@@ -100,6 +107,12 @@ object UserAccount extends IdService with RegexPack with TimeFormat {
     (__ \ "enrolments").formatNullable[Enrolments] and
     (__ \ "settings").formatNullable[Settings]
   )(UserAccount.apply, unlift(UserAccount.unapply))
+
+  implicit def newUserDeObfuscator(implicit tag: ClassTag[UserAccount]): DeObfuscator[UserAccount] = new DeObfuscator[UserAccount] {
+    override def decrypt(value: String): Either[UserAccount, DecryptionError] = {
+      DeObfuscation.deObfuscate[UserAccount](value)(newUserReads, tag)
+    }
+  }
 }
 
 case class BasicDetails(firstName : String,
@@ -116,4 +129,10 @@ object BasicDetails extends TimeFormat {
     (__ \ "email").format[String] and
     (__ \ "createdAt").format[DateTime](dateTimeRead)(dateTimeWrite)
   )(BasicDetails.apply, unlift(BasicDetails.unapply))
+
+  implicit val obfuscator: Obfuscator[BasicDetails] = new Obfuscator[BasicDetails] {
+    override def encrypt(value: BasicDetails): String = {
+      Obfuscation.obfuscateJson(Json.toJson(value))
+    }
+  }
 }

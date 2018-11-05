@@ -17,6 +17,8 @@
 package models
 
 import com.cjwwdev.regex.RegexPack
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -38,4 +40,16 @@ object Settings extends RegexPack {
     (__ \ "displayNameColour").format[String](displayNameColourValidation) and
     (__ \ "displayImageURL").format[String]
   )(Settings.apply, unlift(Settings.unapply))
+
+  implicit val deObfuscator: DeObfuscator[Settings] = new DeObfuscator[Settings] {
+    override def decrypt(value: String): Either[Settings, DecryptionError] = {
+      DeObfuscation.deObfuscate[Settings](value)
+    }
+  }
+
+  implicit val obfuscator: Obfuscator[Settings] = new Obfuscator[Settings] {
+    override def encrypt(value: Settings): String = {
+      Obfuscation.obfuscateJson(Json.toJson(value))
+    }
+  }
 }

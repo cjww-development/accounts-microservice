@@ -26,6 +26,7 @@ class OrgAccountControllerSpec extends ControllerSpec {
       override protected def controllerComponents = stubControllerComponents()
       override val orgAccountService              = mockOrgAccountService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppId"
     }
   }
 

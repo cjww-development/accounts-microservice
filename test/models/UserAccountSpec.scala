@@ -15,7 +15,7 @@
  */
 package models
 
-import com.cjwwdev.security.encryption.SHA512
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, Json}
 
@@ -29,7 +29,7 @@ class UserAccountSpec extends PlaySpec {
           | "lastName" : "testLastName",
           | "userName" : "tUserName",
           | "email" : "test@email.com",
-          | "password" : "${SHA512.encrypt("testString")}"
+          | "password" : "${"testString".sha512}"
           |}
         """.stripMargin
       )

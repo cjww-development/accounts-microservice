@@ -17,7 +17,7 @@
 package models
 
 import com.cjwwdev.regex.RegexPack
-import play.api.data.validation.ValidationError
+import com.cjwwdev.security.deobfuscation.{DeObfuscation, DeObfuscator, DecryptionError}
 import play.api.libs.functional.syntax._
 import play.api.libs.json._
 
@@ -41,4 +41,10 @@ object UserProfile extends RegexPack {
     (__ \ "email").format[String](emailValidation) and
     (__ \ "settings").formatNullable[Settings]
   )(UserProfile.apply, unlift(UserProfile.unapply))
+
+  implicit val deObfuscator: DeObfuscator[UserProfile] = new DeObfuscator[UserProfile] {
+    override def decrypt(value: String): Either[UserProfile, DecryptionError] = {
+      DeObfuscation.deObfuscate[UserProfile](value)
+    }
+  }
 }

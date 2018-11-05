@@ -15,7 +15,8 @@
  */
 package controllers
 
-import com.cjwwdev.security.encryption.{DataSecurity, SHA512}
+import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.Obfuscation._
 import helpers.controllers.ControllerSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.stubControllerComponents
@@ -28,10 +29,11 @@ class RegistrationControllerSpec extends ControllerSpec {
       override val registrationService            = mockRegistrationService
       override val validationService              = mockValidationService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppId"
     }
   }
 
-  val password = SHA512.encrypt("testPassword")
+  val password = "testPassword".sha512
 
   val testNewUserJson = Json.parse(
     s"""
@@ -40,7 +42,7 @@ class RegistrationControllerSpec extends ControllerSpec {
        | "lastName" : "testLastName",
        | "userName" : "tUserName",
        | "email" : "test@email.com",
-       | "password" : "${SHA512.encrypt("testPass")}"
+       | "password" : "${"testPass".sha512}"
        |}
     """.stripMargin
   )
@@ -58,8 +60,8 @@ class RegistrationControllerSpec extends ControllerSpec {
     """.stripMargin
   )
 
-  val encryptedUserJson = DataSecurity.encryptType[JsValue](testNewUserJson)
-  val encryptedOrgUserJson = DataSecurity.encryptType[JsValue](testNewOrgUserJson)
+  val encryptedUserJson    = testNewUserJson.encrypt
+  val encryptedOrgUserJson = testNewOrgUserJson.encrypt
 
   "createNewUser" should {
     "return a created" when {

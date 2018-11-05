@@ -15,7 +15,7 @@
  */
 package models
 
-import com.cjwwdev.security.encryption.SHA512
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsError, Json}
 
@@ -30,21 +30,21 @@ class OrgAccountModelSpec extends PlaySpec {
           | "orgUserName" : "tUserName",
           | "location" : "testLocation",
           | "orgEmail" : "test@email.com",
-          | "password" : "${SHA512.encrypt("testPass")}"
+          | "password" : "${"testPass".sha512}"
           |}
         """.stripMargin
       )
 
       val result = Json.fromJson(newUserJson)(OrgAccount.newOrgAccountReads).get
       result.orgId.contains("org-user-") mustBe true
-      result.orgName mustBe "testOrgName"
-      result.initials mustBe "TON"
-      result.orgUserName mustBe "tUserName"
-      result.location mustBe "testLocation"
-      result.orgEmail mustBe "test@email.com"
-      result.credentialType mustBe "organisation"
-      result.password.length mustBe 128
-      result.settings mustBe None
+      result.orgName                     mustBe "testOrgName"
+      result.initials                    mustBe "TON"
+      result.orgUserName                 mustBe "tUserName"
+      result.location                    mustBe "testLocation"
+      result.orgEmail                    mustBe "test@email.com"
+      result.credentialType              mustBe "organisation"
+      result.password.length             mustBe 128
+      result.settings                    mustBe None
     }
 
     "return a JsError" when {

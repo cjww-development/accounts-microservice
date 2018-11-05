@@ -16,6 +16,7 @@
 package controllers
 
 import com.cjwwdev.auth.connectors.AuthConnector
+import com.cjwwdev.config.ConfigurationLoader
 import common.BackendController
 import javax.inject.Inject
 import play.api.mvc._
@@ -25,7 +26,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class DefaultTestTeardownController @Inject()(val testEndpointService: TestEndpointService,
                                               val controllerComponents: ControllerComponents,
-                                              val authConnector: AuthConnector) extends TestTeardownController
+                                              val config: ConfigurationLoader,
+                                              val authConnector: AuthConnector) extends TestTeardownController {
+  override val appId: String = config.getServiceId(config.get[String]("appName"))
+}
 
 trait TestTeardownController extends BackendController {
   val testEndpointService: TestEndpointService

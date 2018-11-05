@@ -15,7 +15,7 @@
  */
 package models
 
-import com.cjwwdev.security.encryption.SHA512
+import com.cjwwdev.implicits.ImplicitDataSecurity._
 import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsSuccess, Json}
 
@@ -25,15 +25,15 @@ class UpdatedPasswordSpec extends PlaySpec {
       val updatedPasswordJson = Json.parse(
         s"""
           |{
-          | "previousPassword" : "${SHA512.encrypt("testPass")}",
-          | "newPassword" : "${SHA512.encrypt("testPass123")}"
+          | "previousPassword" : "${"testPass".sha512}",
+          | "newPassword" : "${"testPass123".sha512}"
           |}
         """.stripMargin
       )
 
       val updatedPassword = UpdatedPassword(
-        previousPassword = SHA512.encrypt("testPass"),
-        newPassword = SHA512.encrypt("testPass123")
+        previousPassword = "testPass".sha512,
+        newPassword      = "testPass123".sha512
       )
 
       Json.fromJson[UpdatedPassword](updatedPasswordJson) mustBe JsSuccess(updatedPassword)

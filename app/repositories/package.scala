@@ -28,7 +28,7 @@ package object repositories {
   val userEmailSelector: String => BSONDocument = email => BSONDocument("email" -> email)
   val userIdPasswordSelector: (String, String) => BSONDocument = (userId, password) => BSONDocument("userId" -> userId, "password" -> password)
   val deversitySchoolSelector: String => BSONDocument = orgName => BSONDocument(
-    "deversityDetails.schoolName" -> orgName,
-    "deversityDetails.role"       -> "teacher"
+    "deversityDetails.schoolDevId" -> orgName,
+    "deversityDetails.role"        -> "teacher"
   )
 }

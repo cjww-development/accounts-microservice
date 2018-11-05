@@ -16,8 +16,11 @@
 package controllers
 
 import com.cjwwdev.implicits.ImplicitDataSecurity._
+import com.cjwwdev.security.obfuscation.{Obfuscation, Obfuscator}
 import common._
 import helpers.controllers.ControllerSpec
+import models.{UpdatedPassword, UserProfile}
+import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 
@@ -28,13 +31,21 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
       override protected def controllerComponents = stubControllerComponents()
       override val accountService                 = mockAccountService
       override val authConnector                  = mockAuthConnector
+      override val appId                          = "testAppId"
     }
   }
 
   "updateProfileInformation" should {
+    implicit val obfuscator: Obfuscator[UserProfile] = new Obfuscator[UserProfile] {
+      override def encrypt(value: UserProfile): String = {
+        Obfuscation.obfuscateJson(Json.toJson(value))
+      }
+    }
+
     "return an Ok" when {
       "the users profile information has been updated" in new Setup {
-        val request: FakeRequest[String] = standardRequest.withBody[String](testUserProfile.encryptType)
+
+        val request: FakeRequest[String] = standardRequest.withBody[String](testUserProfile.encrypt)
 
         mockUpdateProfileInformation(updated = true)
 
@@ -46,7 +57,7 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
     "return an internal server error" when {
       "there was a problem updating the users profile information" in new Setup {
-        val request = standardRequest.withBody(testUserProfile.encryptType)
+        val request = standardRequest.withBody(testUserProfile.encrypt)
 
         mockUpdateProfileInformation(updated = false)
 
@@ -58,9 +69,15 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
   }
 
   "updateUserPassword" should {
+    implicit val obfuscator: Obfuscator[UpdatedPassword] = new Obfuscator[UpdatedPassword] {
+      override def encrypt(value: UpdatedPassword): String = {
+        Obfuscation.obfuscateJson(Json.toJson(value))
+      }
+    }
+
     "return an Ok" when {
       "the users password has been successfully updated" in new Setup {
-        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
+        val request = standardRequest.withBody(testUpdatedPassword.encrypt)
 
         mockUpdatePassword(updatedResponse = PasswordUpdated)
 
@@ -72,7 +89,7 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
     "return a conflict" when {
       "the users old password doesn't match what is on record" in new Setup {
-        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
+        val request = standardRequest.withBody(testUpdatedPassword.encrypt)
 
         mockUpdatePassword(updatedResponse = InvalidOldPassword)
 
@@ -84,7 +101,7 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
     "return an Internal server error" when {
       "there was a problem updating the users password" in new Setup {
-        val request = standardRequest.withBody(testUpdatedPassword.encryptType)
+        val request = standardRequest.withBody(testUpdatedPassword.encrypt)
 
         mockUpdatePassword(updatedResponse = PasswordUpdateFailed)
 
@@ -98,7 +115,7 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
   "updateUserSettings" should {
     "return an Ok" when {
       "a users settings have been updated" in new Setup {
-        val request = standardRequest.withBody(testSettings.encryptType)
+        val request = standardRequest.withBody(testSettings.encrypt)
 
         mockUpdateSettings(updated = true)
 
@@ -110,7 +127,7 @@ class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
     "return an internal server error" when {
       "there a problem updating the users settings" in new Setup {
-        val request = standardRequest.withBody(testSettings.encryptType)
+        val request = standardRequest.withBody(testSettings.encrypt)
 
         mockUpdateSettings(updated = false)
 
