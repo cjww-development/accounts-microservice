@@ -20,6 +20,8 @@ import com.cjwwdev.mongo.responses.{MongoFailedDelete, MongoSuccessDelete}
 import helpers.other.AccountEnums
 import helpers.services.ServiceSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class TestEndpointServiceSpec extends ServiceSpec {
 
   class Setup {

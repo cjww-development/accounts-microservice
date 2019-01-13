@@ -28,7 +28,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import repositories.OrgAccountRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockOrgAccountRepository extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -42,27 +41,27 @@ trait MockOrgAccountRepository extends BeforeAndAfterEach with MockitoSugar with
   }
 
   def mockInsertNewOrgUser(inserted: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
-    when(mockOrgAccountRepo.insertNewOrgUser(ArgumentMatchers.any()))
-      .thenReturn(if(inserted) Future(MongoSuccessCreate) else Future.failed(new FailedToCreateException("")))
+    when(mockOrgAccountRepo.insertNewOrgUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(if(inserted) Future.successful(MongoSuccessCreate) else Future.failed(new FailedToCreateException("")))
   }
 
   def mockGetOrgAccount(fetched: Boolean): OngoingStubbing[Future[OrgAccount]] = {
-    when(mockOrgAccountRepo.getOrgAccount[OrgAccount](ArgumentMatchers.any())(ArgumentMatchers.any()))
-      .thenReturn(if(fetched) Future(testOrgAccount) else Future.failed(new MissingAccountException("")))
+    when(mockOrgAccountRepo.getOrgAccount[OrgAccount](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
+      .thenReturn(if(fetched) Future.successful(testOrgAccount) else Future.failed(new MissingAccountException("")))
   }
 
   def mockVerifyOrgUserName(inUse: Boolean): OngoingStubbing[Future[UserNameUse]] = {
-    when(mockOrgAccountRepo.verifyUserName(ArgumentMatchers.any()))
-      .thenReturn(Future(if(inUse) UserNameInUse else UserNameNotInUse))
+    when(mockOrgAccountRepo.verifyUserName(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(inUse) UserNameInUse else UserNameNotInUse))
   }
 
   def mockVerifyOrgEmail(inUse: Boolean): OngoingStubbing[Future[EmailUse]] = {
-    when(mockOrgAccountRepo.verifyEmail(ArgumentMatchers.any()))
-      .thenReturn(Future(if(inUse) EmailInUse else EmailNotInUse))
+    when(mockOrgAccountRepo.verifyEmail(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(inUse) EmailInUse else EmailNotInUse))
   }
 
   def mockDeleteOrgAccount(deleted: Boolean): OngoingStubbing[Future[MongoDeleteResponse]] = {
-    when(mockOrgAccountRepo.deleteOrgAccount(ArgumentMatchers.any()))
-      .thenReturn(Future(if(deleted) MongoSuccessDelete else MongoFailedDelete))
+    when(mockOrgAccountRepo.deleteOrgAccount(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(deleted) MongoSuccessDelete else MongoFailedDelete))
   }
 }

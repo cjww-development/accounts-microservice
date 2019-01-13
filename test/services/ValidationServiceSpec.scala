@@ -17,6 +17,8 @@ package services
 
 import helpers.services.ServiceSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class ValidationServiceSpec extends ServiceSpec {
 
   class Setup {

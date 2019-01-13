@@ -25,7 +25,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.ValidationService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockValidationService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -39,12 +38,12 @@ trait MockValidationService extends BeforeAndAfterEach with MockitoSugar with Fi
   }
 
   def mockIsUserNameInUse(inUse: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockValidationService.isUserNameInUse(ArgumentMatchers.any()))
-      .thenReturn(Future(inUse))
+    when(mockValidationService.isUserNameInUse(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(inUse))
   }
 
   def mockIsEmailInUse(inUse: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockValidationService.isEmailInUse(ArgumentMatchers.any()))
-      .thenReturn(Future(inUse))
+    when(mockValidationService.isEmailInUse(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(inUse))
   }
 }

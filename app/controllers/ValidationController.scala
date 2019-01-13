@@ -24,12 +24,13 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.ValidationService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultValidationController @Inject()(val validationService : ValidationService,
                                             val controllerComponents: ControllerComponents,
                                             val config: ConfigurationLoader,
-                                            val authConnector: AuthConnector) extends ValidationController {
+                                            val authConnector: AuthConnector,
+                                            implicit val ec: ExecutionContext) extends ValidationController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 

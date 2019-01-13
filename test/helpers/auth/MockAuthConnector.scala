@@ -26,7 +26,6 @@ import org.scalatest.BeforeAndAfterEach
 import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockAuthConnector extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -40,12 +39,12 @@ trait MockAuthConnector extends BeforeAndAfterEach with MockitoSugar with Fixtur
   }
 
   def mockGetIndCurrentUser(fetched: Boolean): OngoingStubbing[Future[Option[CurrentUser]]] = {
-    when(mockAuthConnector.getCurrentUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(testCurrentUser) else None))
+    when(mockAuthConnector.getCurrentUser(ArgumentMatchers.any(), ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(testCurrentUser) else None))
   }
 
   def mockGetOrgCurrentUser(fetched: Boolean): OngoingStubbing[Future[Option[CurrentUser]]] = {
-    when(mockAuthConnector.getCurrentUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(testOrgCurrentUser) else None))
+    when(mockAuthConnector.getCurrentUser(ArgumentMatchers.any(), ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(testOrgCurrentUser) else None))
   }
 }

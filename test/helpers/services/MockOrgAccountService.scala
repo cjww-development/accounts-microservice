@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.OrgAccountService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockOrgAccountService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -40,12 +39,12 @@ trait MockOrgAccountService extends BeforeAndAfterEach with MockitoSugar with Fi
   }
 
   def mockGetOrganisationBasicDetails(fetched: Boolean): OngoingStubbing[Future[Option[OrgDetails]]] = {
-    when(mockOrgAccountService.getOrganisationBasicDetails(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(testOrgDetails) else None))
+    when(mockOrgAccountService.getOrganisationBasicDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(testOrgDetails) else None))
   }
 
   def mockGetOrganisationsTeachers(populated: Boolean): OngoingStubbing[Future[List[TeacherDetails]]] = {
-    when(mockOrgAccountService.getOrganisationsTeachers(ArgumentMatchers.any()))
-      .thenReturn(if(populated) Future(List(testTeacherDetails)) else Future.failed(new Exception))
+    when(mockOrgAccountService.getOrganisationsTeachers(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(if(populated) Future.successful(List(testTeacherDetails)) else Future.failed(new Exception))
   }
 }

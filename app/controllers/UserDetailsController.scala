@@ -24,13 +24,14 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.{GetDetailsService, OrgAccountService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultUserDetailsController @Inject()(val detailsService: GetDetailsService,
                                              val orgDetailsService: OrgAccountService,
                                              val controllerComponents: ControllerComponents,
                                              val config: ConfigurationLoader,
-                                             val authConnector: AuthConnector) extends UserDetailsController {
+                                             val authConnector: AuthConnector,
+                                             implicit val ec: ExecutionContext) extends UserDetailsController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 
@@ -49,8 +50,8 @@ trait UserDetailsController extends BackendController {
           case e: Throwable =>
             e.printStackTrace()
             withJsonResponseBody(NOT_FOUND, "No basic details found") { json =>
-            NotFound(json)
-          }
+              NotFound(json)
+            }
         }
       }
     }

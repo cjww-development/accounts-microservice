@@ -25,12 +25,13 @@ import models.FeedItem
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.UserFeedService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultUserFeedController @Inject()(val userFeedService: UserFeedService,
                                           val controllerComponents: ControllerComponents,
                                           val config: ConfigurationLoader,
-                                          val authConnector: AuthConnector) extends UserFeedController {
+                                          val authConnector: AuthConnector,
+                                          implicit val ec: ExecutionContext) extends UserFeedController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 

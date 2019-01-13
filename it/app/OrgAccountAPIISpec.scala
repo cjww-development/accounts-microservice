@@ -42,7 +42,6 @@ class OrgAccountAPIISpec extends IntegrationSpec with IntegrationStubbing {
 
         awaitAndAssert(client(s"$testAppUrl/account/${testOrgAccount.orgId}/teachers").get()) { res =>
           res.status                                                               mustBe OK
-          println(res.json.get[String]("body").decrypt[JsValue])
           res.json.get[String]("body").decrypt[List[TeacherDetails]].left.get.size mustBe 1
         }
       }

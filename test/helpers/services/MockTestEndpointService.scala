@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.TestEndpointService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockTestEndpointService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -40,12 +39,12 @@ trait MockTestEndpointService extends BeforeAndAfterEach with MockitoSugar with 
   }
 
   def mockTearDownTestUser(tornDown: Boolean): OngoingStubbing[Future[MongoDeleteResponse]] = {
-    when(mockTestEndpointService.tearDownTestUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(tornDown) MongoSuccessDelete else MongoFailedDelete))
+    when(mockTestEndpointService.tearDownTestUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(tornDown) MongoSuccessDelete else MongoFailedDelete))
   }
 
   def mockTearDownTestOrgUser(tornDown: Boolean): OngoingStubbing[Future[MongoDeleteResponse]] = {
-    when(mockTestEndpointService.tearDownTestOrgUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(tornDown) MongoSuccessDelete else MongoFailedDelete))
+    when(mockTestEndpointService.tearDownTestOrgUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(tornDown) MongoSuccessDelete else MongoFailedDelete))
   }
 }

@@ -21,10 +21,14 @@ import helpers.controllers.ControllerSpec
 import play.api.libs.json.{JsValue, Json}
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class RegistrationControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new RegistrationController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val registrationService            = mockRegistrationService
       override val validationService              = mockValidationService

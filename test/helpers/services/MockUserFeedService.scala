@@ -27,7 +27,6 @@ import org.scalatestplus.play.PlaySpec
 import play.api.libs.json.{JsObject, Json}
 import services.UserFeedService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockUserFeedService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -41,8 +40,8 @@ trait MockUserFeedService extends BeforeAndAfterEach with MockitoSugar with Fixt
   }
 
   def mockCreateFeedItem(created: Boolean): OngoingStubbing[Future[Boolean]] = {
-    when(mockUserFeedService.createFeedItem(ArgumentMatchers.any()))
-      .thenReturn(Future(created))
+    when(mockUserFeedService.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(created))
   }
 
   def mockFlipList(list: List[FeedItem]): OngoingStubbing[Option[List[FeedItem]]] = {
@@ -51,7 +50,7 @@ trait MockUserFeedService extends BeforeAndAfterEach with MockitoSugar with Fixt
   }
 
   def mockGetFeedList(fetched: Boolean): OngoingStubbing[Future[Option[JsObject]]] = {
-    when(mockUserFeedService.getFeedList(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(Json.obj("feed-array" -> Json.toJson(testFeedList))) else None))
+    when(mockUserFeedService.getFeedList(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(Json.obj("feed-array" -> Json.toJson(testFeedList))) else None))
   }
 }

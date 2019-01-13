@@ -22,8 +22,7 @@ import models.{OrgAccount, OrgDetails, TeacherDetails}
 import reactivemongo.bson.BSONDocument
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultOrgAccountService @Inject()(val orgAccountRepository: OrgAccountRepository,
                                          val userAccountRepository: UserAccountRepository) extends OrgAccountService
@@ -34,7 +33,7 @@ trait OrgAccountService {
 
   private val orgIdSelector: String => BSONDocument = orgId => BSONDocument("orgId" -> orgId)
 
-  def getOrganisationBasicDetails(orgId: String): Future[Option[OrgDetails]] = {
+  def getOrganisationBasicDetails(orgId: String)(implicit ec: ExC): Future[Option[OrgDetails]] = {
     orgAccountRepository.getOrgAccount[OrgDetails](orgIdSelector(orgId)) map {
       Some(_)
     } recover {
@@ -42,7 +41,7 @@ trait OrgAccountService {
     }
   }
 
-  def getOrganisationsTeachers(orgId: String): Future[List[TeacherDetails]] = {
+  def getOrganisationsTeachers(orgId: String)(implicit ec: ExC): Future[List[TeacherDetails]] = {
     for {
       orgAcc    <- orgAccountRepository.getOrgAccount[OrgAccount](orgIdSelector(orgId))
       teachers  <- userAccountRepository.getAllTeacherForOrg(orgAcc.deversityId)

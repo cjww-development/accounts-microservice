@@ -20,7 +20,7 @@ import javax.inject.Inject
 import models.{OrgAccount, UserAccount}
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultRegistrationService @Inject()(val userAccountRepository: UserAccountRepository,
                                            val orgAccountRepository: OrgAccountRepository) extends RegistrationService
@@ -29,11 +29,11 @@ trait RegistrationService {
   val userAccountRepository: UserAccountRepository
   val orgAccountRepository: OrgAccountRepository
 
-  def createNewUser(newUser : UserAccount) : Future[MongoCreateResponse] = {
+  def createNewUser(newUser: UserAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
     userAccountRepository.insertNewUser(newUser)
   }
 
-  def createNewOrgUser(newOrgUser: OrgAccount): Future[MongoCreateResponse] = {
+  def createNewOrgUser(newOrgUser: OrgAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
     orgAccountRepository.insertNewOrgUser(newOrgUser)
   }
 }

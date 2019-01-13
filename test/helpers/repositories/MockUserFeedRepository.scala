@@ -27,7 +27,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import repositories.UserFeedRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockUserFeedRepository extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -42,16 +41,16 @@ trait MockUserFeedRepository extends BeforeAndAfterEach with MockitoSugar with F
 
   def mockCreateFeedItem(created: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
     when(mockUserFeedRepo.createFeedItem(ArgumentMatchers.any())(ArgumentMatchers.any()))
-      .thenReturn(Future(if(created) MongoSuccessCreate else MongoFailedCreate))
+      .thenReturn(Future.successful(if(created) MongoSuccessCreate else MongoFailedCreate))
   }
 
   def mockGetFeedItems(found: Boolean): OngoingStubbing[Future[List[FeedItem]]] = {
-    when(mockUserFeedRepo.getFeedItems(ArgumentMatchers.any()))
-      .thenReturn(Future(if(found) List(testFeedItem) else List.empty[FeedItem]))
+    when(mockUserFeedRepo.getFeedItems(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(found) List(testFeedItem) else List.empty[FeedItem]))
   }
 
   def mockDeleteFeedItems(deleted: Boolean): OngoingStubbing[Future[MongoDeleteResponse]] = {
-    when(mockUserFeedRepo.deleteFeedItems(ArgumentMatchers.any()))
-      .thenReturn(Future(if(deleted) MongoSuccessDelete else MongoFailedDelete))
+    when(mockUserFeedRepo.deleteFeedItems(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(deleted) MongoSuccessDelete else MongoFailedDelete))
   }
 }

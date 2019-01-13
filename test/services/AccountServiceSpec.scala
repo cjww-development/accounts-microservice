@@ -20,6 +20,8 @@ import common._
 import helpers.services.ServiceSpec
 import models.{Settings, UpdatedPassword, UserProfile}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class AccountServiceSpec extends ServiceSpec {
 
   class Setup {

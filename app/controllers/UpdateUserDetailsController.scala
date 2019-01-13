@@ -25,12 +25,13 @@ import models.{Settings, UpdatedPassword, UserProfile}
 import play.api.mvc.{Action, ControllerComponents}
 import services._
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultUpdateUserDetailsController @Inject()(val accountService: AccountService,
                                                    val controllerComponents: ControllerComponents,
                                                    val config: ConfigurationLoader,
-                                                   val authConnector: AuthConnector) extends UpdateUserDetailsController {
+                                                   val authConnector: AuthConnector,
+                                                   implicit val ec: ExecutionContext) extends UpdateUserDetailsController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 

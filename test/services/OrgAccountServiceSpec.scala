@@ -23,6 +23,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.Mockito.when
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class OrgAccountServiceSpec extends ServiceSpec {
 
@@ -48,7 +49,7 @@ class OrgAccountServiceSpec extends ServiceSpec {
   "getOrganisationBasicDetails" should {
     "return org details" when {
       "given a valid org id" in new Setup {
-        when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any()))
+        when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
           .thenReturn(Future.successful(testOrgDetails))
 
         awaitAndAssert(testService.getOrganisationBasicDetails(generateTestSystemId(ORG))) {
@@ -58,7 +59,7 @@ class OrgAccountServiceSpec extends ServiceSpec {
     }
 
     "throw a MissingAccountException" in new Setup {
-      when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any()))
+      when(mockOrgAccountRepo.getOrgAccount[OrgDetails](ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
         .thenReturn(Future.failed(new MissingAccountException("")))
 
       awaitAndAssert(testService.getOrganisationBasicDetails(generateTestSystemId(ORG))) {

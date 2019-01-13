@@ -18,10 +18,14 @@ package controllers
 import helpers.controllers.ControllerSpec
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class UserDetailsControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UserDetailsController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val detailsService                 = mockGetDetailsService
       override val orgDetailsService              = mockOrgAccountService

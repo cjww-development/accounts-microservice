@@ -24,10 +24,14 @@ import play.api.libs.json.Json
 import play.api.test.FakeRequest
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class UpdateUserDetailsControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UpdateUserDetailsController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val accountService                 = mockAccountService
       override val authConnector                  = mockAuthConnector

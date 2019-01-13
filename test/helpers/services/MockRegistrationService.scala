@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.RegistrationService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockRegistrationService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -40,12 +39,12 @@ trait MockRegistrationService extends BeforeAndAfterEach with MockitoSugar with 
   }
 
   def mockCreateNewUser(created: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
-    when(mockRegistrationService.createNewUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(created) MongoSuccessCreate else MongoFailedCreate))
+    when(mockRegistrationService.createNewUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(created) MongoSuccessCreate else MongoFailedCreate))
   }
 
   def mockCreateNewOrgUser(created: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
-    when(mockRegistrationService.createNewOrgUser(ArgumentMatchers.any()))
-      .thenReturn(Future(if(created) MongoSuccessCreate else MongoFailedCreate))
+    when(mockRegistrationService.createNewOrgUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(created) MongoSuccessCreate else MongoFailedCreate))
   }
 }

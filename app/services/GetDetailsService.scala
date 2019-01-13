@@ -21,8 +21,7 @@ import models.{BasicDetails, Enrolments, Settings, UserAccount}
 import reactivemongo.bson.BSONDocument
 import repositories.UserAccountRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultGetDetailsService @Inject()(val userAccountRepository: UserAccountRepository) extends GetDetailsService
 
@@ -31,19 +30,19 @@ trait GetDetailsService {
 
   private val userIdSelector: String => BSONDocument = userId => BSONDocument("userId" -> userId)
 
-  def getBasicDetails(userId : String) : Future[BasicDetails] = {
+  def getBasicDetails(userId: String)(implicit ec: ExC): Future[BasicDetails] = {
     userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractBasicDetails
   }
 
-  def getEnrolments(userId : String) : Future[Option[Enrolments]] = {
+  def getEnrolments(userId: String)(implicit ec: ExC): Future[Option[Enrolments]] = {
     userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractEnrolments
   }
 
-  def getSettings(userId : String) : Future[Option[Settings]] = {
+  def getSettings(userId: String)(implicit ec: ExC): Future[Option[Settings]] = {
     userAccountRepository.getUserBySelector(userIdSelector(userId)) map extractSettings
   }
 
-  private def extractBasicDetails(user : UserAccount) : BasicDetails = BasicDetails(
+  private def extractBasicDetails(user: UserAccount): BasicDetails = BasicDetails(
     firstName = user.firstName,
     lastName  = user.lastName,
     userName  = user.userName,
@@ -51,6 +50,6 @@ trait GetDetailsService {
     createdAt = user.createdAt
   )
 
-  private def extractEnrolments(user : UserAccount) : Option[Enrolments] = user.enrolments
-  private def extractSettings(user : UserAccount) : Option[Settings]     = user.settings
+  private def extractEnrolments(user: UserAccount): Option[Enrolments] = user.enrolments
+  private def extractSettings(user: UserAccount): Option[Settings]     = user.settings
 }

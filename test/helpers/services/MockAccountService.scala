@@ -27,7 +27,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.AccountService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockAccountService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -41,17 +40,17 @@ trait MockAccountService extends BeforeAndAfterEach with MockitoSugar with Fixtu
   }
 
   def mockUpdateProfileInformation(updated: Boolean): OngoingStubbing[Future[MongoUpdatedResponse]] = {
-    when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any()))
-      .thenReturn(Future(if(updated) MongoSuccessUpdate else MongoFailedUpdate))
+    when(mockAccountService.updateProfileInformation(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(updated) MongoSuccessUpdate else MongoFailedUpdate))
   }
 
   def mockUpdatePassword(updatedResponse: UpdatedPasswordResponse): OngoingStubbing[Future[UpdatedPasswordResponse]] = {
-    when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any()))
-      .thenReturn(Future(updatedResponse))
+    when(mockAccountService.updatePassword(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(updatedResponse))
   }
 
   def mockUpdateSettings(updated: Boolean): OngoingStubbing[Future[UpdatedSettingsResponse]] = {
-    when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any()))
-      .thenReturn(Future(if(updated) UpdatedSettingsSuccess else UpdatedSettingsFailed))
+    when(mockAccountService.updateSettings(ArgumentMatchers.any(), ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(updated) UpdatedSettingsSuccess else UpdatedSettingsFailed))
   }
 }

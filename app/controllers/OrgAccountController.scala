@@ -24,12 +24,13 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, ControllerComponents}
 import services.OrgAccountService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultOrgAccountController @Inject()(val orgAccountService: OrgAccountService,
                                             val controllerComponents: ControllerComponents,
                                             val config: ConfigurationLoader,
-                                            val authConnector: AuthConnector) extends OrgAccountController {
+                                            val authConnector: AuthConnector,
+                                            implicit val ec: ExecutionContext) extends OrgAccountController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 

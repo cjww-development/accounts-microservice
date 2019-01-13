@@ -19,8 +19,7 @@ import common.{EmailInUse, UserNameInUse}
 import javax.inject.Inject
 import repositories._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultValidationService @Inject()(val userAccountRepository: UserAccountRepository,
                                          val orgAccountRepository: OrgAccountRepository) extends ValidationService
@@ -29,14 +28,14 @@ trait ValidationService {
   val userAccountRepository: UserAccountRepository
   val orgAccountRepository: OrgAccountRepository
 
-  def isUserNameInUse(username : String) : Future[Boolean] = {
+  def isUserNameInUse(username: String)(implicit ec: ExC): Future[Boolean] = {
     for {
       user  <- userAccountRepository.verifyUserName(username)
       org   <- orgAccountRepository.verifyUserName(username)
     } yield user == UserNameInUse || org == UserNameInUse
   }
 
-  def isEmailInUse(email : String) : Future[Boolean] = {
+  def isEmailInUse(email: String)(implicit ec: ExC): Future[Boolean] = {
     for {
       user  <- userAccountRepository.verifyEmail(email)
       org   <- orgAccountRepository.verifyEmail(email)
