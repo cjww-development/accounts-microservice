@@ -19,10 +19,14 @@ package controllers
 import helpers.controllers.ControllerSpec
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class TestTeardownControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new TestTeardownController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val testEndpointService            = mockTestEndpointService
       override val authConnector                  = mockAuthConnector

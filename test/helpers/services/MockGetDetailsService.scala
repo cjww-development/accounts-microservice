@@ -26,7 +26,6 @@ import org.scalatest.mockito.MockitoSugar
 import org.scalatestplus.play.PlaySpec
 import services.GetDetailsService
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 trait MockGetDetailsService extends BeforeAndAfterEach with MockitoSugar with Fixtures {
@@ -40,17 +39,17 @@ trait MockGetDetailsService extends BeforeAndAfterEach with MockitoSugar with Fi
   }
 
   def mockGetBasicDetails: OngoingStubbing[Future[BasicDetails]] = {
-    when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any()))
-      .thenReturn(Future(testBasicDetails))
+    when(mockGetDetailsService.getBasicDetails(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(testBasicDetails))
   }
 
   def mockGetEnrolments(fetched: Boolean): OngoingStubbing[Future[Option[Enrolments]]] = {
-    when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(testEnrolments) else None))
+    when(mockGetDetailsService.getEnrolments(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(testEnrolments) else None))
   }
 
   def mockGetSettings(fetched: Boolean): OngoingStubbing[Future[Option[Settings]]] = {
-    when(mockGetDetailsService.getSettings(ArgumentMatchers.any()))
-      .thenReturn(Future(if(fetched) Some(testSettings) else None))
+    when(mockGetDetailsService.getSettings(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.successful(if(fetched) Some(testSettings) else None))
   }
 }

@@ -17,6 +17,8 @@ package services
 
 import helpers.services.ServiceSpec
 
+import scala.concurrent.ExecutionContext.Implicits.global
+
 class UserFeedServiceSpec extends ServiceSpec {
 
   class Setup {

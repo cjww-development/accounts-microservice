@@ -20,6 +20,9 @@ import com.cjwwdev.security.obfuscation.Obfuscation._
 import helpers.controllers.ControllerSpec
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class ValidationControllerSpec extends ControllerSpec {
 
   val testEncUserName = "testUserName".encrypt
@@ -27,6 +30,7 @@ class ValidationControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new ValidationController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val validationService              = mockValidationService
       override val authConnector                  = mockAuthConnector

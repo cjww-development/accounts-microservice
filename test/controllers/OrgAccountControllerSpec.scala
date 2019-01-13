@@ -19,10 +19,14 @@ package controllers
 import helpers.controllers.ControllerSpec
 import play.api.test.Helpers._
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class OrgAccountControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new OrgAccountController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val orgAccountService              = mockOrgAccountService
       override val authConnector                  = mockAuthConnector

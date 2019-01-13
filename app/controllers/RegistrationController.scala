@@ -24,14 +24,14 @@ import models.{OrgAccount, UserAccount}
 import play.api.mvc.{Action, ControllerComponents}
 import services.{RegistrationService, ValidationService}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 class DefaultRegistrationController @Inject()(val registrationService : RegistrationService,
                                               val validationService: ValidationService,
                                               val controllerComponents: ControllerComponents,
                                               val config: ConfigurationLoader,
-                                              val authConnector: AuthConnector) extends RegistrationController {
+                                              val authConnector: AuthConnector,
+                                              implicit val ec: ExecutionContext) extends RegistrationController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 
@@ -62,7 +62,7 @@ trait RegistrationController extends BackendController {
             }
           } else {
             withFutureJsonResponseBody(CONFLICT, "Could not create a new user; either the user name or email address is already in use") { json =>
-              Future(Conflict(json))
+              Future.successful(Conflict(json))
             }
           }
         } yield registered
@@ -93,7 +93,7 @@ trait RegistrationController extends BackendController {
             }
           } else {
             withFutureJsonResponseBody(CONFLICT, "Could not create a new user; either the user name or email address is already in use") { json =>
-              Future(Conflict(json))
+              Future.successful(Conflict(json))
             }
           }
         } yield registered

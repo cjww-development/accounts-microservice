@@ -136,7 +136,7 @@ trait Fixtures extends TestDataGenerator {
     location        = "testLocation",
     orgEmail        = "test@email.com",
     credentialType  = "organisation",
-    password        = "testPass",
+    password        = "testPass".sha512,
     createdAt       = now,
     settings        = None
   )
@@ -230,9 +230,9 @@ trait Fixtures extends TestDataGenerator {
   val testNewOrgUserJson = Json.parse(
     s"""
        |{
-       | "orgName" : "testOrgName",
-       | "initials" : "TI",
-       | "orgUserName" : "oUserName",
+       | "orgName" : "testSchoolName",
+       | "initials" : "TSN",
+       | "orgUserName" : "tSchoolName",
        | "location" : "testLocation",
        | "orgEmail" : "test@email.com",
        | "password" : "${"testPass".sha512}"

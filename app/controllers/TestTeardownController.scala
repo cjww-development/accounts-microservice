@@ -22,12 +22,13 @@ import javax.inject.Inject
 import play.api.mvc._
 import services.TestEndpointService
 
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
 class DefaultTestTeardownController @Inject()(val testEndpointService: TestEndpointService,
                                               val controllerComponents: ControllerComponents,
                                               val config: ConfigurationLoader,
-                                              val authConnector: AuthConnector) extends TestTeardownController {
+                                              val authConnector: AuthConnector,
+                                              implicit val ec: ExecutionContext) extends TestTeardownController {
   override val appId: String = config.getServiceId(config.get[String]("appName"))
 }
 

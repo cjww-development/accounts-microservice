@@ -28,8 +28,7 @@ import reactivemongo.api.Cursor
 import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.play.json._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultUserFeedRepository @Inject()(val config: Configuration) extends UserFeedRepository with ConnectionSettings
 
@@ -51,21 +50,21 @@ trait UserFeedRepository extends DatabaseRepository {
     )
   )
 
-  def createFeedItem(feedItem : FeedItem)(implicit format : OFormat[FeedItem]): Future[MongoCreateResponse] = {
+  def createFeedItem(feedItem: FeedItem)(implicit ec: ExC): Future[MongoCreateResponse] = {
     for {
       col <- collection
       wr  <- col.insert[FeedItem](feedItem)
     } yield if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create feed item")
   }
 
-  def getFeedItems(userId : String): Future[List[FeedItem]] = {
+  def getFeedItems(userId: String)(implicit ec: ExC): Future[List[FeedItem]] = {
     for {
       col   <- collection
       items <- col.find(userIdSelector(userId)).cursor[FeedItem]().collect[List](MAX, Cursor.FailOnError[List[FeedItem]]())
     } yield items
   }
 
-  def deleteFeedItems(userId: String): Future[MongoDeleteResponse] = {
+  def deleteFeedItems(userId: String)(implicit ec: ExC): Future[MongoDeleteResponse] = {
     for {
       col <- collection
       wr  <- col.remove(userIdSelector(userId))

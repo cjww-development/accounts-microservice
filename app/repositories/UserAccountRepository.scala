@@ -28,8 +28,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultUserAccountRepository @Inject()(val config: Configuration) extends UserAccountRepository with ConnectionSettings
 
@@ -43,14 +42,14 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     )
   )
 
-  def insertNewUser(user : UserAccount): Future[MongoCreateResponse] = {
+  def insertNewUser(user: UserAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
     for {
       col <- collection
       wr  <- col.insert[UserAccount](user)
     } yield if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException(s"Failed to create new UserAccount")
   }
 
-  def getUserBySelector(selector: BSONDocument): Future[UserAccount] = {
+  def getUserBySelector(selector: BSONDocument)(implicit ec: ExC): Future[UserAccount] = {
     for {
       col           <- collection
       (name, value) =  getSelectorHead(selector)
@@ -61,7 +60,7 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     })
   }
 
-  def verifyUserName(username : String): Future[UserNameUse] = {
+  def verifyUserName(username: String)(implicit ec: ExC): Future[UserNameUse] = {
     for {
       col <- collection
       acc <- col.find(userNameSelector(username)).one[UserAccount]
@@ -73,7 +72,7 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     }
   }
 
-  def verifyEmail(email : String): Future[EmailUse] = {
+  def verifyEmail(email: String)(implicit ec: ExC): Future[EmailUse] = {
     for {
       col <- collection
       acc <- col.find(userEmailSelector(email)).one[UserAccount]
@@ -85,7 +84,7 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     }
   }
 
-  def updateAccountData(userId: String, userProfile: UserProfile)(implicit format: OFormat[UserProfile]): Future[MongoUpdatedResponse] = {
+  def updateAccountData(userId: String, userProfile: UserProfile)(implicit ec: ExC): Future[MongoUpdatedResponse] = {
     for {
       col         <- collection
       updatedData =  BSONDocument("$set" -> BSONDocument(
@@ -97,14 +96,14 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     } yield if(uwr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update user profile for user id $userId")
   }
 
-  def findPassword(userId: String, oldPassword: String)(implicit format: OFormat[UpdatedPassword]): Future[Boolean] = {
+  def findPassword(userId: String, oldPassword: String)(implicit ec: ExC): Future[Boolean] = {
     for {
       col <- collection
       acc <- col.find(userIdPasswordSelector(userId, oldPassword)).one[UserAccount]
     } yield acc.fold(throw new MissingAccountException(s"No matching user account for user id $userId"))(_ => true)
   }
 
-  def updatePassword(userId: String, newPassword : String)(implicit format: OFormat[UpdatedPassword]): Future[MongoUpdatedResponse] = {
+  def updatePassword(userId: String, newPassword: String)(implicit ec: ExC): Future[MongoUpdatedResponse] = {
     for {
       col    <- collection
       update = BSONDocument("$set" -> BSONDocument("password" -> newPassword))
@@ -112,7 +111,7 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     } yield if(uwr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update password for user id $userId")
   }
 
-  def updateSettings(userId: String, newSettings : Settings): Future[MongoUpdatedResponse] = {
+  def updateSettings(userId: String, newSettings: Settings)(implicit ec: ExC): Future[MongoUpdatedResponse] = {
     for {
       col    <- collection
       update =  BSONDocument("$set" -> BSONDocument("settings" -> BSONDocument(
@@ -124,14 +123,14 @@ trait UserAccountRepository extends DatabaseRepository with Logging {
     } yield if(uwr.ok) MongoSuccessUpdate else throw new FailedToUpdateException(s"Failed to update user settings for user id $userId")
   }
 
-  def getAllTeacherForOrg(orgName: String): Future[List[UserAccount]] = {
+  def getAllTeacherForOrg(orgName: String)(implicit ec: ExC): Future[List[UserAccount]] = {
     for {
       col  <- collection
       list <- col.find(deversitySchoolSelector(orgName)).cursor[UserAccount]().collect[List]()
     } yield list
   }
 
-  def deleteUserAccount(userId: String): Future[MongoDeleteResponse] = {
+  def deleteUserAccount(userId: String)(implicit ec: ExC): Future[MongoDeleteResponse] = {
     for {
       col <- collection
       wr  <- col.remove(userIdSelector(userId))

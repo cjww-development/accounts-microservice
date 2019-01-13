@@ -20,9 +20,12 @@ import com.cjwwdev.mongo.indexes.RepositoryIndexer
 import javax.inject.Inject
 import repositories.{OrgAccountRepository, UserAccountRepository, UserFeedRepository}
 
-class AccountsIndexing @Inject()(orgAccountRepository: OrgAccountRepository,
-                                 userAccountRepository: UserAccountRepository,
-                                 userFeedRepository: UserFeedRepository) extends RepositoryIndexer {
+import scala.concurrent.ExecutionContext
+
+class AccountsIndexing @Inject()(val orgAccountRepository: OrgAccountRepository,
+                                 val userAccountRepository: UserAccountRepository,
+                                 val userFeedRepository: UserFeedRepository,
+                                 implicit val ec: ExecutionContext) extends RepositoryIndexer {
   override val repositories = Seq(
     orgAccountRepository,
     userAccountRepository,

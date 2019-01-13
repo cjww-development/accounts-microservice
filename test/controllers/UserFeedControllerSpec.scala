@@ -22,10 +22,14 @@ import models.FeedItem
 import play.api.libs.json.Json
 import play.api.test.Helpers.stubControllerComponents
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits
+
 class UserFeedControllerSpec extends ControllerSpec {
 
   class Setup {
     val testController = new UserFeedController {
+      override implicit val ec: ExecutionContext  = Implicits.global
       override protected def controllerComponents = stubControllerComponents()
       override val userFeedService                = mockUserFeedService
       override val authConnector                  = mockAuthConnector

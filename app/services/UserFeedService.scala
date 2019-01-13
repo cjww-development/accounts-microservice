@@ -21,30 +21,29 @@ import models.FeedItem
 import play.api.libs.json.{JsObject, Json}
 import repositories.UserFeedRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultUserFeedService @Inject()(val userFeedRepository : UserFeedRepository) extends UserFeedService
 
 trait UserFeedService {
   val userFeedRepository: UserFeedRepository
 
-  def createFeedItem(feedItem: FeedItem) : Future[Boolean] = {
+  def createFeedItem(feedItem: FeedItem)(implicit ec: ExC): Future[Boolean] = {
     userFeedRepository.createFeedItem(feedItem) map {
       case MongoSuccessCreate => true
       case MongoFailedCreate  => false
     }
   }
 
-  def flipList(list : List[FeedItem]) : Option[List[FeedItem]] = {
+  def flipList(list: List[FeedItem]): Option[List[FeedItem]] = {
     if(list.nonEmpty) Some(list.reverse) else None
   }
 
-  def getFeedList(userId : String) : Future[Option[JsObject]] = {
+  def getFeedList(userId: String)(implicit ec: ExC): Future[Option[JsObject]] = {
     userFeedRepository.getFeedItems(userId) map(list => convertToJsObject(flipList(list)))
   }
 
-  private def convertToJsObject(list : Option[List[FeedItem]]) : Option[JsObject] = {
+  private def convertToJsObject(list: Option[List[FeedItem]]): Option[JsObject] = {
     list map(fi => Json.obj("feed-array" -> fi))
   }
 }

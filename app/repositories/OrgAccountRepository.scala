@@ -28,8 +28,7 @@ import reactivemongo.api.indexes.{Index, IndexType}
 import reactivemongo.bson.BSONDocument
 import reactivemongo.play.json._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultOrgAccountRepository @Inject()(val config: Configuration) extends OrgAccountRepository with ConnectionSettings
 
@@ -49,14 +48,14 @@ trait OrgAccountRepository extends DatabaseRepository with Logging {
     )
   )
 
-  def insertNewOrgUser(orgUser: OrgAccount): Future[MongoCreateResponse] = {
+  def insertNewOrgUser(orgUser: OrgAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
     for {
       col <- collection
       wr  <- col.insert[OrgAccount](orgUser)
     } yield if(wr.ok) MongoSuccessCreate else throw new FailedToCreateException("Failed to create new OrgAccount")
   }
 
-  def getOrgAccount[T : OFormat](selector: BSONDocument): Future[T] = {
+  def getOrgAccount[T : OFormat](selector: BSONDocument)(implicit ec: ExC): Future[T] = {
     for {
       col           <- collection
       (name, value) =  getSelectorHead(selector)
@@ -67,7 +66,7 @@ trait OrgAccountRepository extends DatabaseRepository with Logging {
     })
   }
 
-  def verifyUserName(username : String): Future[UserNameUse] = {
+  def verifyUserName(username : String)(implicit ec: ExC): Future[UserNameUse] = {
     for {
       col <- collection
       acc <- col.find(orgUserNameSelector(username)).one[OrgAccount]
@@ -79,7 +78,7 @@ trait OrgAccountRepository extends DatabaseRepository with Logging {
     }
   }
 
-  def verifyEmail(email : String): Future[EmailUse] = {
+  def verifyEmail(email : String)(implicit ec: ExC): Future[EmailUse] = {
     for {
       col <- collection
       acc <- col.find(orgEmailSelector(email)).one[OrgAccount]
@@ -91,7 +90,7 @@ trait OrgAccountRepository extends DatabaseRepository with Logging {
     }
   }
 
-  def deleteOrgAccount(userId: String): Future[MongoDeleteResponse] = {
+  def deleteOrgAccount(userId: String)(implicit ec: ExC): Future[MongoDeleteResponse] = {
     for {
       col <- collection
       wr  <- col.remove(orgIdSelector(userId))

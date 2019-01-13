@@ -22,8 +22,7 @@ import models.OrgAccount
 import reactivemongo.bson.BSONDocument
 import repositories.{OrgAccountRepository, UserAccountRepository, UserFeedRepository}
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultTestEndpointService @Inject()(val userAccountRepository: UserAccountRepository,
                                            val orgAccountRepository: OrgAccountRepository,
@@ -37,7 +36,7 @@ trait TestEndpointService {
   private val userNameSelector: String => BSONDocument = userName => BSONDocument("userName" -> userName)
   private val orgUserNameSelector: String => BSONDocument = orgUserName => BSONDocument("orgUserName" -> orgUserName)
 
-  def tearDownTestUser(userName: String): Future[MongoDeleteResponse] = {
+  def tearDownTestUser(userName: String)(implicit ec: ExC): Future[MongoDeleteResponse] = {
     for {
       account <- userAccountRepository.getUserBySelector(userNameSelector(userName))
       _       <- userFeedRepository.deleteFeedItems(account.userId)
@@ -45,7 +44,7 @@ trait TestEndpointService {
     } yield deleted
   }
 
-  def tearDownTestOrgUser(orgUserName: String): Future[MongoDeleteResponse] = {
+  def tearDownTestOrgUser(orgUserName: String)(implicit ec: ExC): Future[MongoDeleteResponse] = {
     for {
       account <- orgAccountRepository.getOrgAccount[OrgAccount](orgUserNameSelector(orgUserName))
       deleted <- orgAccountRepository.deleteOrgAccount(account.orgId)

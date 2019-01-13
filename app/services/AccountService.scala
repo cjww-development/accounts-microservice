@@ -22,19 +22,18 @@ import javax.inject.Inject
 import models.{Settings, UpdatedPassword, UserProfile}
 import repositories.UserAccountRepository
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext => ExC, Future}
 
 class DefaultAccountService @Inject()(val userAccountRepository: UserAccountRepository) extends AccountService
 
 trait AccountService {
   val userAccountRepository: UserAccountRepository
 
-  def updateProfileInformation(userId: String, userProfile: UserProfile) : Future[MongoUpdatedResponse] = {
+  def updateProfileInformation(userId: String, userProfile: UserProfile)(implicit ec: ExC): Future[MongoUpdatedResponse] = {
     userAccountRepository.updateAccountData(userId, userProfile)
   }
 
-  def updatePassword(userId: String, passwordSet: UpdatedPassword): Future[UpdatedPasswordResponse] = {
+  def updatePassword(userId: String, passwordSet: UpdatedPassword)(implicit ec: ExC): Future[UpdatedPasswordResponse] = {
     userAccountRepository.findPassword(userId, passwordSet.previousPassword) flatMap { _ =>
       userAccountRepository.updatePassword(userId, passwordSet.newPassword) map {
         _ => PasswordUpdated
@@ -46,7 +45,7 @@ trait AccountService {
     }
   }
 
-  def updateSettings(userId: String, accountSettings : Settings) : Future[UpdatedSettingsResponse] = {
+  def updateSettings(userId: String, accountSettings: Settings)(implicit ec: ExC): Future[UpdatedSettingsResponse] = {
     userAccountRepository.updateSettings(userId, accountSettings) map {
       _ => UpdatedSettingsSuccess
     } recover {
