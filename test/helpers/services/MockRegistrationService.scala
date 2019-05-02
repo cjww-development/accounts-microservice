@@ -39,12 +39,12 @@ trait MockRegistrationService extends BeforeAndAfterEach with MockitoSugar with 
   }
 
   def mockCreateNewUser(created: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
-    when(mockRegistrationService.createNewUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+    when(mockRegistrationService.createNewUser(ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
       .thenReturn(Future.successful(if(created) MongoSuccessCreate else MongoFailedCreate))
   }
 
   def mockCreateNewOrgUser(created: Boolean): OngoingStubbing[Future[MongoCreateResponse]] = {
-    when(mockRegistrationService.createNewOrgUser(ArgumentMatchers.any())(ArgumentMatchers.any()))
+    when(mockRegistrationService.createNewOrgUser(ArgumentMatchers.any())(ArgumentMatchers.any(), ArgumentMatchers.any()))
       .thenReturn(Future.successful(if(created) MongoSuccessCreate else MongoFailedCreate))
   }
 }

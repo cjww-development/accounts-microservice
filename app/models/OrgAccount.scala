@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 CJWW Development
+ * Copyright 2019 CJWW Development
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,16 @@ case class OrgAccount(orgId: String,
                       credentialType: String,
                       password: String,
                       createdAt: DateTime,
-                      settings: Option[Settings])
+                      settings: Option[Settings]) {
+  def toAudit: Map[String, String] = Map(
+    "orgId"          -> orgId,
+    "deversityId"    -> deversityId,
+    "orgName"        -> orgName,
+    "orgUserName"    -> orgUserName,
+    "orgEmail"       -> orgEmail,
+    "credentialType" -> credentialType
+  )
+}
 
 object OrgAccount extends IdService with RegexPack with TimeFormat {
   private val orgNameValidation     = Reads.StringReads.filter(JsonValidationError("Invalid org name"))(_.matches(orgNameRegex.regex))

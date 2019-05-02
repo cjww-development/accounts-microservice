@@ -16,13 +16,14 @@
 
 package helpers.services
 
-import helpers.other.FutureAsserts
+import helpers.other.AssertionHelpers
 import helpers.repositories.{MockOrgAccountRepository, MockUserAccountRepository, MockUserFeedRepository}
 import org.scalatestplus.play.PlaySpec
 
 trait ServiceSpec
   extends PlaySpec
-    with FutureAsserts
+    with AssertionHelpers
     with MockUserAccountRepository
     with MockOrgAccountRepository
     with MockUserFeedRepository
+    with MockMessagingService

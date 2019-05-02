@@ -14,12 +14,26 @@
  * limitations under the License.
  */
 
-package common
+package models.common
 
-import com.cjwwdev.logging.filters.RequestLoggingFilter
-import com.cjwwdev.shuttering.filters.BackendShutteringFilter
-import javax.inject.Inject
-import play.api.http.DefaultHttpFilters
+import play.api.libs.json._
 
-class AccountsFilters @Inject()(loggingFilter: RequestLoggingFilter, shutteringFilter: BackendShutteringFilter)
-  extends DefaultHttpFilters(loggingFilter, shutteringFilter)
+object MessageTypes {
+  sealed trait MessageType
+
+  case object AUDIT_EVENT extends MessageType
+  case object FEED_EVENT  extends MessageType
+
+  implicit val format: Format[MessageType] = new Format[MessageType] {
+    override def writes(msgType: MessageType): JsValue = {
+      JsString(msgType.toString)
+    }
+
+    override def reads(json: JsValue): JsResult[MessageType] = {
+      json.as[String] match {
+        case "AUDIT_EVENT" => JsSuccess(AUDIT_EVENT)
+        case "FEED_EVENT"  => JsSuccess(FEED_EVENT)
+      }
+    }
+  }
+}

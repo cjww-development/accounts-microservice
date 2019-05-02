@@ -19,7 +19,7 @@ package helpers.controllers
 import com.cjwwdev.http.headers.HeaderPackage
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import helpers.auth.{AuthBuilder, MockAuthConnector}
-import helpers.other.FutureAsserts
+import helpers.other.AssertionHelpers
 import helpers.services._
 import org.scalatestplus.play.PlaySpec
 import play.api.http.{HeaderNames, HttpProtocol, MimeTypes, Status}
@@ -27,7 +27,7 @@ import play.api.test._
 
 trait ControllerSpec
   extends PlaySpec
-    with FutureAsserts
+    with AssertionHelpers
     with AuthBuilder
     with MockAuthConnector
     with MockAccountService

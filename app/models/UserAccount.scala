@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 CJWW Development
+ * Copyright 2019 CJWW Development
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,15 @@ case class UserAccount(userId : String,
                        deversityDetails: Option[DeversityEnrolment],
                        createdAt : DateTime,
                        enrolments: Option[Enrolments],
-                       settings : Option[Settings])
+                       settings : Option[Settings]) {
+  def toAudit: Map[String, String] = Map(
+    "userId"    -> userId,
+    "firstName" -> firstName,
+    "lastName"  -> lastName,
+    "userName"  -> userName,
+    "email"     -> email
+  )
+}
 
 object UserAccount extends IdService with RegexPack with TimeFormat {
   private val firstNameValidation = Reads.StringReads.filter(JsonValidationError("Invalid first name"))(_.matches(firstNameRegex.regex))

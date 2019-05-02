@@ -19,6 +19,7 @@ import com.cjwwdev.mongo.responses.MongoSuccessCreate
 import common.FailedToCreateException
 import helpers.other.AccountEnums
 import helpers.services.ServiceSpec
+import play.api.test.FakeRequest
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -26,15 +27,20 @@ class RegistrationServiceSpec extends ServiceSpec {
 
   class Setup {
     val testService = new RegistrationService {
+      override val messagingService      = mockMessagingService
       override val userAccountRepository = mockUserAccountRepo
       override val orgAccountRepository  = mockOrgAccountRepo
     }
   }
 
+  implicit val req = FakeRequest()
+
   "createNewUser" should {
     "return a MongoSuccessCreate" when {
       "the given user has been inserted into the database" in new Setup {
         mockInsertNewUser(inserted = true)
+
+        mockSendAuditEvent(success = true)
 
         awaitAndAssert(testService.createNewUser(testUserAccount(AccountEnums.basic))) {
           _ mustBe MongoSuccessCreate
@@ -55,6 +61,8 @@ class RegistrationServiceSpec extends ServiceSpec {
     "return a MongoSuccessCreate" when {
       "the given org user has been inserted into the database" in new Setup {
         mockInsertNewOrgUser(inserted = true)
+
+        mockSendAuditEvent(success = true)
 
         awaitAndAssert(testService.createNewOrgUser(testOrgAccount)) {
           _ mustBe MongoSuccessCreate

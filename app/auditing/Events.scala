@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package common
+package auditing
 
-import com.cjwwdev.logging.filters.RequestLoggingFilter
-import com.cjwwdev.shuttering.filters.BackendShutteringFilter
-import javax.inject.Inject
-import play.api.http.DefaultHttpFilters
+object Events {
+  final case class EventType(code: Int, description: String)
 
-class AccountsFilters @Inject()(loggingFilter: RequestLoggingFilter, shutteringFilter: BackendShutteringFilter)
-  extends DefaultHttpFilters(loggingFilter, shutteringFilter)
+  val individualReg = EventType(code = 100, "Individual Registration Event")
+  val orgReg        = EventType(code = 101, "Organisation Registration Event")
+}

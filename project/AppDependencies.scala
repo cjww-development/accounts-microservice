@@ -28,6 +28,7 @@ private object CompileDependencies {
   private val serviceHealthVersion     = "0.3.1"
   private val featureManagementVersion = "1.5.0"
   private val loggingUtilsVersion      = "1.3.1"
+  private val ampqClientVersion        = "5.6.0"
 
   private val playImports: Seq[ModuleID] = Seq(guice)
 
@@ -37,7 +38,8 @@ private object CompileDependencies {
     "com.cjww-dev.libs" % "application-utilities_2.12" % appUtilsVersion,
     "com.cjww-dev.libs" % "service-health_2.12"        % serviceHealthVersion,
     "com.cjww-dev.libs" % "feature-management_2.12"    % featureManagementVersion,
-    "com.cjww-dev.libs" % "logging-utils_2.12"         % loggingUtilsVersion
+    "com.cjww-dev.libs" % "logging-utils_2.12"         % loggingUtilsVersion,
+    "com.rabbitmq"      % "amqp-client"                % ampqClientVersion
   )
 
   def apply(): Seq[ModuleID] = compileDependencies ++ playImports

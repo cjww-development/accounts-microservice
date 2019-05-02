@@ -1,5 +1,5 @@
 /*
- * Copyright 2018 CJWW Development
+ * Copyright 2019 CJWW Development
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,25 +15,39 @@
  */
 package services
 
-import com.cjwwdev.mongo.responses.MongoCreateResponse
+import com.cjwwdev.mongo.responses.{MongoCreateResponse, MongoSuccessCreate}
 import javax.inject.Inject
 import models.{OrgAccount, UserAccount}
+import auditing.Events.{individualReg, orgReg}
+import play.api.mvc.Request
 import repositories.{OrgAccountRepository, UserAccountRepository}
 
-import scala.concurrent.{ExecutionContext => ExC, Future}
+import scala.concurrent.{Future, ExecutionContext => ExC}
 
 class DefaultRegistrationService @Inject()(val userAccountRepository: UserAccountRepository,
-                                           val orgAccountRepository: OrgAccountRepository) extends RegistrationService
+                                           val orgAccountRepository: OrgAccountRepository,
+                                           val messagingService: MessagingService) extends RegistrationService
 
 trait RegistrationService {
+
+  val messagingService: MessagingService
+
   val userAccountRepository: UserAccountRepository
   val orgAccountRepository: OrgAccountRepository
 
-  def createNewUser(newUser: UserAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
-    userAccountRepository.insertNewUser(newUser)
+  def createNewUser(newUser: UserAccount)(implicit ec: ExC, req: Request[_]): Future[MongoCreateResponse] = {
+    userAccountRepository.insertNewUser(newUser) map {
+      case success@MongoSuccessCreate =>
+        messagingService.sendAuditEvent(newUser.userId, individualReg.code, newUser.toAudit)
+        success
+    }
   }
 
-  def createNewOrgUser(newOrgUser: OrgAccount)(implicit ec: ExC): Future[MongoCreateResponse] = {
-    orgAccountRepository.insertNewOrgUser(newOrgUser)
+  def createNewOrgUser(newOrgUser: OrgAccount)(implicit ec: ExC, req: Request[_]): Future[MongoCreateResponse] = {
+    orgAccountRepository.insertNewOrgUser(newOrgUser) collect {
+      case success@MongoSuccessCreate =>
+        messagingService.sendAuditEvent(newOrgUser.orgId, orgReg.code, newOrgUser.toAudit)
+        success
+    }
   }
 }

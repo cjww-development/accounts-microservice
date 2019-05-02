@@ -26,7 +26,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
-trait FutureAsserts
+trait AssertionHelpers
   extends FutureAwaits
     with DefaultAwaitTimeout {
   self: PlaySpec =>
