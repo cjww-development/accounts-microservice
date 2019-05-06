@@ -41,6 +41,7 @@ object Event extends EnvReads with EnvWrites with TimeFormat {
     (__ \ "correlationId").format[String] and
     (__ \ "messageType").format[MessageType] and
     (__ \ "service").format[String] and
+    (__ \ "appId").format[String] and
     (__ \ "createdAt").format[LocalDateTime](DefaultLocalDateTimeWrites)(dateTimeReadLDT) and
     (__ \ "sessionId").format[String] and
     (__ \ "userId").format[String] and

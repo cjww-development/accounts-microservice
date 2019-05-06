@@ -81,6 +81,12 @@ case class UserAccount(userId : String,
     "userName"  -> userName,
     "email"     -> email
   )
+
+  def toDetailsAudit: Map[String, String] = Map(
+    "firstName" -> firstName,
+    "lastName"  -> lastName,
+    "email"     -> email
+  )
 }
 
 object UserAccount extends IdService with RegexPack with TimeFormat {

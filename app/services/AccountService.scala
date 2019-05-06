@@ -16,27 +16,51 @@
 
 package services
 
+import java.time.LocalDateTime
+
+import auditing.Events._
 import com.cjwwdev.mongo.responses.MongoUpdatedResponse
 import common._
 import javax.inject.Inject
 import models.{Settings, UpdatedPassword, UserProfile}
+import play.api.libs.json.Json
+import play.api.mvc.Request
+import reactivemongo.bson.BSONDocument
 import repositories.UserAccountRepository
 
-import scala.concurrent.{ExecutionContext => ExC, Future}
+import scala.concurrent.{Future, ExecutionContext => ExC}
 
-class DefaultAccountService @Inject()(val userAccountRepository: UserAccountRepository) extends AccountService
+class DefaultAccountService @Inject()(val userAccountRepository: UserAccountRepository,
+                                      val messagingService: MessagingService) extends AccountService
 
 trait AccountService {
+
   val userAccountRepository: UserAccountRepository
 
-  def updateProfileInformation(userId: String, userProfile: UserProfile)(implicit ec: ExC): Future[MongoUpdatedResponse] = {
-    userAccountRepository.updateAccountData(userId, userProfile)
+  val messagingService: MessagingService
+
+  def updateProfileInformation(userId: String, userProfile: UserProfile)(implicit ec: ExC, req: Request[_]): Future[MongoUpdatedResponse] = {
+    for {
+      account <- userAccountRepository.getUserBySelector(BSONDocument("userId" -> userId))
+      _ = messagingService.sendAuditEvent(account.userId, indDetailsUpdate.code, Map(
+        "previousDetails" -> account.toDetailsAudit,
+        "updatedDetails"  -> Map(
+          "firstName" -> userProfile.firstName,
+          "lastName"  -> userProfile.lastName,
+          "email"     -> userProfile.email
+        )
+      ))
+      updated <- userAccountRepository.updateAccountData(account.userId, userProfile)
+    } yield updated
   }
 
-  def updatePassword(userId: String, passwordSet: UpdatedPassword)(implicit ec: ExC): Future[UpdatedPasswordResponse] = {
+  def updatePassword(userId: String, passwordSet: UpdatedPassword)(implicit ec: ExC, req: Request[_]): Future[UpdatedPasswordResponse] = {
     userAccountRepository.findPassword(userId, passwordSet.previousPassword) flatMap { _ =>
-      userAccountRepository.updatePassword(userId, passwordSet.newPassword) map {
-        _ => PasswordUpdated
+      userAccountRepository.updatePassword(userId, passwordSet.newPassword) map { _ =>
+        messagingService.sendAuditEvent(userId, indPasswordUpdate.code, Map(
+          "updated" -> LocalDateTime.now()
+        ))
+        PasswordUpdated
       } recover {
         case _ => PasswordUpdateFailed
       }
@@ -45,11 +69,18 @@ trait AccountService {
     }
   }
 
-  def updateSettings(userId: String, accountSettings: Settings)(implicit ec: ExC): Future[UpdatedSettingsResponse] = {
-    userAccountRepository.updateSettings(userId, accountSettings) map {
-      _ => UpdatedSettingsSuccess
-    } recover {
-      case _ => UpdatedSettingsFailed
-    }
+  def updateSettings(userId: String, accountSettings: Settings)(implicit ec: ExC, req: Request[_]): Future[UpdatedSettingsResponse] = {
+    for {
+      account <- userAccountRepository.getUserBySelector(BSONDocument("userId" -> userId))
+      _ = messagingService.sendAuditEvent(account.userId, indSettingsUpdate.code, Map(
+        "previousSettings" -> Json.toJson(account.settings.getOrElse(Settings("-", "-", "-"))),
+        "newSettings"      -> Json.toJson(accountSettings)
+      ))
+      updated <- userAccountRepository.updateSettings(account.userId, accountSettings) map {
+        _ => UpdatedSettingsSuccess
+      } recover {
+        case _ => UpdatedSettingsFailed
+      }
+    } yield updated
   }
 }

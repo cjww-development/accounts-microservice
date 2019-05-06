@@ -21,4 +21,8 @@ object Events {
 
   val individualReg = EventType(code = 100, "Individual Registration Event")
   val orgReg        = EventType(code = 101, "Organisation Registration Event")
+
+  val indDetailsUpdate  = EventType(code = 200, "Individual Basic Details Update Event")
+  val indPasswordUpdate = EventType(code = 202, "Individual Password Update Event")
+  val indSettingsUpdate = EventType(code = 204, "Individual Settings Update Event")
 }

@@ -39,10 +39,10 @@ class DefaultAuditingConnector @Inject()(val config: ConfigurationLoader) extend
     deObfuscator.decrypt(config.get[String](s"$configPath.$key")).swap.getOrElse("")
   }
 
-  override val host: String         = config.get[String](s"$configPath.host")
-  override val userName: String     = getEncodedValue("user")
-  override val password: String     = getEncodedValue("pass")
-  override val queueName: String    = config.get[String](s"$configPath.queue")
+  override val host: String      = config.get[String](s"$configPath.host")
+  override val userName: String  = getEncodedValue("user")
+  override val password: String  = getEncodedValue("pass")
+  override val queueName: String = config.get[String](s"$configPath.queue")
 
   protected val connectionFactory = new ConnectionFactory()
 
