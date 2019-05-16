@@ -29,7 +29,7 @@ class RegistrationAPIISpec extends IntegrationSpec with IntegrationStubbing {
       "return a Conflict" when {
         "an account already exists with either the same user name or email address" in {
           given
-              .user.orgUser.isSetup
+              .user.individualUser.isSetup
 
           awaitAndAssert(client(s"$testAppUrl/account/create-new-user").post(encryptedUserJson)) {
             _.status mustBe CONFLICT

@@ -50,6 +50,11 @@ trait MockUserAccountRepository extends BeforeAndAfterEach with MockitoSugar wit
       .thenReturn(Future.successful(returned))
   }
 
+  def mockGetUserBySelectorFailed(): OngoingStubbing[Future[UserAccount]] = {
+    when(mockUserAccountRepo.getUserBySelector(ArgumentMatchers.any())(ArgumentMatchers.any()))
+      .thenReturn(Future.failed(new MissingAccountException("")))
+  }
+
   def mockVerifyUserName(inUse: Boolean): OngoingStubbing[Future[UserNameUse]] = {
     when(mockUserAccountRepo.verifyUserName(ArgumentMatchers.any())(ArgumentMatchers.any()))
       .thenReturn(Future.successful(if(inUse) UserNameInUse else UserNameNotInUse))

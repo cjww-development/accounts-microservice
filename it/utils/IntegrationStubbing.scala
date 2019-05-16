@@ -34,7 +34,7 @@ trait IntegrationStubbing {
 
   def given: PreconditionBuilder = new PreconditionBuilder
 
-  case class UserStub()(implicit builder: PreconditionBuilder) {
+  case class UserStub()(implicit builder: PreconditionBuilder) extends PreconditionBuilder {
     def individualUser: IndividualUser = IndividualUser()
     def orgUser: OrgUser = OrgUser()
   }

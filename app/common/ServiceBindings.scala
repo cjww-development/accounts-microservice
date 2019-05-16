@@ -40,7 +40,8 @@ class ServiceBindings extends Module {
     bind(classOf[UserDetailsController]).to(classOf[DefaultUserDetailsController]).eagerly(),
     bind(classOf[UserFeedController]).to(classOf[DefaultUserFeedController]).eagerly(),
     bind(classOf[ValidationController]).to(classOf[DefaultValidationController]).eagerly(),
-    bind(classOf[HealthController]).to(classOf[DefaultHealthController]).eagerly()
+    bind(classOf[HealthController]).to(classOf[DefaultHealthController]).eagerly(),
+    bind(classOf[AdminController]).to(classOf[DefaultAdminController]).eagerly()
   )
 
   private def bindServices(): Seq[Binding[_]] = Seq(
@@ -50,7 +51,8 @@ class ServiceBindings extends Module {
     bind(classOf[RegistrationService]).to(classOf[DefaultRegistrationService]).eagerly(),
     bind(classOf[TestEndpointService]).to(classOf[DefaultTestEndpointService]).eagerly(),
     bind(classOf[UserFeedService]).to(classOf[DefaultUserFeedService]).eagerly(),
-    bind(classOf[ValidationService]).to(classOf[DefaultValidationService]).eagerly()
+    bind(classOf[ValidationService]).to(classOf[DefaultValidationService]).eagerly(),
+    bind(classOf[AdminService]).to(classOf[DefaultAdminService]).eagerly()
   )
 
   private def bindRepositories(): Seq[Binding[_]] = Seq(

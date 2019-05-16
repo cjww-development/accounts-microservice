@@ -16,6 +16,8 @@
 
 package utils
 
+import java.util.UUID
+
 import akka.util.Timeout
 import com.cjwwdev.implicits.ImplicitDataSecurity._
 import com.cjwwdev.http.headers.HeaderPackage
@@ -46,14 +48,15 @@ trait IntegrationSpec
   val testUserAccount: UserAccount = testUserAccount(AccountEnums.teacher)
 
   override val appConfig = Map(
-    "play.http.router"                                        -> "testRouter.Routes",
-    "microservice.external-services.auth-microservice.domain" -> s"$wiremockUrl/auth",
-    "microservice.external-services.auth-microservice.uri"    -> "/get-current-user/:sessionId",
-    "microservice.external-services.session-store.domain"     -> s"$wiremockUrl/session-store",
-    "microservice.external-services.session-store.uri"        -> "/session/:contextId/data?key=contextId",
-    "repositories.UserAccountRepositoryImpl.collection"       -> "it-user-accounts",
-    "repositories.OrgAccountRepositoryImpl.collection"        -> "it-org-accounts",
-    "repositories.UserFeedRepositoryImpl.collection"          -> "it-user-feed"
+    "play.http.router"                                             -> "testRouter.Routes",
+    "microservice.external-services.auth-microservice.domain"      -> s"$wiremockUrl/auth",
+    "microservice.external-services.auth-microservice.uri"         -> "/get-current-user/:sessionId",
+    "microservice.external-services.session-store.domain"          -> s"$wiremockUrl/session-store",
+    "microservice.external-services.session-store.uri"             -> "/session/:contextId/data?key=contextId",
+    "microservice.external-services.admin-frontend.application-id" -> "abda73f4-9d52-4bb8-b20d-b5fffd0cc130",
+    "repositories.UserAccountRepositoryImpl.collection"            -> "it-user-accounts",
+    "repositories.OrgAccountRepositoryImpl.collection"             -> "it-org-accounts",
+    "repositories.UserFeedRepositoryImpl.collection"               -> "it-user-feed"
   )
 
   override val currentAppBaseUrl = "accounts"
@@ -64,9 +67,10 @@ trait IntegrationSpec
 
   val testCookieId = generateTestSystemId(SESSION)
 
-  def client(url: String): WSRequest = ws.url(url).withHeaders(
+  def client(url: String): WSRequest = ws.url(url).withHttpHeaders(
     "cjww-headers" -> HeaderPackage("abda73f4-9d52-4bb8-b20d-b5fffd0cc130", Some(testCookieId)).encrypt,
-    CONTENT_TYPE  -> TEXT
+    CONTENT_TYPE   -> TEXT,
+    "requestId"    -> s"requestId-${UUID.randomUUID()}"
   )
 
   def testApiResponse(uri: String, method: String, status: Int, body: String): JsValue = Json.obj(
