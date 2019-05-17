@@ -16,6 +16,7 @@
 
 import com.heroku.sbt.HerokuPlugin.autoImport.herokuAppName
 import com.typesafe.config.ConfigFactory
+import com.typesafe.sbt.packager.docker.Cmd
 import scoverage.ScoverageKeys
 
 import scala.util.{Failure, Success, Try}
@@ -58,5 +59,14 @@ lazy val root = Project(appName, file("."))
     bintrayOmitLicense                             :=  true,
     Keys.fork                   in IntegrationTest :=  false,
     unmanagedSourceDirectories  in IntegrationTest :=  (baseDirectory in IntegrationTest)(base => Seq(base / "it")).value,
-    parallelExecution           in IntegrationTest :=  false
+    parallelExecution           in IntegrationTest :=  false,
+    dockerRepository                               :=  Some("cjwwdevelopment"),
+    dockerCommands                                 :=  Seq(
+      Cmd("FROM", "openjdk:8u181-jdk"),
+      Cmd("WORKDIR", "/opt/docker"),
+      Cmd("ADD", "--chown=daemon:daemon opt /opt"),
+      Cmd("USER", "daemon"),
+      Cmd("ENTRYPOINT", """["/opt/docker/bin/accounts-microservice"]"""),
+      Cmd("CMD", """[]""")
+    )
   )
