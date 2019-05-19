@@ -1,4 +1,7 @@
 #Primary entry point for the acounts microservice
 ->          /accounts                   app.Routes
+->          /private                    internal.Routes
 ->          /accounts/test-only         test.Routes
 ->          /                           health.Routes
+->          /private                    shuttering.Routes
+->          /private                    features.Routes

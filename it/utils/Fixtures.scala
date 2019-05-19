@@ -134,7 +134,7 @@ trait Fixtures extends TestDataGenerator {
     initials        = "TSN",
     orgUserName     = "tSchoolName",
     location        = "testLocation",
-    orgEmail        = "test@email.com",
+    orgEmail        = "test-org@email.com",
     credentialType  = "organisation",
     password        = "testPass".sha512,
     createdAt       = now,
